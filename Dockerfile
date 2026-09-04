@@ -25,6 +25,9 @@ WORKDIR /var/www/html
 # Copy application files
 COPY . .
 
+# Create .env file if it doesn't exist (from .env.example if available)
+RUN if [ ! -f .env ] && [ -f .env.example ]; then cp .env.example .env; fi
+
 # Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader
 
@@ -35,8 +38,8 @@ RUN npm run build
 # Set permissions
 RUN chmod -R 775 storage bootstrap/cache
 
-# Generate application key
-RUN php artisan key:generate
+# Generate application key (force if .env was created from example)
+RUN php artisan key:generate --force
 
 # Expose port
 EXPOSE 10000
