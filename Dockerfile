@@ -11,10 +11,11 @@ RUN apk add --no-cache \
     nodejs \
     npm \
     nginx \
-    supervisor
+    supervisor \
+    sqlite
 
 # Install PHP extensions
-RUN docker-php-ext-install pdo pdo_mysql
+RUN docker-php-ext-install pdo pdo_mysql pdo_sqlite
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -25,8 +26,11 @@ WORKDIR /var/www/html
 # Copy application files
 COPY . .
 
-# Create .env file if it doesn't exist (from .env.example if available)
+# Create .env file if it doesn't exist
 RUN if [ ! -f .env ] && [ -f .env.example ]; then cp .env.example .env; fi
+
+# Create SQLite database file
+RUN touch database/database.sqlite
 
 # Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader
@@ -36,10 +40,13 @@ RUN npm install
 RUN npm run build
 
 # Set permissions
-RUN chmod -R 775 storage bootstrap/cache
+RUN chmod -R 775 storage bootstrap/cache database
 
-# Generate application key (force if .env was created from example)
+# Generate application key
 RUN php artisan key:generate --force
+
+# Run migrations
+RUN php artisan migrate --force
 
 # Expose port
 EXPOSE 10000
