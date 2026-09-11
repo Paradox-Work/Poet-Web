@@ -1,10 +1,7 @@
 <script setup>
    import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/vue'
-   import FollowingItem from '@/Components/app/FollowingItem.vue';
-   import TextInput from '@/Components/TextInput.vue';
-   import { ref } from 'vue';
-
-   const searchKeyword = ref(''); 
+   import FollowingListItems from './FollowingListItems.vue';
+   
 </script>
 
 <template>
@@ -13,40 +10,23 @@
       <!-- MOBILE: collapsible -->
       <Disclosure v-slot="{ open }" as="div" class="flex flex-col lg:hidden">
          <DisclosureButton class="text-left">
+            <div class="flex justify-between">
             <h2 class="text-xl font-bold mb-4">Following</h2>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 transition-transform ui-open:rotate-90">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+               </svg>
+            </div>
          </DisclosureButton>
 
          <DisclosurePanel class="flex flex-col">
-            <TextInput v-model="searchKeyword" placeholder="Type to search..." class="w-full"/>
-            <div class="mt-3 max-h-64 overflow-auto rounded border border-gray-100">
-               <div v-if="false" class="text-gray-400 text-center p-3">
-                  You havent befriended anyone yet.
-               </div>
-               <div v-else>
-                  <FollowingItem image="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
-                                 title="Shakspeare" />
-                  <FollowingItem image="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
-                                 title="Harry Potter" />
-               </div>
-            </div>
+            <FollowingListItems />
          </DisclosurePanel>
       </Disclosure>
 
       <!-- DESKTOP: always open -->
       <div class="hidden lg:flex flex-col min-h-0 flex-1">
          <h2 class="text-xl font-bold mb-4">Following</h2>
-         <TextInput v-model="searchKeyword" placeholder="Type to search..." class="w-full"/>
-         <div class="mt-3 flex-1 min-h-0 overflow-auto">
-            <div v-if="false" class="text-gray-400 text-center p-3">
-               You havent befriended anyone yet.
-            </div>
-            <div v-else>
-               <FollowingItem image="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
-                              title="Shakspeare" />
-               <FollowingItem image="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
-                              title="Harry Potter" />
-            </div>
-         </div>
+         <FollowingListItems />
       </div>
 
    </div>
