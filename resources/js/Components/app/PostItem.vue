@@ -1,17 +1,46 @@
 <script setup>
-import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/vue'
-defineProps({
+import { computed } from 'vue';
+import { router, usePage } from '@inertiajs/vue3';
+import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/vue';
+
+const props = defineProps({
     post: Object,
+    following: {
+        type: Array,
+        default: () => [],
+    },
 });
+
+const page = usePage();
+const authUserId = computed(() => page.props.auth.user.id);
+const isFollowing = computed(() =>
+    props.following.some(u => u.id === props.post.user.id)
+);
+
+function toggleFollow() {
+    if (isFollowing.value) {
+        router.delete(route('unfollow', props.post.user.id));
+        return;
+    }
+
+    router.post(route('follow', props.post.user.id));
+}
 
 function isImage(attachment) {
     const mime = attachment.mime.split('/');
     return mime[0].toLowerCase() === 'image';
 }
+
+const isLong = computed(() => props.post.body.length > 200);
+
+const preview = computed(() => {
+    if (!isLong.value) return props.post.body;
+    return props.post.body.substring(0, 200).trim() + '…';
+});
 </script>
 
 <template>
-    <div class="bg-white border rounded p-4 mb-3 shadow">
+    <div class="bg-white border rounded p-4 mb-3 shadow overflow-hidden">
         <div class="flex items-center gap-2 mb-3">
             <a href="javascript:void(0)">
                 <img 
@@ -20,22 +49,35 @@ function isImage(attachment) {
                     class="w-10 h-10 rounded-full border-2 transition-all duration-150 hover:border-blue-500" 
                 />
             </a>
-            <div>
-                <h4 class="font-bold">
+            <div class="min-w-0">
+                <h4 class="font-bold truncate">
                     <a href="javascript:void(0)" class="hover:underline">{{ post.user.name }}</a>
                     <template v-if="post.group">
                         <span class="text-gray-400 mx-1">•</span>
                         <a href="javascript:void(0)" class="hover:underline">{{ post.group.name }}</a>
                     </template>
                 </h4>
+                <button
+                v-if="post.user.id !== authUserId"
+                type="button"
+                class="mt-1 px-3 py-1 rounded-md text-xs font-semibold transition-colors"
+                :class="isFollowing
+                    ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    : 'bg-indigo-600 text-white hover:bg-indigo-700'"
+                @click="toggleFollow"
+            >
+                {{ isFollowing ? 'Unfollow' : 'Follow' }}
+            </button>           
                 <small class="text-gray-500">{{ post.created_at }}</small>
             </div>
         </div>
-        <div class="mb-3">
-            <Disclosure v-slot="{ open }">
-                <div v-if="!open" v-html="post.body.substring(0, 200) + '...'" />
+        <div class="mb-3 min-w-0">
+            <div v-if="!isLong" class="whitespace-pre-wrap break-words">{{ post.body }}</div>
+
+            <Disclosure v-else v-slot="{ open }">
+                <div v-if="!open" class="whitespace-pre-wrap break-words">{{ preview }}</div>
                 <DisclosurePanel>
-                    <div v-html="post.body" />
+                    <div class="whitespace-pre-wrap break-words">{{ post.body }}</div>
                 </DisclosurePanel>
                 <div class="flex justify-end">
                     <DisclosureButton class="text-blue-500 hover:text-blue-700 hover:underline">
@@ -45,7 +87,7 @@ function isImage(attachment) {
             </Disclosure>
         </div>
         <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
-            <template v-for="attachment in post.attachments" :key="attachment.id">
+            <template v-for="attachment in post.attachments || []" :key="attachment.id">
                 
                 <div class="group bg-blue-100 flex flex-col items-center justify-center text-gray-500  rounded  h-48 relative">
                     

@@ -1,52 +1,44 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import FollowingList from '@/Components/app/FollowingList.vue';
 import GroupList from '@/Components/app/GroupList.vue';
 import PostList from '@/Components/app/PostList.vue';
 import CreatePost from '@/Components/app/CreatePost.vue';
-
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 
 defineProps({
-    canLogin: {
-        type: Boolean,
-    },
-    canRegister: {
-        type: Boolean,
-    },
-    laravelVersion: {
-        type: String,
+    posts: {
+        type: Array,
         required: true,
     },
-    phpVersion: {
-        type: String,
-        required: true,
+    following: {
+        type: Array,
+        default: () => [],
     },
 });
 
-function handleImageError() {
-    document.getElementById('screenshot-container')?.classList.add('!hidden');
-    document.getElementById('docs-card')?.classList.add('!row-span-1');
-    document.getElementById('docs-card-content')?.classList.add('!flex-row');
-    document.getElementById('background')?.classList.add('!hidden');
-}
 </script>
 
 <template>
 
     <Head title="Poet Web" />
-    <div class="grid lg:grid-cols-12 gap-3 mb-3 p-4 lg:h-full">
-        <div class="lg:col-span-3 lg:order-1 overflow-hidden">
-            <GroupList />
+    <AuthenticatedLayout>
+
+        <div class="grid lg:grid-cols-12 gap-3 p-4 lg:h-[calc(100vh-4rem)] lg:overflow-hidden">
+            <div class="lg:col-span-3 lg:order-1 overflow-hidden">
+                <GroupList />
+            </div>
+            <div class="lg:col-span-3 lg:order-3 h-full overflow-auto">
+            <FollowingList :following="following" />
+            </div>
+            <div class="lg:col-span-6 lg:order-2 overflow-hidden flex flex-col">
+                <CreatePost />
+                <PostList :posts="posts" :following="following" />
+            </div>
+            
         </div>
-        <div class="lg:col-span-3 lg:order-3 h-full overflow-auto">
-           <FollowingList />
-        </div>
-        <div class="lg:col-span-6 lg:order-2 overflow-hidden flex flex-col">
-            <CreatePost />
-            <PostList />
-        </div>
-        
-    </div>
+
+    </AuthenticatedLayout>
 
 
 </template>
