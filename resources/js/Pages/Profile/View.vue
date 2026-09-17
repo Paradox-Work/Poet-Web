@@ -1,78 +1,77 @@
 <template>
-    <div class="container mx-auto bg_gray-200">
-        <div class="w-full max-w-md px-2 py-16 sm:px-0">
-    <TabGroup>
-      <TabList class="flex space-x-1 rounded-xl bg-blue-900/20 p-1">
-        <Tab
-          v-for="category in Object.keys(categories)"
-          as="template"
-          :key="category"
-          v-slot="{ selected }"
-        >
-          <button
-            :class="[
-              'w-full rounded-lg py-2.5 text-sm font-medium leading-5',
-              'ring-white/60 ring-offset-2 ring-offset-blue-400 focus:outline-none focus:ring-2',
-              selected
-                ? 'bg-white text-blue-700 shadow'
-                : 'text-blue-100 hover:bg-white/[0.12] hover:text-white',
-            ]"
-          >
-            {{ category }}
-          </button>
-        </Tab>
-      </TabList>
+  <AuthenticatedLayout>
 
-      <TabPanels class="mt-2">
-        <TabPanel
-          v-for="(posts, idx) in Object.values(categories)"
-          :key="idx"
-          :class="[
-            'rounded-xl bg-white p-3',
-            'ring-white/60 ring-offset-2 ring-offset-blue-400 focus:outline-none focus:ring-2',
-          ]"
-        >
-          <ul>
-            <li
-              v-for="post in posts"
-              :key="post.id"
-              class="relative rounded-md p-3 hover:bg-gray-100"
-            >
-              <h3 class="text-sm font-medium leading-5">
-                {{ post.title }}
-              </h3>
-
-              <ul
-                class="mt-1 flex space-x-1 text-xs font-normal leading-4 text-gray-500"
+    <div class="container mx-auto">
+        <div class="relative">
+            <img 
+                src="https://imgsrv.crunchyroll.com/cdn-cgi/image/fit=cover,format=auto,quality=85,width=1920/keyart/GRE50KV36-backdrop_wide" 
+                class="w-full h-[200px] object-cover object-top" 
+            />
+            <img 
+                src="https://i.pinimg.com/736x/a6/72/05/a67205f60f44c386f4bdfb8fab4d8bed.jpg"
+                class="absolute left-[48px] w-[128px] h-[128px] -bottom-[41px] rounded-full object-cover border-4 border-white shadow-lg"
+            />
+        </div>
+        <div>
+          <TabGroup>
+            <TabList class="pl-[200px] flex bg-white">
+              <Tab
+                as="template"
+                v-slot="{ selected }"
               >
-                <li>{{ post.date }}</li>
-                <li>&middot;</li>
-                <li>{{ post.commentCount }} comments</li>
-                <li>&middot;</li>
-                <li>{{ post.shareCount }} shares</li>
-              </ul>
+                <TabItem text="About" :selected="selected" />
+              </Tab>
+              <Tab
+                as="template"
+                v-slot="{ selected }"
+              >
+                <TabItem text="Posts" :selected="selected" />
+              </Tab>
+              <Tab
+                as="template"
+                v-slot="{ selected }"
+              >
+                <TabItem text="Followers" :selected="selected" />
+              </Tab>
+              <Tab
+                as="template"
+                v-slot="{ selected }"
+              >
+                <TabItem text="Following" :selected="selected" />
+              </Tab>
+              <Tab
+                as="template"
+                v-slot="{ selected }"
+              >
+                <TabItem text="Photos" :selected="selected" />
+              </Tab>
+            </TabList>
+           
 
-              <a
-                href="#"
-                :class="[
-                  'absolute inset-0 rounded-md',
-                  'ring-blue-400 focus:z-10 focus:outline-none focus:ring-2',
-                ]"
-              />
-            </li>
-          </ul>
-        </TabPanel>
-      </TabPanels>
-    </TabGroup>
-  </div>
+            <TabPanels class="mt-2">
+              <TabPanel
+                :key="posts" class="bg-white p-3">
+                Posts
+              </TabPanel>
+              <TabPanel
+                :key="followers" class="bg-white p-3">
+                Followers
+              </TabPanel>
+            </TabPanels>
+          </TabGroup>
+        </div>
     </div>
+    
+  </AuthenticatedLayout>
   
 </template>
 
 <script setup>
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { ref } from 'vue'
 import { TabGroup, TabList, Tab, TabPanels, TabPanel } from '@headlessui/vue'
 import { Link, useForm, usePage } from '@inertiajs/vue3';
+import TabItem from './Partials/TabItem.vue';
 
 const user = usePage().props.auth.user;
 
