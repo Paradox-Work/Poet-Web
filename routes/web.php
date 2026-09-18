@@ -11,7 +11,6 @@ Route::get('/', [HomeController::class, 'index'])
     ->middleware(['auth'])->name('dashboard');
 
 Route::get('/u/{user:username}', [ProfileController::class, 'index'])
-    ->middleware(['auth'])
     ->name('profile');
 
 

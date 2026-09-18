@@ -8,20 +8,7 @@ import CreatePost from '@/Components/app/CreatePost.vue';
 
 
 defineProps({
-    canLogin: {
-        type: Boolean,
-    },
-    canRegister: {
-        type: Boolean,
-    },
-    laravelVersion: {
-        type: String,
-        required: true,
-    },
-    phpVersion: {
-        type: String,
-        required: true,
-    },
+    posts: Object,
 });
 
 function handleImageError() {
