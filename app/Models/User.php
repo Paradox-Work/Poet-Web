@@ -13,7 +13,7 @@ use Illuminate\Notifications\Notifiable;
 use Spatie\Sluggable\HasSlug;
 use Spatie\Sluggable\SlugOptions;
 
-#[Fillable(['name', 'username', 'email', 'password'])]
+#[Fillable(['name', 'username', 'email', 'password', 'username', 'cover_path', 'avatar_path',])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -28,11 +28,10 @@ class User extends Authenticatable implements MustVerifyEmail
     protected function casts(): array
     {
         return [
-            'username',
+          
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'cover_path',
-            'avatar_path'
+            
         ];
     }
 
