@@ -12,7 +12,9 @@ class PostController extends Controller
     {
         Post::create([
             'user_id' => auth()->id(),
-            'body'    => $request->validated('body'),
+            'title' => $request->validated('title'),
+            'body' => $request->validated('body'),
+            'category' => $request->validated('category', 'general'),
         ]);
 
         return redirect()->route('dashboard');

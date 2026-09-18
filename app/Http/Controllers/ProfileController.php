@@ -14,15 +14,34 @@ use App\Models\User;
 
 class ProfileController extends Controller
 {
-
-    public function index(User $user){
-        
-     return Inertia::render('Profile/View', [
+    public function index(User $user)
+    {
+        return Inertia::render('Profile/View', [
             'mustVerifyEmail' => $user instanceof MustVerifyEmail,
             'status' => session('status'),
             'user' => $user,
+            'isFollowing' => auth()->check() ? auth()->user()->isFollowing($user) : false,
         ]);
+    }
 
+    public function toggleFollow(User $user): RedirectResponse
+    {
+        $viewer = auth()->user();
+
+        if (! $viewer || $viewer->id === $user->id) {
+            return redirect()->route('profile', $user);
+        }
+
+        $follow = $viewer->following()->firstOrNew(['user_id' => $user->id]);
+
+        if ($follow->exists) {
+            $follow->delete();
+        } else {
+            $follow->follower_id = $viewer->id;
+            $follow->save();
+        }
+
+        return redirect()->route('profile', $user);
     }
 
     /**
@@ -30,7 +49,10 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): Response
     {
-       
+        return Inertia::render('Profile/Edit', [
+            'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
+            'status' => session('status'),
+        ]);
     }
 
     /**

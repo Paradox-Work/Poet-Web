@@ -15,13 +15,19 @@
             
               <div class="flex justify-between items-center flex-1 p-4">
                 <h3 class="font-bold text-lg">{{  user.name  }}</h3>
-                <PrimaryButton v-if="isMyProfile">
+                <Link v-if="isMyProfile" :href="route('profile.edit')" class="inline-flex items-center gap-2 rounded-md bg-gray-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-900">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4 mr-2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                   </svg>
 
                   Edit Profile
-                </PrimaryButton>
+                </Link>
+                <Link v-else-if="isLoggedIn" :href="route('profile.follow', { user: user.username })" method="post" as="button" class="inline-flex items-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                  {{ isFollowing ? 'Unfollow' : 'Follow' }}
+                </Link>
+                <Link v-else :href="route('login')" class="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50">
+                  Log in to follow
+                </Link>
               </div>
             </div>
         </div>
@@ -98,7 +104,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { computed } from 'vue';
 import { TabGroup, TabList, Tab, TabPanels, TabPanel } from '@headlessui/vue';
-import { usePage } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import TabItem from './Partials/TabItem.vue';
 import Edit from './Edit.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
@@ -114,6 +120,9 @@ const authUser = usePage().props.auth.user;
 const isMyProfile = computed(() =>
     authUser && authUser.id === props.user.id
 );
+
+const isLoggedIn = computed(() => !!authUser);
+const isFollowing = computed(() => !!props.user?.isFollowing);
 </script>
 
 

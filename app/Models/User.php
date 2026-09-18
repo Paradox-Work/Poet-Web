@@ -41,4 +41,19 @@ class User extends Authenticatable implements MustVerifyEmail
             ->usingSeparator('')
             ->doNotGenerateSlugsOnUpdate();
     }
+
+    public function followers()
+    {
+        return $this->hasMany(Follower::class, 'user_id');
+    }
+
+    public function following()
+    {
+        return $this->hasMany(Follower::class, 'follower_id');
+    }
+
+    public function isFollowing(User $user): bool
+    {
+        return $this->following()->where('user_id', $user->id)->exists();
+    }
 }

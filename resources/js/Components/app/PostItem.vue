@@ -1,5 +1,5 @@
 <script setup>
-import { useForm } from '@inertiajs/vue3';
+import { Link, router, useForm } from '@inertiajs/vue3';
 import { reactive } from 'vue';
 
 const props = defineProps({
@@ -21,14 +21,31 @@ function submitComment(postId) {
 
     form.post(route('posts.comments.store', postId), {
         preserveScroll: true,
-        onSuccess: () => form.reset(),
+        onSuccess: () => {
+            form.reset();
+            router.reload({ only: ['posts'] });
+        },
     });
 }
 </script>
 
 <template>
     <div class="mb-3 rounded border bg-white p-4 shadow-sm">
-        <div class="mb-3 flex items-center gap-3">
+        <Link
+            v-if="post.user?.username"
+            :href="route('profile', { username: post.user.username })"
+            class="mb-3 flex items-center gap-3 hover:opacity-90"
+        >
+            <div class="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 font-bold text-indigo-700">
+                {{ post.user?.name?.charAt(0)?.toUpperCase() || 'U' }}
+            </div>
+            <div>
+                <div class="font-semibold text-gray-800">{{ post.user?.name || 'Unknown author' }}</div>
+                <div class="text-xs text-gray-500">{{ post.created_at }}</div>
+            </div>
+        </Link>
+
+        <div v-else class="mb-3 flex items-center gap-3">
             <div class="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 font-bold text-indigo-700">
                 {{ post.user?.name?.charAt(0)?.toUpperCase() || 'U' }}
             </div>
