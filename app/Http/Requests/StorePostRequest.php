@@ -15,25 +15,16 @@ class StorePostRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'body'         => ['required', 'string', 'min:1', 'max:10000'],
-            'user_id'      => ['numeric'],
-            'title'        => ['required', 'string', 'max:255'],
-            'slug'         => ['required', 'string', 'max:255'],
-            'published_at' => ['required', 'date'],
+            'body' => ['nullable', 'string'],
+            'user_id' => ['numeric']
         ];
     }
 
     protected function prepareForValidation()
     {
-        $body = $this->input('body', '');
-        $title = Str::limit($body, 50);
-        $slug = Str::slug($title) . '-' . uniqid();
-
+        // Add your custom key to the request data
         $this->merge([
-            'user_id'      => auth()->id(),
-            'title'        => $title,
-            'slug'         => $slug,
-            'published_at' => now(),
+            'user_id' => auth()->user()->id,
         ]);
     }
 }

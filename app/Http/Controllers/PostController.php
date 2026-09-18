@@ -9,7 +9,6 @@ use App\Http\Requests\UpdatePostRequest;
 
 class PostController extends Controller
 {
-   
 
     /**
      * Store a newly created resource in storage.
