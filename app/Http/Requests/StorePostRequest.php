@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Str;
 
 class StorePostRequest extends FormRequest
 {
@@ -12,28 +12,24 @@ class StorePostRequest extends FormRequest
         return true;
     }
 
+    /**
+     * @return array<string, ValidationRule|array<mixed>|string>
+     */
     public function rules(): array
     {
         return [
-            'body'         => ['required', 'string', 'min:1', 'max:10000'],
-            'user_id'      => ['numeric'],
-            'title'        => ['required', 'string', 'max:255'],
-            'slug'         => ['required', 'string', 'max:255'],
-            'published_at' => ['required', 'date'],
+            'title' => ['required', 'string', 'max:255'],
+            'body' => ['required', 'string'],
+            'category' => ['nullable', 'string', 'max:100'],
+            'user_id' => ['required', 'numeric'],
         ];
     }
 
-    protected function prepareForValidation()
+    protected function prepareForValidation(): void
     {
-        $body = $this->input('body', '');
-        $title = Str::limit($body, 50);
-        $slug = Str::slug($title) . '-' . uniqid();
-
         $this->merge([
-            'user_id'      => auth()->id(),
-            'title'        => $title,
-            'slug'         => $slug,
-            'published_at' => now(),
+            'user_id' => auth()->id(),
+            'category' => $this->input('category', 'general'),
         ]);
     }
 }

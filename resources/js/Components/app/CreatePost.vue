@@ -1,49 +1,72 @@
 <script setup>
 import { ref } from 'vue';
-import TextInputArea from '../TextInputArea.vue';
 import { useForm } from '@inertiajs/vue3';
 
-const postCreating = ref(false); 
+const postCreating = ref(false);
 const newPostForm = useForm({
-    body: ''
-})
+    title: '',
+    body: '',
+    category: 'general',
+});
 
-function submit(){
+function submit() {
     newPostForm.post(route('post.create'), {
+        preserveScroll: true,
         onSuccess: () => {
-            newPostForm.reset()
-        }
-    })
+            newPostForm.reset();
+            postCreating.value = false;
+        },
+    });
 }
-
 </script>
 
 <template>
+    <div class="bg-white border rounded p-4 mb-3 shadow-sm">
+        <div class="mb-3">
+            <input
+                v-model="newPostForm.title"
+                type="text"
+                placeholder="Poem title"
+                class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+            />
+            <div v-if="newPostForm.errors.title" class="mt-1 text-xs text-red-600">
+                {{ newPostForm.errors.title }}
+            </div>
+        </div>
 
-<div>
-    <div class="bg-white border rounded p-4 mb-3">
+        <div class="mb-3">
+            <select
+                v-model="newPostForm.category"
+                class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+            >
+                <option value="general">General</option>
+                <option value="love">Love</option>
+                <option value="nature">Nature</option>
+                <option value="sadness">Sadness</option>
+                <option value="inspiration">Inspiration</option>
+            </select>
+        </div>
 
-        <TextInputArea @click="postCreating = true" 
-            class="mb-3 w-full" 
-            placeholder="Click here to create a new post" 
-            rows="1" 
+        <textarea
             v-model="newPostForm.body"
+            rows="4"
+            placeholder="Write your poem..."
+            class="mb-3 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+            @focus="postCreating = true"
         />
-        <pre>{{newPostForm.body}}</pre>
-        <div v-if="postCreating" class="flex gap-2 justify-between">
-            <button type="button" class="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 relative">
-                Attach files
-                <input type="file" class="absolute inset-0 w-full h-full opacity-0" />
-            </button>
-            <button @click="submit" type="submit" class="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                Save
+
+        <div v-if="newPostForm.errors.body" class="mb-2 text-xs text-red-600">
+            {{ newPostForm.errors.body }}
+        </div>
+
+        <div v-if="postCreating" class="flex justify-end">
+            <button
+                @click="submit"
+                type="button"
+                class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500"
+            >
+                Publish poem
             </button>
         </div>
     </div>
-</div>
-
 </template>
-
-<style scoped>
-
-</style>
