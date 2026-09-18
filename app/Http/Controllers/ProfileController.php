@@ -87,14 +87,12 @@ class ProfileController extends Controller
         $success = '';
 
         if ($cover) {
-                if ($user->cover_path) {
+            if ($user->cover_path) {
                 Storage::disk('public')->delete($user->cover_path);
-            }}
-           
-
-        $path = $cover->store('user-'.$user->id, 'public');
-        $user->update(['cover_path' => $path]);
-        $success = 'Your cover image was updated';
+            }
+            $path = $cover->store('user-'.$user->id, 'public');
+            $user->update(['cover_path' => $path]);
+            $success = 'Your cover image was updated';
         }
 
         if ($avatar) {
