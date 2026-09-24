@@ -22,7 +22,9 @@ class PostResource extends JsonResource
      
             'user' => new UserResource($this->user),
             'group' => $this->group,
-            'attachments' => $this->attachments,
+            'attachments' => PostAttachmentResource::collection(
+                $this->attachments
+            ),
         ];
     }
 }

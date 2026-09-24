@@ -126,6 +126,7 @@
                                 <div class="flex gap-2 py-3 px-4">
 
                                     <label
+                                        v-if="!form.id"
                                         class="cursor-pointer flex items-center justify-center rounded-md bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-200 flex-1"
                                     >
 
@@ -219,7 +220,8 @@ const attachmentFiles = ref([]);
 
 const form = useForm({
     id: null,
-    body: ''
+    body: '',
+    attachments: []
 });
 
 
@@ -309,8 +311,13 @@ function removeFile(fileToRemove) {
 
 function submit() {
 
+    form.attachments = attachmentFiles.value.map(
+        myFile => myFile.file
+    );
+
     const options = {
         preserveScroll: true,
+        forceFormData: true,
 
         onSuccess: () => {
             show.value = false;

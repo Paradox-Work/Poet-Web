@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Post;
+use App\Models\PostAttachment;
 use Illuminate\Http\Request;
 use App\Http\Requests\StorePostRequest;
 use App\Http\Requests\UpdatePostRequest;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class PostController extends Controller
 {
@@ -17,7 +20,78 @@ class PostController extends Controller
     {
         $data = $request->validated();
 
-        Post::create($data);
+        $user = $request->user();
+
+
+        $files = $data['attachments'] ?? [];
+
+        unset($data['attachments']);
+
+
+        DB::beginTransaction();
+
+
+        $storedPaths = [];
+
+
+        try {
+
+            $post = Post::create($data);
+
+
+            foreach ($files as $file) {
+
+                $path = $file->store(
+                    'attachments/' . $post->id,
+                    'public'
+                );
+
+
+                $storedPaths[] = $path;
+
+
+                PostAttachment::create([
+                    'post_id' => $post->id,
+
+                    'name' =>
+                        $file->getClientOriginalName(),
+
+                    'path' => $path,
+
+                    'url' =>
+                        Storage::disk('public')->url($path),
+
+                    'mime' =>
+                        $file->getMimeType(),
+
+                    'size' =>
+                        $file->getSize(),
+
+                    'created_by' =>
+                        $user->id,
+                ]);
+
+            }
+
+
+            DB::commit();
+
+        } catch (\Throwable $exception) {
+
+            foreach ($storedPaths as $path) {
+
+                Storage::disk('public')->delete(
+                    $path
+                );
+
+            }
+
+
+            DB::rollBack();
+
+
+            throw $exception;
+        }
 
         return back();
     }
