@@ -53,7 +53,9 @@ watch(
 
         editor.value.commands.setContent(
             value || '',
-            false
+            {
+                emitUpdate: false
+            }
         );
     }
 );

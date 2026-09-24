@@ -53,7 +53,7 @@
                                     class="flex items-center justify-between py-3 px-4 font-medium bg-gray-100 text-gray-900"
                                 >
 
-                                    Update Post
+                                    {{ form.id ? 'Update Post' : 'Create Post' }}
 
                                     <button
                                         @click="closeModal"
@@ -88,7 +88,9 @@
                                         class="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 w-full"
                                         @click="submit"
                                     >
-                                        Save Changes
+
+                                        {{ form.id ? 'Save Changes' : 'Publish Post' }}
+
                                     </button>
 
                                 </div>
@@ -151,6 +153,7 @@ const emit = defineEmits([
 
 
 const form = useForm({
+    id: null,
     body: ''
 });
 
@@ -167,9 +170,21 @@ const show = computed({
 
 
 watch(
-    () => props.post,
-    () => {
-        form.body = props.post.body ?? '';
+    [
+        () => props.post,
+        () => props.modelValue
+    ],
+    ([post, isOpen]) => {
+
+        if (!isOpen || !post) {
+            return;
+        }
+
+        form.id = post.id ?? null;
+        form.body = post.body ?? '';
+    },
+    {
+        immediate: true
     }
 );
 
@@ -181,16 +196,31 @@ function closeModal() {
 
 function submit() {
 
-    form.put(
-        route('post.update', props.post.id),
-        {
-            preserveScroll: true,
+    const options = {
+        preserveScroll: true,
 
-            onSuccess: () => {
-                show.value = false;
-            }
+        onSuccess: () => {
+            show.value = false;
+            form.reset();
         }
-    );
+    };
+
+
+    if (form.id) {
+
+        form.put(
+            route('post.update', form.id),
+            options
+        );
+
+    } else {
+
+        form.post(
+            route('post.create'),
+            options
+        );
+
+    }
 
 }
 
