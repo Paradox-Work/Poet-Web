@@ -13,20 +13,34 @@ Route::get('/', [HomeController::class, 'index'])
 Route::get('/u/{user:username}', [ProfileController::class, 'index'])
     ->name('profile');
 
-Route::post('/posts', [\App\Http\Controllers\PostController::class, 'store'])
-    ->name('post.create');
-
 Route::middleware('auth')->group(function () {
-    Route::post('/profile/update-images', [ProfileController::class, 'updateImage'])
-        ->name('profile.updateImages');
+    
+    Route::post(
+        \'/posts', 
+        [\App\Http\Controllers\PostController::class, 'store']
+    )->name('post.create');
+
+    Route::put(
+        '/posts/{post}',
+        [\App\Http\Controllers\PostController::class, 'update']
+    )->name('post.update');
+    
+    Route::post(
+        '/profile/update-images',
+         [ProfileController::class, 'updateImage']
+    )->name('profile.updateImages');
 
 //   Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
 
-    Route::patch('/profile', [ProfileController::class, 'update'])
-        ->name('profile.update');
+    Route::patch(
+        '/profile',
+         [ProfileController::class, 'update']
+    )->name('profile.update');
 
-    Route::delete('/profile', [ProfileController::class, 'destroy'])
-        ->name('profile.destroy');
+    Route::delete(
+        '/profile',
+         [ProfileController::class, 'destroy']
+    )->name('profile.destroy');
 });
 
 require __DIR__.'/auth.php';
