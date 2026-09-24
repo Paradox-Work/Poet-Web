@@ -16,7 +16,7 @@ import {
 
 import PostUserHeader from '@/Components/app/PostUserHeader.vue';
 
-defineProps({
+const props = defineProps({
     post: Object,
 });
 

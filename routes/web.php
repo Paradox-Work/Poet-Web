@@ -16,7 +16,7 @@ Route::get('/u/{user:username}', [ProfileController::class, 'index'])
 Route::middleware('auth')->group(function () {
     
     Route::post(
-        \'/posts', 
+        '/posts', 
         [\App\Http\Controllers\PostController::class, 'store']
     )->name('post.create');
 
