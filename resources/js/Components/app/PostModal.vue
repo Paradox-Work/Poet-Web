@@ -75,9 +75,8 @@
                                         class="mb-4"
                                     />
 
-                                    <TextInputArea
+                                    <TiptapEditor
                                         v-model="form.body"
-                                        class="mb-3 w-full"
                                     />
 
                                 </div>
@@ -130,7 +129,7 @@ import { XMarkIcon } from '@heroicons/vue/24/solid';
 
 import { useForm } from '@inertiajs/vue3';
 
-import TextInputArea from '@/Components/TextInputArea.vue';
+import TiptapEditor from '@/Components/app/TiptapEditor.vue';
 import PostUserHeader from '@/Components/app/PostUserHeader.vue';
 
 

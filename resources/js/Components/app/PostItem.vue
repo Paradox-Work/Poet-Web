@@ -17,9 +17,20 @@ import {
 
 import PostUserHeader from '@/Components/app/PostUserHeader.vue';
 import { router } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 const props = defineProps({
     post: Object,
+});
+
+const plainBody = computed(() => {
+
+    const body = props.post.body ?? '';
+
+    return body
+        .replace(/<[^>]*>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
 });
 
 const emit = defineEmits([
@@ -132,30 +143,42 @@ function deletePost() {
 
         </div>
         <div class="mb-3">
-            <Disclosure v-slot="{ open }">
 
-                <div
-                    v-if="!open"
-                    v-html="post.body.substring(0, 200)"
-                />
+            <Disclosure
+                v-if="plainBody.length > 200"
+                v-slot="{ open }"
+            >
 
-                <template v-if="post.body.length > 200">
+                <div v-if="!open">
+                    {{ plainBody.substring(0, 200) }}...
+                </div>
 
-                    <DisclosurePanel>
-                        <div v-html="post.body" />
-                    </DisclosurePanel>
+                <DisclosurePanel>
+                    <div
+                        class="rich-text-output"
+                        v-html="post.body"
+                    />
+                </DisclosurePanel>
 
-                    <div class="flex justify-end">
-                        <DisclosureButton
-                            class="text-blue-500 hover:text-blue-700 hover:underline"
-                        >
-                            {{ open ? 'Display less' : 'Display more' }}
-                        </DisclosureButton>
-                    </div>
+                <div class="flex justify-end">
 
-                </template>
+                    <DisclosureButton
+                        class="text-blue-500 hover:text-blue-700 hover:underline"
+                    >
+                        {{ open ? 'Display less' : 'Display more' }}
+                    </DisclosureButton>
+
+                </div>
 
             </Disclosure>
+
+
+            <div
+                v-else
+                class="rich-text-output"
+                v-html="post.body"
+            />
+
         </div>
         <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
             <template v-for="attachment in post.attachments" :key="attachment.id">
