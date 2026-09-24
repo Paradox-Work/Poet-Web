@@ -18,6 +18,7 @@ import {
 import PostUserHeader from '@/Components/app/PostUserHeader.vue';
 import { router } from '@inertiajs/vue3';
 import { computed } from 'vue';
+import { isImage } from '@/helpers.js';
 
 const props = defineProps({
     post: Object,
@@ -36,11 +37,6 @@ const plainBody = computed(() => {
 const emit = defineEmits([
     'editClick'
 ]);
-
-function isImage(attachment) {
-    const mime = attachment.mime.split('/');
-    return mime[0].toLowerCase() === 'image';
-}
 
 function openEditModal() {
     emit('editClick', props.post);

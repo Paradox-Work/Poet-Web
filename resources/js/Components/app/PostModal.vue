@@ -79,13 +79,73 @@
                                         v-model="form.body"
                                     />
 
+                                    <div
+                                        v-if="attachmentFiles.length"
+                                        class="grid grid-cols-2 lg:grid-cols-3 gap-3 mt-4"
+                                    >
+
+                                        <div
+                                            v-for="(myFile, index) in attachmentFiles"
+                                            :key="`${myFile.file.name}-${index}`"
+                                            class="group aspect-square bg-gray-100 rounded-md flex flex-col items-center justify-center text-gray-500 relative overflow-hidden"
+                                        >
+
+                                            <button
+                                                type="button"
+                                                @click="removeFile(myFile)"
+                                                class="absolute z-20 right-2 top-2 w-7 h-7 flex items-center justify-center bg-black/40 text-white rounded-full hover:bg-black/60"
+                                            >
+                                                <XMarkIcon class="h-5 w-5" />
+                                            </button>
+
+
+                                            <img
+                                                v-if="isImage(myFile.file)"
+                                                :src="myFile.url"
+                                                :alt="myFile.file.name"
+                                                class="w-full h-full object-cover"
+                                            />
+
+
+                                            <template v-else>
+
+                                                <PaperClipIcon class="w-10 h-10 mb-3" />
+
+                                                <small class="text-center px-2 break-all">
+                                                    {{ myFile.file.name }}
+                                                </small>
+
+                                            </template>
+
+                                        </div>
+
+                                    </div>
+
                                 </div>
 
-                                <div class="py-3 px-4">
+                                <div class="flex gap-2 py-3 px-4">
+
+                                    <label
+                                        class="cursor-pointer flex items-center justify-center rounded-md bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-200 flex-1"
+                                    >
+
+                                        <PaperClipIcon class="w-4 h-4 mr-2" />
+
+                                        Attach Files
+
+                                        <input
+                                            type="file"
+                                            multiple
+                                            class="hidden"
+                                            @change="onAttachmentChoose"
+                                        />
+
+                                    </label>
+
 
                                     <button
                                         type="button"
-                                        class="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 w-full"
+                                        class="flex items-center justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 flex-1"
                                         @click="submit"
                                     >
 
@@ -116,6 +176,7 @@
 
 import {
     computed,
+    ref,
     watch
 } from 'vue';
 
@@ -127,13 +188,16 @@ import {
     DialogTitle
 } from '@headlessui/vue';
 
-import { XMarkIcon } from '@heroicons/vue/24/solid';
+import { 
+    XMarkIcon,
+    PaperClipIcon
+        } from '@heroicons/vue/24/solid';
 
 import { useForm } from '@inertiajs/vue3';
 
 import TiptapEditor from '@/Components/app/TiptapEditor.vue';
 import PostUserHeader from '@/Components/app/PostUserHeader.vue';
-
+import { isImage } from '@/helpers.js';
 
 const props = defineProps({
 
@@ -151,6 +215,7 @@ const emit = defineEmits([
     'update:modelValue'
 ]);
 
+const attachmentFiles = ref([]);
 
 const form = useForm({
     id: null,
@@ -191,8 +256,56 @@ watch(
 
 function closeModal() {
     show.value = false;
+
+    form.reset();
+    attachmentFiles.value = [];
 }
 
+async function onAttachmentChoose(event) {
+
+    for (const file of event.target.files) {
+
+        attachmentFiles.value.push({
+            file,
+            url: await readFile(file)
+        });
+
+    }
+
+    event.target.value = '';
+}
+
+
+function readFile(file) {
+
+    return new Promise((resolve, reject) => {
+
+        if (!isImage(file)) {
+            resolve(null);
+            return;
+        }
+
+        const reader = new FileReader();
+
+        reader.onload = () => {
+            resolve(reader.result);
+        };
+
+        reader.onerror = reject;
+
+        reader.readAsDataURL(file);
+    });
+}
+
+
+function removeFile(fileToRemove) {
+
+    attachmentFiles.value =
+        attachmentFiles.value.filter(
+            file => file !== fileToRemove
+        );
+
+}
 
 function submit() {
 
@@ -202,6 +315,7 @@ function submit() {
         onSuccess: () => {
             show.value = false;
             form.reset();
+            attachmentFiles.value = [];
         }
     };
 
