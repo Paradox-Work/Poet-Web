@@ -24,6 +24,11 @@ Route::middleware('auth')->group(function () {
         '/posts/{post}',
         [\App\Http\Controllers\PostController::class, 'update']
     )->name('post.update');
+
+    Route::delete(
+        '/posts/{post}',
+        [\App\Http\Controllers\PostController::class, 'destroy']
+    )->name('post.destroy');
     
     Route::post(
         '/profile/update-images',
