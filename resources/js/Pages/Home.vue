@@ -34,7 +34,7 @@ function handleImageError() {
             </div>
             <div class="lg:col-span-6 lg:order-2 overflow-hidden flex flex-col">
                 <CreatePost />
-                <PostList />
+                <PostList :posts="posts.data" />
             </div>
             
         </div>
