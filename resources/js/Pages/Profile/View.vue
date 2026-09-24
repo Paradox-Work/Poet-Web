@@ -85,26 +85,12 @@
             
               <div class="flex justify-between items-center flex-1 p-4">
                 <h3 class="font-bold text-lg">{{  user.name  }}</h3>
-                <PrimaryButton v-if="isMyProfile">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4 mr-2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-                  </svg>
-
-                  Edit Profile
-                </PrimaryButton>
               </div>
             </div>
         </div>
         <div class="border-t">
           <TabGroup>
             <TabList class="flex bg-white pl-4 md:pl-[200px]">
-              <Tab
-                v-if="isMyProfile"
-                as="template"
-                v-slot="{ selected }"
-              >
-                <TabItem text="About" :selected="selected" />
-              </Tab>
               <Tab
                 as="template"
                 v-slot="{ selected }"
@@ -129,16 +115,17 @@
               >
                 <TabItem text="Photos" :selected="selected" />
               </Tab>
+              <Tab
+                v-if="isMyProfile"
+                as="template"
+                v-slot="{ selected }"
+                >
+                <TabItem text="My Profile" :selected="selected" />
+            </Tab>
             </TabList>
            
 
             <TabPanels class="mt-2">
-              <TabPanel
-                class=""
-                v-if="isMyProfile"
-                >
-                <Edit :must-verify-email="mustVerifyEmail" :status="status"/>
-              </TabPanel>
               <TabPanel
                  class="bg-white p-3">
                 Posts
@@ -154,6 +141,9 @@
               <TabPanel
                  class="bg-white p-3">
                 Photos
+              </TabPanel>
+              <TabPanel v-if="isMyProfile">
+                <Edit :must-verify-email="mustVerifyEmail" :status="status"/>
               </TabPanel>
             </TabPanels>
           </TabGroup>
