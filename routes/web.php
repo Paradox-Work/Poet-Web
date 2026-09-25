@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\GroupController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -60,6 +61,10 @@ Route::middleware('auth')->group(function () {
         [\App\Http\Controllers\PostController::class, 'deleteComment']
     )->name('post.comment.delete');
     
+    Route::post(
+        '/groups',
+        [GroupController::class, 'store']
+    )->name('group.create');
 //   Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
 
     Route::patch(
