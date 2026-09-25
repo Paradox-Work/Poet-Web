@@ -35,8 +35,17 @@ const plainBody = computed(() => {
 });
 
 const emit = defineEmits([
-    'editClick'
+    'editClick',
+    'attachmentClick'
 ]);
+
+function openAttachment(index) {
+    emit(
+        'attachmentClick',
+        props.post,
+        index
+    );
+}
 
 function openEditModal() {
     emit('editClick', props.post);
@@ -177,13 +186,17 @@ function deletePost() {
 
         </div>
         <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
-            <template v-for="attachment in post.attachments" :key="attachment.id">
+            <template v-for="(attachment, index) in post.attachments" :key="attachment.id">
                 
-                <div class="group bg-blue-100 flex flex-col items-center justify-center text-gray-500  rounded  h-48 relative">
+                <div 
+                    @click="openAttachment(index)" 
+                    class="group bg-blue-100 flex flex-col items-center justify-center text-gray-500 rounded h-48 relative cursor-pointer"
+                >
                     
                     <!---Download-->
                     <a
                         :href="route('post.download', attachment.id)"
+                        @click.stop
                         class="z-20 opacity-0 group-hover:opacity-100 transition-all w-8 h-8 flex items-center justify-center text-gray-100 bg-gray-600 rounded absolute right-2 top-2 hover:bg-gray-800"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-gray-400 hover:text-white">
