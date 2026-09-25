@@ -21,14 +21,25 @@ import {
     ref
 } from 'vue';
 
+import {
+    router,
+    usePage
+} from '@inertiajs/vue3';
+
 import PostUserHeader from '@/Components/app/PostUserHeader.vue';
-import { router } from '@inertiajs/vue3';
 import axios from 'axios';
 import { isImage } from '@/helpers.js';
 
 const props = defineProps({
     post: Object,
 });
+
+const authUser =
+    usePage().props.auth.user;
+
+const newCommentText = ref('');
+
+const commentPending = ref(false);
 
 const plainBody = computed(() => {
 
@@ -109,6 +120,48 @@ async function sendReaction() {
     }
 }
 
+async function createComment() {
+
+        const comment =
+            newCommentText.value.trim();
+
+        if (!comment || commentPending.value) {
+            return;
+        }
+
+        commentPending.value = true;
+
+        try {
+
+            const { data } =
+                await axios.post(
+                    route(
+                        'post.comment.create',
+                        props.post.id
+                    ),
+                    {
+                        comment
+                    }
+                );
+
+            props.post.comments.unshift(data);
+
+            props.post.num_of_comments++;
+
+            newCommentText.value = '';
+
+        } catch (error) {
+
+            console.error(
+                'Failed to create comment:',
+                error
+            );
+
+        } finally {
+
+            commentPending.value = false;
+        }
+    }
 </script>
 
 <template>
@@ -268,43 +321,155 @@ async function sendReaction() {
                 </div>
             </template>
         </div>
-        <div class="flex gap-2 mt-3">
-            <button
-                type="button"
-                @click="sendReaction"
-                :disabled="reactionPending"
-                class="text-gray-800 flex gap-1 items-center justify-center rounded-lg py-2 px-4 flex-1 transition"
-                :class="[
-                    post.current_user_has_reaction
-                        ? 'bg-sky-100 hover:bg-sky-200'
-                        : 'bg-gray-100 hover:bg-gray-200',
+        <Disclosure v-slot="{ open }">
 
-                    reactionPending
-                        ? 'opacity-60 cursor-wait'
-                        : ''
-                ]"
-            >
-                <HandThumbUpIcon
-                    class="w-5 h-5"
+    <!-- Like + Comment buttons -->
+    <div class="flex gap-2 mt-3">
+
+        <!-- Like -->
+        <button
+            type="button"
+            @click="sendReaction"
+            :disabled="reactionPending"
+            class="text-gray-800 flex gap-1 items-center justify-center rounded-lg py-2 px-4 flex-1 transition"
+            :class="[
+                post.current_user_has_reaction
+                    ? 'bg-sky-100 hover:bg-sky-200'
+                    : 'bg-gray-100 hover:bg-gray-200',
+
+                reactionPending
+                    ? 'opacity-60 cursor-wait'
+                    : ''
+            ]"
+        >
+            <HandThumbUpIcon
+                class="w-5 h-5"
+            />
+
+            <span class="mr-1">
+                {{ post.num_of_reactions ?? 0 }}
+            </span>
+
+            {{
+                post.current_user_has_reaction
+                    ? 'Unlike'
+                    : 'Like'
+            }}
+        </button>
+
+
+        <!-- Comment -->
+        <DisclosureButton
+            class="text-gray-800 flex gap-1 items-center justify-center bg-gray-100 rounded-lg hover:bg-gray-200 py-2 px-4 flex-1"
+        >
+            <span>
+                {{ post.num_of_comments ?? 0 }}
+            </span>
+
+            Comment
+        </DisclosureButton>
+
+    </div>
+
+
+    <!-- Everything below appears when Comment is clicked -->
+    <DisclosurePanel class="mt-4">
+
+        <!-- New comment -->
+        <div class="flex gap-2 mb-4">
+
+            <img
+                v-if="authUser.avatar_url"
+                :src="authUser.avatar_url"
+                class="w-10 h-10 rounded-full object-cover"
+                alt="Your avatar"
+            />
+
+            <div class="flex flex-1 gap-2">
+
+                <textarea
+                    v-model="newCommentText"
+                    placeholder="Write a comment..."
+                    rows="2"
+                    maxlength="2000"
+                    class="flex-1 rounded-md border-gray-300 resize-none"
                 />
 
-                <span class="mr-1">
-                    {{ post.num_of_reactions ?? 0 }}
-                </span>
+                <button
+                    type="button"
+                    @click="createComment"
+                    :disabled="
+                        commentPending ||
+                        !newCommentText.trim()
+                    "
+                    class="rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-500 disabled:opacity-50"
+                >
+                    {{
+                        commentPending
+                            ? 'Posting...'
+                            : 'Submit'
+                    }}
+                </button>
 
-                {{
-                    post.current_user_has_reaction
-                        ? 'Unlike'
-                        : 'Like'
-                }}
-            </button>
-            <button class=" text-gray-800 flex gap-1 items-center justify-center py-2 px-4 bg-gray-100 hover:bg-gray-200 rounded-lg flex-1">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 0 1-.923 1.785A5.969 5.969 0 0 0 6 21c1.282 0 2.47-.402 3.445-1.087.81.22 1.668.337 2.555.337Z" />
-                </svg>
-                Comment
-            </button>
+            </div>
+
         </div>
+
+
+        <!-- Existing comments -->
+        <div
+            v-if="post.comments?.length"
+            class="space-y-4"
+        >
+            <div
+                v-for="comment in post.comments"
+                :key="comment.id"
+            >
+                <div class="flex gap-2">
+
+                    <img
+                        v-if="comment.user.avatar_url"
+                        :src="comment.user.avatar_url"
+                        class="w-10 h-10 rounded-full object-cover"
+                        alt="User avatar"
+                    />
+
+                    <div class="flex-1">
+
+                        <div class="flex items-center gap-2">
+
+                            <strong>
+                                {{ comment.user.name }}
+                            </strong>
+
+                            <small class="text-gray-400">
+                                {{ comment.created_at }}
+                            </small>
+
+                        </div>
+
+                        <p class="text-sm whitespace-pre-wrap">
+                            {{ comment.comment }}
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+
+        <div
+            v-else
+            class="text-sm text-gray-500"
+        >
+            No comments yet.
+        </div>
+
+    </DisclosurePanel>
+
+</Disclosure>
     </div>
 </template>
 

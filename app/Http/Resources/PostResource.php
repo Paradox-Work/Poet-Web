@@ -31,6 +31,14 @@ class PostResource extends JsonResource
             'current_user_has_reaction' =>
                 $this->relationLoaded('reactions')
                     && $this->reactions->isNotEmpty(),
+
+            'num_of_comments' =>
+                $this->comments_count ?? 0,
+
+            'comments' =>
+                CommentResource::collection(
+                    $this->comments
+                ),
         ];
     }
 }

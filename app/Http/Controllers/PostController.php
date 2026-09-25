@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Storage;
 use App\Enums\PostReactionEnum;
 use App\Models\PostReaction;
 use Illuminate\Validation\Rule;
+use App\Http\Resources\CommentResource;
+use App\Models\Comment;
 
 class PostController extends Controller
 {
@@ -271,4 +273,32 @@ class PostController extends Controller
                 $hasReaction,
         ]);
     }
+
+    public function createComment(
+    Request $request,
+    Post $post
+) {
+    $data = $request->validate([
+        'comment' => [
+            'required',
+            'string',
+            'max:2000',
+        ],
+    ]);
+
+    $comment = $post
+        ->comments()
+        ->create([
+            'comment' => $data['comment'],
+            'user_id' => $request->user()->id,
+        ]);
+
+    $comment->load('user');
+
+    return (
+        new CommentResource($comment)
+    )
+        ->response()
+        ->setStatusCode(201);
+}
 }

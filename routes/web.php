@@ -44,6 +44,11 @@ Route::middleware('auth')->group(function () {
         '/posts/{post}/reaction',
         [\App\Http\Controllers\PostController::class, 'postReaction']
     )->name('post.reaction');
+
+    Route::post(
+        '/posts/{post}/comments',
+        [\App\Http\Controllers\PostController::class, 'createComment']
+    )->name('post.comment.create');
     
 //   Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
 
