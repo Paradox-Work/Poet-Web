@@ -83,9 +83,22 @@
                   </div>
               </div>
             
-              <div class="flex justify-between items-center flex-1 p-4">
-                <h3 class="font-bold text-lg">{{  user.name  }}</h3>
-              </div>
+               <div>
+
+                    <h3
+                        class="font-bold text-lg"
+                    >
+                        {{ user.name }}
+                    </h3>
+
+                    <p
+                        class="text-xs text-gray-500"
+                    >
+                        {{ followerCount }}
+                        follower{{ followerCount === 1 ? '' : 's' }}
+                    </p>
+
+                </div>
             </div>
         </div>
         <div class="border-t">
@@ -163,12 +176,24 @@ import { usePage, useForm } from '@inertiajs/vue3';
 import TabItem from './Partials/TabItem.vue';
 import Edit from './Edit.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
+import DangerButton from '@/Components/DangerButton.vue';
 
 const props = defineProps({
     errors: Object,
     mustVerifyEmail: Boolean,
     status: String,
     success: String,
+
+    isCurrentUserFollower: {
+        type: Boolean,
+        default: false,
+    },
+
+    followerCount: {
+        type: Number,
+        default: 0,
+    },
+
     user: Object,
 });
 
@@ -240,6 +265,24 @@ function submitAvatarImage() {
             }, 3000)
         },
     })
+}
+
+function followUser() {
+
+    const form = useForm({
+        follow:
+            !props.isCurrentUserFollower
+    });
+
+    form.post(
+        route(
+            'user.follow',
+            props.user.id
+        ),
+        {
+            preserveScroll: true
+        }
+    );
 }
 
 </script>

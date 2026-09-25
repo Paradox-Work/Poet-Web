@@ -5,6 +5,7 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\HomeController;
 
 
@@ -75,6 +76,13 @@ Route::middleware('auth')->group(function () {
         '/groups/{group:slug}/images',
         [GroupController::class, 'updateImage']
     )->name('group.updateImages');
+
+    Route::post(
+        '/users/{user}/follow',
+        [UserController::class, 'follow']
+    )->name('user.follow');
+
+
 //   Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
 
     Route::patch(

@@ -13,19 +13,59 @@ use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 use App\Models\User;
+use App\Models\Follower;
 
 class ProfileController extends Controller
 {
 
-    public function index(User $user){
-        
-     return Inertia::render('Profile/View', [
-            'mustVerifyEmail' => $user instanceof MustVerifyEmail,
-            'status' => session('status'),
-            'success' => session('success'),
-            'user' => new UserResource($user)
-        ]);
+   public function index(User $user)
+    {
+        $currentUserId = Auth::id();
 
+        $isCurrentUserFollower =
+            $currentUserId
+                ? Follower::query()
+                    ->where(
+                        'user_id',
+                        $user->id
+                    )
+                    ->where(
+                        'follower_id',
+                        $currentUserId
+                    )
+                    ->exists()
+                : false;
+
+        $followerCount =
+            Follower::query()
+                ->where(
+                    'user_id',
+                    $user->id
+                )
+                ->count();
+
+        return Inertia::render(
+            'Profile/View',
+            [
+                'mustVerifyEmail' =>
+                    $user instanceof MustVerifyEmail,
+
+                'status' =>
+                    session('status'),
+
+                'success' =>
+                    session('success'),
+
+                'isCurrentUserFollower' =>
+                    $isCurrentUserFollower,
+
+                'followerCount' =>
+                    $followerCount,
+
+                'user' =>
+                    new UserResource($user),
+            ]
+        );
     }
 
     /**

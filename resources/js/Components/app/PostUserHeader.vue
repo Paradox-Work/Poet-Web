@@ -1,5 +1,7 @@
 <script setup>
 
+import { Link } from '@inertiajs/vue3';
+
 defineProps({
     post: {
         type: Object,
@@ -18,33 +20,43 @@ defineProps({
 
     <div class="flex items-center gap-2">
 
-        <a href="javascript:void(0)">
+        <Link
+            :href="route(
+                'profile',
+                post.user.username
+            )"
+        >
             <img
                 :src="post.user.avatar_url"
                 class="w-[40px] h-[40px] object-cover rounded-full border-2 transition-all hover:border-blue-500"
             />
-        </a>
+        </Link>
 
         <div>
 
             <h4 class="font-bold">
 
-                <a
-                    href="javascript:void(0)"
+                <Link
+                    :href="route(
+                        'profile',
+                        post.user.username
+                    )"
                     class="hover:underline"
                 >
                     {{ post.user.name }}
-                </a>
+                </Link>
 
                 <template v-if="post.group">
                     <span class="text-gray-400 mx-1">•</span>
 
-                    <a
-                        href="javascript:void(0)"
-                        class="hover:underline"
+                    <Link
+                        :href="route(
+                            'group.profile',
+                            post.group.slug
+                        )"
                     >
                         {{ post.group.name }}
-                    </a>
+                    </Link>
                 </template>
 
             </h4>
