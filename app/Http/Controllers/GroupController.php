@@ -43,6 +43,12 @@ class GroupController extends Controller
                         $user->id,
                 ]);
 
+                $group->status =
+                    GroupUserStatus::APPROVED->value;
+
+                $group->role =
+                    GroupUserRole::ADMIN->value;
+
                 return $group;
             }
         );

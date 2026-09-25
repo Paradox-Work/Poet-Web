@@ -82,7 +82,10 @@ async function submit() {
                 }
             );
 
-        emit('created', data);
+        emit(
+            'created',
+            data.data ?? data
+        );
 
         closeModal();
 

@@ -1,11 +1,24 @@
 <script setup>
 import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/vue' 
-import GroupListItems from './GroupListItems.vue';
 import { ref } from 'vue';
-
+import GroupListItems from './GroupListItems.vue';
 import GroupModal from '@/Components/app/GroupModal.vue';
 
+const props = defineProps({
+    groups: {
+        type: Array,
+        default: () => []
+    }
+});
+
 const showNewGroupModal = ref(false);
+
+const localGroups =
+    ref([...props.groups]);
+
+function onGroupCreated(group) {
+    localGroups.value.unshift(group);
+}
 
 </script>
 
@@ -25,7 +38,9 @@ const showNewGroupModal = ref(false);
 
          <!-- CHANGED: was "block flex-col min-h-0 flex-1" (block + flex conflict) -->
          <DisclosurePanel class="flex flex-col">
-            <GroupListItems />
+            <GroupListItems
+               :groups="localGroups"
+            />
          </DisclosurePanel>
       </Disclosure>
 
@@ -47,12 +62,15 @@ const showNewGroupModal = ref(false);
                New group
             </button>
          </div>
-         <GroupListItems />
+         <GroupListItems
+            :groups="localGroups"
+         />
       </div>
 
    </div>
    <GroupModal
       v-model="showNewGroupModal"
+      @created="onGroupCreated"
    />
 </template>
 
