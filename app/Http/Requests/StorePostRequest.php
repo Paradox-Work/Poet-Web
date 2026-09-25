@@ -2,8 +2,11 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\TotalAttachmentSize;
 use Illuminate\Validation\Rules\File;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\UploadedFile;
+
 class StorePostRequest extends FormRequest
 {
     public static array $extensions = [
@@ -42,9 +45,10 @@ class StorePostRequest extends FormRequest
             'attachments' => [
                 'nullable',
                 'array',
-                'max:10'
+                'max:10',
+                new TotalAttachmentSize(90),
             ],
-
+            
             'attachments.*' => [
                 'file',
 

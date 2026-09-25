@@ -6,6 +6,8 @@ use Illuminate\Validation\Rules\File;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\UploadedFile;
+use App\Rules\TotalAttachmentSize;
 
 class UpdatePostRequest extends FormRequest
 {
@@ -31,11 +33,12 @@ class UpdatePostRequest extends FormRequest
                 'nullable',
                 'string'
             ],
-
+            
             'attachments' => [
                 'nullable',
                 'array',
-                'max:10'
+                'max:10',
+                new TotalAttachmentSize(90),
             ],
 
             'attachments.*' => [

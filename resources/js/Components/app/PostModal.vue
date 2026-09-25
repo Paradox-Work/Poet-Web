@@ -284,7 +284,29 @@ const emit = defineEmits([
 
 const attachmentFiles = ref([]);
 const attachmentErrors = ref([]);
-const showExtensionsText = ref(false);
+
+const showExtensionsText = computed(() => {
+
+    for (const myFile of attachmentFiles.value) {
+
+        const file = myFile.file;
+
+        const parts = file.name.split('.');
+
+        const extension =
+            parts.length > 1
+                ? parts.pop().toLowerCase()
+                : '';
+
+        if (
+            !attachmentExtensions.includes(extension)
+        ) {
+            return true;
+        }
+    }
+
+    return false;
+});
 
 const computedAttachments = computed(() => {
 
@@ -335,7 +357,6 @@ watch(
 
         attachmentFiles.value = [];
         attachmentErrors.value = [];
-        showExtensionsText.value = false;
     },
     {
         immediate: true
@@ -349,28 +370,13 @@ function closeModal() {
     form.reset();
     attachmentFiles.value = [];
     attachmentErrors.value = [];
-    showExtensionsText.value = false;
 }
 
 async function onAttachmentChoose(event) {
 
-    showExtensionsText.value = false;
     attachmentErrors.value = [];
 
     for (const file of event.target.files) {
-
-        const parts = file.name.split('.');
-
-        const extension =
-            parts.length > 1
-                ? parts.pop().toLowerCase()
-                : '';
-
-        if (
-            !attachmentExtensions.includes(extension)
-        ) {
-            showExtensionsText.value = true;
-        }
 
         attachmentFiles.value.push({
             file,
