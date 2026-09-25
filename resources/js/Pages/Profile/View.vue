@@ -83,20 +83,45 @@
                   </div>
               </div>
             
-               <div>
+               <div
+                    class="flex justify-between items-center flex-1 p-4"
+                >
 
-                    <h3
-                        class="font-bold text-lg"
-                    >
-                        {{ user.name }}
-                    </h3>
+                    <div>
 
-                    <p
-                        class="text-xs text-gray-500"
-                    >
-                        {{ followerCount }}
-                        follower{{ followerCount === 1 ? '' : 's' }}
-                    </p>
+                        <h3
+                            class="font-bold text-lg"
+                        >
+                            {{ user.name }}
+                        </h3>
+
+                        <p
+                            class="text-xs text-gray-500"
+                        >
+                            {{ followerCount }}
+                            follower{{ followerCount === 1 ? '' : 's' }}
+                        </p>
+
+                    </div>
+
+
+                    <div v-if="!isMyProfile">
+
+                        <PrimaryButton
+                            v-if="!isCurrentUserFollower"
+                            @click="followUser"
+                        >
+                            Follow
+                        </PrimaryButton>
+
+                        <DangerButton
+                            v-else
+                            @click="followUser"
+                        >
+                            Unfollow
+                        </DangerButton>
+
+                    </div>
 
                 </div>
             </div>
