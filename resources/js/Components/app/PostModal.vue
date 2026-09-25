@@ -80,15 +80,34 @@
                                     />
 
                                     <div
-                                        v-if="attachmentFiles.length"
+                                        v-if="computedAttachments.length"
                                         class="grid grid-cols-2 lg:grid-cols-3 gap-3 mt-4"
                                     >
 
                                         <div
-                                            v-for="(myFile, index) in attachmentFiles"
-                                            :key="`${myFile.file.name}-${index}`"
+                                            v-for="(myFile, index) in computedAttachments"
+                                            :key="
+                                                myFile.file
+                                                    ? `${myFile.file.name}-${index}`
+                                                    : `existing-${myFile.id}`
+                                            "
                                             class="group aspect-square bg-gray-100 rounded-md flex flex-col items-center justify-center text-gray-500 relative overflow-hidden"
                                         >
+
+                                            <div
+                                                v-if="
+                                                    !myFile.file &&
+                                                    form.deleted_file_ids.includes(myFile.id)
+                                                "
+                                                class="absolute z-30 left-0 bottom-0 right-0 py-2 px-3 text-sm bg-black/80 text-white flex justify-between items-center"
+                                            >
+                                                To be deleted
+
+                                                <ArrowUturnLeftIcon
+                                                    @click.stop="undoDelete(myFile)"
+                                                    class="w-5 h-5 cursor-pointer"
+                                                />
+                                            </div>
 
                                             <button
                                                 type="button"
@@ -100,10 +119,15 @@
 
 
                                             <img
-                                                v-if="isImage(myFile.file)"
+                                                v-if="isImage(myFile.file ?? myFile)"
                                                 :src="myFile.url"
-                                                :alt="myFile.file.name"
-                                                class="w-full h-full object-cover"
+                                                :alt="(myFile.file ?? myFile).name"
+                                                :class="
+                                                    !myFile.file &&
+                                                    form.deleted_file_ids.includes(myFile.id)
+                                                        ? 'opacity-50'
+                                                        : ''
+                                                "
                                             />
 
 
@@ -112,7 +136,7 @@
                                                 <PaperClipIcon class="w-10 h-10 mb-3" />
 
                                                 <small class="text-center px-2 break-all">
-                                                    {{ myFile.file.name }}
+                                                    {{ (myFile.file ?? myFile).name }}
                                                 </small>
 
                                             </template>
@@ -126,7 +150,6 @@
                                 <div class="flex gap-2 py-3 px-4">
 
                                     <label
-                                        v-if="!form.id"
                                         class="cursor-pointer flex items-center justify-center rounded-md bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-200 flex-1"
                                     >
 
@@ -191,7 +214,8 @@ import {
 
 import { 
     XMarkIcon,
-    PaperClipIcon
+    PaperClipIcon,
+    ArrowUturnLeftIcon
         } from '@heroicons/vue/24/solid';
 
 import { useForm } from '@inertiajs/vue3';
@@ -218,10 +242,21 @@ const emit = defineEmits([
 
 const attachmentFiles = ref([]);
 
+const computedAttachments = computed(() => {
+
+    return [
+        ...(props.post.attachments ?? []),
+        ...attachmentFiles.value
+    ];
+
+});
+
 const form = useForm({
     id: null,
     body: '',
-    attachments: []
+    attachments: [],
+    deleted_file_ids: [],
+    _method: 'POST'
 });
 
 
@@ -249,6 +284,12 @@ watch(
 
         form.id = post.id ?? null;
         form.body = post.body ?? '';
+
+        form.deleted_file_ids = [];
+        form.attachments = [];
+        form._method = post.id ? 'PUT' : 'POST';
+
+        attachmentFiles.value = [];
     },
     {
         immediate: true
@@ -300,47 +341,70 @@ function readFile(file) {
 }
 
 
-function removeFile(fileToRemove) {
+function removeFile(myFile) {
 
-    attachmentFiles.value =
-        attachmentFiles.value.filter(
-            file => file !== fileToRemove
+    if (myFile.file) {
+
+        attachmentFiles.value =
+            attachmentFiles.value.filter(
+                file => file !== myFile
+            );
+
+        return;
+    }
+
+
+    if (
+        !form.deleted_file_ids.includes(myFile.id)
+    ) {
+        form.deleted_file_ids.push(myFile.id);
+    }
+
+}
+
+function undoDelete(myFile) {
+
+    form.deleted_file_ids =
+        form.deleted_file_ids.filter(
+            id => id !== myFile.id
         );
 
 }
 
 function submit() {
 
-    form.attachments = attachmentFiles.value.map(
-        myFile => myFile.file
-    );
+    form.attachments =
+        attachmentFiles.value.map(
+            myFile => myFile.file
+        );
 
     const options = {
         preserveScroll: true,
         forceFormData: true,
 
         onSuccess: () => {
-            show.value = false;
-            form.reset();
-            attachmentFiles.value = [];
+            closeModal();
         }
     };
 
 
     if (form.id) {
 
-        form.put(
+        form._method = 'PUT';
+
+        form.post(
             route('post.update', form.id),
             options
         );
 
     } else {
 
+        form._method = 'POST';
+
         form.post(
             route('post.create'),
             options
         );
-
     }
 
 }

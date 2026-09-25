@@ -99,9 +99,100 @@ class PostController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdatePostRequest $request, Post $post)
-    {
-        $post->update($request->validated());
+    public function update(UpdatePostRequest $request, Post $post){
+        
+        $data = $request->validated();
+
+        $user = $request->user();
+
+        $files = $data['attachments'] ?? [];
+
+        $deletedIds =
+            $data['deleted_file_ids'] ?? [];
+
+
+        $attachmentsToDelete =
+            PostAttachment::query()
+                ->where('post_id', $post->id)
+                ->whereIn('id', $deletedIds)
+                ->get();
+
+
+        $storedPaths = [];
+
+
+        DB::beginTransaction();
+
+
+        try {
+
+            $post->update([
+                'body' => $data['body'] ?? null,
+            ]);
+
+
+            foreach ($files as $file) {
+
+                $path = $file->store(
+                    'attachments/' . $post->id,
+                    'public'
+                );
+
+
+                $storedPaths[] = $path;
+
+
+                PostAttachment::create([
+                    'post_id' => $post->id,
+
+                    'name' =>
+                        $file->getClientOriginalName(),
+
+                    'path' => $path,
+
+                    'url' =>
+                        Storage::disk('public')
+                            ->url($path),
+
+                    'mime' =>
+                        $file->getMimeType(),
+
+                    'size' =>
+                        $file->getSize(),
+
+                    'created_by' =>
+                        $user->id,
+                ]);
+
+            }
+
+
+            foreach ($attachmentsToDelete as $attachment) {
+                $attachment->delete();
+            }
+
+
+            DB::commit();
+
+
+            foreach ($attachmentsToDelete as $attachment) {
+                Storage::disk('public')
+                    ->delete($attachment->path);
+            }
+
+        } catch (\Throwable $exception) {
+
+            DB::rollBack();
+
+
+            foreach ($storedPaths as $path) {
+                Storage::disk('public')
+                    ->delete($path);
+            }
+
+
+            throw $exception;
+        }
 
         return back();
     }
