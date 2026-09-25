@@ -41,25 +41,9 @@ class UpdatePostRequest extends FormRequest
             'attachments.*' => [
                 'file',
 
-                File::types([
-                    'jpg',
-                    'jpeg',
-                    'png',
-                    'gif',
-                    'webp',
-
-                    'mp3',
-                    'wav',
-                    'mp4',
-
-                    'doc',
-                    'docx',
-                    'pdf',
-                    'csv',
-                    'xls',
-                    'xlsx',
-                    'zip',
-                ])->max('25mb')
+                File::types(
+                    StorePostRequest::$extensions
+                )->max('25mb')
             ],
 
             'deleted_file_ids' => [
@@ -72,4 +56,22 @@ class UpdatePostRequest extends FormRequest
             ],
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'attachments.max' =>
+                'You may upload at most 10 attachments.',
+
+            'attachments.*.file' =>
+                'The selected attachment is not a valid file.',
+
+            'attachments.*.mimes' =>
+                'This file type is not allowed.',
+
+            'attachments.*.max' =>
+                'Each attachment must be 25 MB or smaller.',
+        ];
+    }
+
 }

@@ -1,0 +1,349 @@
+[1mdiff --git a/app/Http/Controllers/PostController.php b/app/Http/Controllers/PostController.php[m
+[1mindex 59a5d31..925857c 100644[m
+[1m--- a/app/Http/Controllers/PostController.php[m
+[1m+++ b/app/Http/Controllers/PostController.php[m
+[36m@@ -3,9 +3,12 @@[m
+ namespace App\Http\Controllers;[m
+ [m
+ use App\Models\Post;[m
+[32m+[m[32muse App\Models\PostAttachment;[m
+ use Illuminate\Http\Request;[m
+ use App\Http\Requests\StorePostRequest;[m
+ use App\Http\Requests\UpdatePostRequest;[m
+[32m+[m[32muse Illuminate\Support\Facades\DB;[m
+[32m+[m[32muse Illuminate\Support\Facades\Storage;[m
+ [m
+ class PostController extends Controller[m
+ {[m
+[36m@@ -17,7 +20,78 @@[m [mpublic function store(StorePostRequest $request)[m
+     {[m
+         $data = $request->validated();[m
+ [m
+[31m-        Post::create($data);[m
+[32m+[m[32m        $user = $request->user();[m
+[32m+[m
+[32m+[m
+[32m+[m[32m        $files = $data['attachments'] ?? [];[m
+[32m+[m
+[32m+[m[32m        unset($data['attachments']);[m
+[32m+[m
+[32m+[m
+[32m+[m[32m        DB::beginTransaction();[m
+[32m+[m
+[32m+[m
+[32m+[m[32m        $storedPaths = [];[m
+[32m+[m
+[32m+[m
+[32m+[m[32m        try {[m
+[32m+[m
+[32m+[m[32m            $post = Post::create($data);[m
+[32m+[m
+[32m+[m
+[32m+[m[32m            foreach ($files as $file) {[m
+[32m+[m
+[32m+[m[32m                $path = $file->store([m
+[32m+[m[32m                    'attachments/' . $post->id,[m
+[32m+[m[32m                    'public'[m
+[32m+[m[32m                );[m
+[32m+[m
+[32m+[m
+[32m+[m[32m                $storedPaths[] = $path;[m
+[32m+[m
+[32m+[m
+[32m+[m[32m                PostAttachment::create([[m
+[32m+[m[32m                    'post_id' => $post->id,[m
+[32m+[m
+[32m+[m[32m                    'name' =>[m
+[32m+[m[32m                        $file->getClientOriginalName(),[m
+[32m+[m
+[32m+[m[32m                    'path' => $path,[m
+[32m+[m
+[32m+[m[32m                    'url' =>[m
+[32m+[m[32m                        Storage::disk('public')->url($path),[m
+[32m+[m
+[32m+[m[32m                    'mime' =>[m
+[32m+[m[32m                        $file->getMimeType(),[m
+[32m+[m
+[32m+[m[32m                    'size' =>[m
+[32m+[m[32m                        $file->getSize(),[m
+[32m+[m
+[32m+[m[32m                    'created_by' =>[m
+[32m+[m[32m                        $user->id,[m
+[32m+[m[32m                ]);[m
+[32m+[m
+[32m+[m[32m            }[m
+[32m+[m
+[32m+[m
+[32m+[m[32m            DB::commit();[m
+[32m+[m
+[32m+[m[32m        } catch (\Throwable $exception) {[m
+[32m+[m
+[32m+[m[32m            foreach ($storedPaths as $path) {[m
+[32m+[m
+[32m+[m[32m                Storage::disk('public')->delete([m
+[32m+[m[32m                    $path[m
+[32m+[m[32m                );[m
+[32m+[m
+[32m+[m[32m            }[m
+[32m+[m
+[32m+[m
+[32m+[m[32m            DB::rollBack();[m
+[32m+[m
+[32m+[m
+[32m+[m[32m            throw $exception;[m
+[32m+[m[32m        }[m
+ [m
+         return back();[m
+     }[m
+[1mdiff --git a/app/Http/Requests/StorePostRequest.php b/app/Http/Requests/StorePostRequest.php[m
+[1mindex 82d3251..1d710ca 100644[m
+[1m--- a/app/Http/Requests/StorePostRequest.php[m
+[1m+++ b/app/Http/Requests/StorePostRequest.php[m
+[36m@@ -2,9 +2,8 @@[m
+ [m
+ namespace App\Http\Requests;[m
+ [m
+[32m+[m[32muse Illuminate\Validation\Rules\File;[m
+ use Illuminate\Foundation\Http\FormRequest;[m
+[31m-use Illuminate\Support\Str;[m
+[31m-[m
+ class StorePostRequest extends FormRequest[m
+ {[m
+     public function authorize(): bool[m
+[36m@@ -15,8 +14,44 @@[m [mpublic function authorize(): bool[m
+     public function rules(): array[m
+     {[m
+         return [[m
+[31m-            'body' => ['nullable', 'string'],[m
+[31m-            'user_id' => ['numeric'][m
+[32m+[m[32m            'body' => [[m
+[32m+[m[32m                'nullable',[m
+[32m+[m[32m                'string'[m
+[32m+[m[32m            ],[m
+[32m+[m
+[32m+[m[32m            'attachments' => [[m
+[32m+[m[32m                'nullable',[m
+[32m+[m[32m                'array',[m
+[32m+[m[32m                'max:10'[m
+[32m+[m[32m            ],[m
+[32m+[m
+[32m+[m[32m            'attachments.*' => [[m
+[32m+[m[32m                'file',[m
+[32m+[m
+[32m+[m[32m                File::types([[m
+[32m+[m[32m                    'jpg',[m
+[32m+[m[32m                    'jpeg',[m
+[32m+[m[32m                    'png',[m
+[32m+[m[32m                    'gif',[m
+[32m+[m[32m                    'webp',[m
+[32m+[m
+[32m+[m[32m                    'mp3',[m
+[32m+[m[32m                    'wav',[m
+[32m+[m[32m                    'mp4',[m
+[32m+[m
+[32m+[m[32m                    'doc',[m
+[32m+[m[32m                    'docx',[m
+[32m+[m[32m                    'pdf',[m
+[32m+[m[32m                    'csv',[m
+[32m+[m[32m                    'xls',[m
+[32m+[m[32m                    'xlsx',[m
+[32m+[m[32m                    'zip',[m
+[32m+[m[32m                ])->max('25mb')[m
+[32m+[m[32m            ],[m
+[32m+[m
+[32m+[m[32m            'user_id' => [[m
+[32m+[m[32m                'numeric'[m
+[32m+[m[32m            ][m
+         ];[m
+     }[m
+ [m
+[1mdiff --git a/app/Http/Resources/PostAttachmentResource.php b/app/Http/Resources/PostAttachmentResource.php[m
+[1mnew file mode 100644[m
+[1mindex 0000000..78fbcc9[m
+[1m--- /dev/null[m
+[1m+++ b/app/Http/Resources/PostAttachmentResource.php[m
+[36m@@ -0,0 +1,31 @@[m
+[32m+[m[32m<?php[m
+[32m+[m
+[32m+[m[32mnamespace App\Http\Resources;[m
+[32m+[m
+[32m+[m[32muse Illuminate\Http\Request;[m
+[32m+[m[32muse Illuminate\Http\Resources\Json\JsonResource;[m
+[32m+[m
+[32m+[m[32mclass PostAttachmentResource extends JsonResource[m
+[32m+[m[32m{[m
+[32m+[m[32m    /**[m
+[32m+[m[32m     * Transform the resource into an array.[m
+[32m+[m[32m     *[m
+[32m+[m[32m     * @return array<string, mixed>[m
+[32m+[m[32m     */[m
+[32m+[m[32m    public function toArray(Request $request): array[m
+[32m+[m[32m    {[m
+[32m+[m[32m         return [[m
+[32m+[m[32m            'id' => $this->id,[m
+[32m+[m
+[32m+[m[32m            'name' => $this->name,[m
+[32m+[m
+[32m+[m[32m            'mime' => $this->mime,[m
+[32m+[m
+[32m+[m[32m            'size' => $this->size,[m
+[32m+[m
+[32m+[m[32m            'url' => $this->url,[m
+[32m+[m
+[32m+[m[32m            'created_at' => $this->created_at,[m
+[32m+[m[32m        ];[m
+[32m+[m[32m    }[m
+[32m+[m[32m}[m
+[1mdiff --git a/app/Http/Resources/PostResource.php b/app/Http/Resources/PostResource.php[m
+[1mindex 149c74f..ae59b47 100644[m
+[1m--- a/app/Http/Resources/PostResource.php[m
+[1m+++ b/app/Http/Resources/PostResource.php[m
+[36m@@ -22,7 +22,9 @@[m [mpublic function toArray(Request $request): array[m
+      [m
+             'user' => new UserResource($this->user),[m
+             'group' => $this->group,[m
+[31m-            'attachments' => $this->attachments,[m
+[32m+[m[32m            'attachments' => PostAttachmentResource::collection([m
+[32m+[m[32m                $this->attachments[m
+[32m+[m[32m            ),[m
+         ];[m
+     }[m
+ }[m
+\ No newline at end of file[m
+[1mdiff --git a/app/Models/PostAttachment.php b/app/Models/PostAttachment.php[m
+[1mindex 4c1ce6e..12486b0 100644[m
+[1m--- a/app/Models/PostAttachment.php[m
+[1m+++ b/app/Models/PostAttachment.php[m
+[36m@@ -2,9 +2,22 @@[m
+ [m
+ namespace App\Models;[m
+ [m
+[32m+[m[32muse Illuminate\Database\Eloquent\Factories\HasFactory;[m
+ use Illuminate\Database\Eloquent\Model;[m
+ [m
+ class PostAttachment extends Model[m
+ {[m
+[31m-    //[m
+[32m+[m[32m    use HasFactory;[m
+[32m+[m
+[32m+[m[32m    const UPDATED_AT = null;[m
+[32m+[m
+[32m+[m[32m    protected $fillable = [[m
+[32m+[m[32m        'post_id',[m
+[32m+[m[32m        'name',[m
+[32m+[m[32m        'path',[m
+[32m+[m[32m        'url',[m
+[32m+[m[32m        'mime',[m
+[32m+[m[32m        'size',[m
+[32m+[m[32m        'created_by',[m
+[32m+[m[32m    ];[m
+ }[m
+[1mdiff --git a/database/migrations/2026_09_24_230019_add_size_to_post_attachments_table.php b/database/migrations/2026_09_24_230019_add_size_to_post_attachments_table.php[m
+[1mnew file mode 100644[m
+[1mindex 0000000..b02542c[m
+[1m--- /dev/null[m
+[1m+++ b/database/migrations/2026_09_24_230019_add_size_to_post_attachments_table.php[m
+[36m@@ -0,0 +1,25 @@[m
+[32m+[m[32m<?php[m
+[32m+[m
+[32m+[m[32muse Illuminate\Database\Migrations\Migration;[m
+[32m+[m[32muse Illuminate\Database\Schema\Blueprint;[m
+[32m+[m[32muse Illuminate\Support\Facades\Schema;[m
+[32m+[m
+[32m+[m[32mreturn new class extends Migration[m
+[32m+[m[32m{[m
+[32m+[m[32m    public function up(): void[m
+[32m+[m[32m    {[m
+[32m+[m[32m        Schema::table('post_attachments', function (Blueprint $table) {[m
+[32m+[m[32m            $table[m
+[32m+[m[32m                ->unsignedBigInteger('size')[m
+[32m+[m[32m                ->nullable()[m
+[32m+[m[32m                ->after('mime');[m
+[32m+[m[32m        });[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    public function down(): void[m
+[32m+[m[32m    {[m
+[32m+[m[32m        Schema::table('post_attachments', function (Blueprint $table) {[m
+[32m+[m[32m            $table->dropColumn('size');[m
+[32m+[m[32m        });[m
+[32m+[m[32m    }[m
+[32m+[m[32m};[m
+\ No newline at end of file[m
+[1mdiff --git a/docs/attachment-flow.md b/docs/attachment-flow.md[m
+[1mnew file mode 100644[m
+[1mindex 0000000..8cb7135[m
+[1m--- /dev/null[m
+[1m+++ b/docs/attachment-flow.md[m
+[36m@@ -0,0 +1,34 @@[m
+[32m+[m[32m# Post attachment upload flow[m
+[32m+[m
+[32m+[m[32m```mermaid[m
+[32m+[m[32mflowchart TD[m
+[32m+[m[32m    A[User selects file] --> B[PostModal][m
+[32m+[m[32m    B --> C[attachmentFiles][m
+[32m+[m[32m    C --> D[Local FileReader preview][m
+[32m+[m
+[32m+[m[32m    C --> E[form.attachments][m
+[32m+[m[32m    E --> F[Inertia FormData][m
+[32m+[m[32m    F --> G[POST /posts][m
+[32m+[m
+[32m+[m[32m    G --> H[StorePostRequest][m
+[32m+[m[32m    H --> I[PostController][m
+[32m+[m
+[32m+[m[32m    I --> J[Create Post][m
+[32m+[m[32m    I --> K[Store file on public disk][m
+[32m+[m
+[32m+[m[32m    K --> L[Create PostAttachment record][m
+[32m+[m
+[32m+[m[32m    L --> M[PostAttachmentResource][m
+[32m+[m[32m    M --> N[PostResource][m
+[32m+[m[32m    N --> O[PostItem.vue][m
+[32m+[m
+[32m+[m[32m    O --> P[Displayed attachment][m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32m## Storage[m
+[32m+[m
+[32m+[m[32mUploaded files are stored under:[m
+[32m+[m
+[32m+[m[32m`storage/app/public/attachments/{post_id}`[m
+[32m+[m
+[32m+[m[32mThe `post_attachments` database table stores metadata including the original file name, storage path, public URL, MIME type, size, uploader, and owning post.[m
+\ No newline at end of file[m
+[1mdiff --git a/resources/js/Components/app/PostModal.vue b/resources/js/Components/app/PostModal.vue[m
+[1mindex d71dd70..6358fb4 100644[m
+[1m--- a/resources/js/Components/app/PostModal.vue[m
+[1m+++ b/resources/js/Components/app/PostModal.vue[m
+[36m@@ -126,6 +126,7 @@[m
+                                 <div class="flex gap-2 py-3 px-4">[m
+ [m
+                                     <label[m
+[32m+[m[32m                                        v-if="!form.id"[m
+                                         class="cursor-pointer flex items-center justify-center rounded-md bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-200 flex-1"[m
+                                     >[m
+ [m
+[36m@@ -219,7 +220,8 @@[m [mconst attachmentFiles = ref([]);[m
+ [m
+ const form = useForm({[m
+     id: null,[m
+[31m-    body: ''[m
+[32m+[m[32m    body: '',[m
+[32m+[m[32m    attachments: [][m
+ });[m
+ [m
+ [m
+[36m@@ -309,8 +311,13 @@[m [mfunction removeFile(fileToRemove) {[m
+ [m
+ function submit() {[m
+ [m
+[32m+[m[32m    form.attachments = attachmentFiles.value.map([m
+[32m+[m[32m        myFile => myFile.file[m
+[32m+[m[32m    );[m
+[32m+[m
+     const options = {[m
+         preserveScroll: true,[m
+[32m+[m[32m        forceFormData: true,[m
+ [m
+         onSuccess: () => {[m
+             show.value = false;[m
