@@ -100,7 +100,7 @@ class PostController extends Controller
      * Update the specified resource in storage.
      */
     public function update(UpdatePostRequest $request, Post $post){
-        
+
         $data = $request->validated();
 
         $user = $request->user();
@@ -209,5 +209,12 @@ class PostController extends Controller
         $post->delete();
 
         return back();
+    }
+
+    public function downloadAttachment(PostAttachment $attachment) {
+        return Storage::disk('public')->download(
+            $attachment->path,
+            $attachment->name
+        );
     }
 }

@@ -29,6 +29,11 @@ Route::middleware('auth')->group(function () {
         '/posts/{post}',
         [\App\Http\Controllers\PostController::class, 'destroy']
     )->name('post.destroy');
+
+    Route::get(
+        '/posts/attachments/{attachment}/download',
+        [\App\Http\Controllers\PostController::class, 'downloadAttachment']
+    )->name('post.download');
     
     Route::post(
         '/profile/update-images',
