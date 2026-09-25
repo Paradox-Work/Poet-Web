@@ -3,18 +3,14 @@ import {
     Disclosure,
     DisclosureButton, 
     DisclosurePanel,
-    Menu,
-    MenuButton,
-    MenuItems,
-    MenuItem
         } from '@headlessui/vue'
         
 import {
-    PencilIcon,
-    TrashIcon,
-    EllipsisVerticalIcon,
     HandThumbUpIcon
         } from '@heroicons/vue/20/solid';
+
+import EditDeleteDropdown
+    from '@/Components/app/EditDeleteDropdown.vue';
 
 import {
     computed,
@@ -40,6 +36,12 @@ const authUser =
 const newCommentText = ref('');
 
 const commentPending = ref(false);
+
+const editingComment = ref(null);
+
+const commentUpdatePending = ref(false);
+
+const deletingCommentId = ref(null);
 
 const plainBody = computed(() => {
 
@@ -162,6 +164,118 @@ async function createComment() {
             commentPending.value = false;
         }
     }
+
+    async function deleteComment(comment) {
+
+        if (
+            !window.confirm(
+                'Are you sure you want to delete this comment?'
+            )
+        ) {
+            return;
+        }
+
+        if (deletingCommentId.value === comment.id) {
+            return;
+        }
+
+        deletingCommentId.value = comment.id;
+
+        try {
+
+            await axios.delete(
+                route(
+                    'post.comment.delete',
+                    comment.id
+                )
+            );
+
+            props.post.comments =
+                props.post.comments.filter(
+                    item => item.id !== comment.id
+                );
+
+            props.post.num_of_comments =
+                Math.max(
+                    0,
+                    props.post.num_of_comments - 1
+                );
+
+        } catch (error) {
+
+            console.error(
+                'Failed to delete comment:',
+                error
+            );
+
+        } finally {
+
+            deletingCommentId.value = null;
+        }
+    }
+
+    function startCommentEdit(comment) {
+
+            editingComment.value = {
+                id: comment.id,
+                comment: comment.comment
+            };
+        }
+
+        async function updateComment() {
+
+        if (
+            !editingComment.value ||
+            commentUpdatePending.value
+        ) {
+            return;
+        }
+
+        const comment =
+            editingComment.value.comment.trim();
+
+        if (!comment) {
+            return;
+        }
+
+        commentUpdatePending.value = true;
+
+        try {
+
+            const { data } =
+                await axios.put(
+                    route(
+                        'post.comment.update',
+                        editingComment.value.id
+                    ),
+                    {
+                        comment
+                    }
+                );
+
+            props.post.comments =
+                props.post.comments.map(
+                    currentComment =>
+                        currentComment.id === data.id
+                            ? data
+                            : currentComment
+                );
+
+            editingComment.value = null;
+
+        } catch (error) {
+
+            console.error(
+                'Failed to update comment:',
+                error
+            );
+
+        } finally {
+
+            commentUpdatePending.value = false;
+        }
+    }
+    
 </script>
 
 <template>
@@ -170,81 +284,11 @@ async function createComment() {
 
             <PostUserHeader :post="post" />
 
-            <Menu
-                as="div"
-                class="relative inline-block text-left"
-            >
-
-                <MenuButton
-                    class="w-8 h-8 rounded-full hover:bg-black/5 transition flex items-center justify-center"
-                >
-                    <EllipsisVerticalIcon class="w-5 h-5" />
-                </MenuButton>
-
-                <transition
-                    enter-active-class="transition duration-100 ease-out"
-                    enter-from-class="transform scale-95 opacity-0"
-                    enter-to-class="transform scale-100 opacity-100"
-                    leave-active-class="transition duration-75 ease-in"
-                    leave-from-class="transform scale-100 opacity-100"
-                    leave-to-class="transform scale-95 opacity-0"
-                >
-
-                    <MenuItems
-                        class="absolute right-0 mt-2 w-32 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none z-20"
-                    >
-
-                        <div class="px-1 py-1">
-
-                            <MenuItem v-slot="{ active }">
-
-                                <button
-                                    @click="openEditModal"
-                                    :class="[
-                                        active
-                                            ? 'bg-indigo-500 text-white'
-                                            : 'text-gray-900',
-
-                                        'group flex w-full items-center rounded-md px-2 py-2 text-sm'
-                                    ]"
-                                >
-
-                                    <PencilIcon class="mr-2 h-5 w-5" />
-
-                                    Edit
-
-                                </button>
-
-                            </MenuItem>
-
-                            <MenuItem v-slot="{ active }">
-
-                                <button
-                                    @click="deletePost"
-                                    :class="[
-                                        active
-                                            ? 'bg-indigo-500 text-white'
-                                            : 'text-gray-900',
-
-                                        'group flex w-full items-center rounded-md px-2 py-2 text-sm'
-                                    ]"
-                                >
-
-                                    <TrashIcon class="mr-2 h-5 w-5" />
-
-                                    Delete
-
-                                </button>
-
-                            </MenuItem>
-
-                        </div>
-
-                    </MenuItems>
-
-                </transition>
-
-            </Menu>
+            <EditDeleteDropdown
+                :user="post.user"
+                @edit="openEditModal"
+                @delete="deletePost"
+            />
 
         </div>
         <div class="mb-3">
@@ -375,57 +419,61 @@ async function createComment() {
     <!-- Everything below appears when Comment is clicked -->
     <DisclosurePanel class="mt-4">
 
-        <!-- New comment -->
-        <div class="flex gap-2 mb-4">
+            <!-- New comment -->
+            <div class="flex gap-2 mb-4">
 
-            <img
-                v-if="authUser.avatar_url"
-                :src="authUser.avatar_url"
-                class="w-10 h-10 rounded-full object-cover"
-                alt="Your avatar"
-            />
-
-            <div class="flex flex-1 gap-2">
-
-                <textarea
-                    v-model="newCommentText"
-                    placeholder="Write a comment..."
-                    rows="2"
-                    maxlength="2000"
-                    class="flex-1 rounded-md border-gray-300 resize-none"
+                <img
+                    v-if="authUser.avatar_url"
+                    :src="authUser.avatar_url"
+                    class="w-10 h-10 rounded-full object-cover"
+                    alt="Your avatar"
                 />
 
-                <button
-                    type="button"
-                    @click="createComment"
-                    :disabled="
-                        commentPending ||
-                        !newCommentText.trim()
-                    "
-                    class="rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-500 disabled:opacity-50"
-                >
-                    {{
-                        commentPending
-                            ? 'Posting...'
-                            : 'Submit'
-                    }}
-                </button>
+                <div class="flex flex-1 gap-2">
+
+                    <textarea
+                        v-model="newCommentText"
+                        placeholder="Write a comment..."
+                        rows="2"
+                        maxlength="2000"
+                        class="flex-1 rounded-md border-gray-300 resize-none"
+                    />
+
+                    <button
+                        type="button"
+                        @click="createComment"
+                        :disabled="
+                            commentPending ||
+                            !newCommentText.trim()
+                        "
+                        class="rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-500 disabled:opacity-50"
+                    >
+                        {{
+                            commentPending
+                                ? 'Posting...'
+                                : 'Submit'
+                        }}
+                    </button>
+
+                </div>
 
             </div>
 
-        </div>
 
+            <!-- Existing comments -->
+    <div
+        v-if="post.comments?.length"
+        class="space-y-4"
+    >
 
-        <!-- Existing comments -->
+        <!-- PUT THE NEW BLOCK HERE -->
         <div
-            v-if="post.comments?.length"
-            class="space-y-4"
+            v-for="comment in post.comments"
+            :key="comment.id"
         >
-            <div
-                v-for="comment in post.comments"
-                :key="comment.id"
-            >
-                <div class="flex gap-2">
+            <div class="flex justify-between gap-2">
+
+                <div class="flex gap-2 flex-1">
 
                     <img
                         v-if="comment.user.avatar_url"
@@ -443,29 +491,89 @@ async function createComment() {
                             </strong>
 
                             <small class="text-gray-400">
-                                {{ comment.created_at }}
+                                {{ comment.updated_at }}
                             </small>
 
                         </div>
-
-                        <p class="text-sm whitespace-pre-wrap">
-                            {{ comment.comment }}
-                        </p>
 
                     </div>
 
                 </div>
 
+                <EditDeleteDropdown
+                    :user="comment.user"
+                    @edit="startCommentEdit(comment)"
+                    @delete="deleteComment(comment)"
+                />
+
             </div>
-        </div>
 
 
-        <div
-            v-else
-            class="text-sm text-gray-500"
-        >
-            No comments yet.
+            <!-- Editing mode -->
+            <div
+                v-if="
+                    editingComment &&
+                    editingComment.id === comment.id
+                "
+                class="ml-12 mt-2"
+            >
+                <textarea
+                    v-model="editingComment.comment"
+                    rows="2"
+                    maxlength="2000"
+                    class="w-full rounded-md border-gray-300 resize-none"
+                />
+
+                <div class="flex justify-end gap-3 mt-2">
+
+                    <button
+                        type="button"
+                        @click="editingComment = null"
+                        class="text-gray-600 hover:underline"
+                    >
+                        Cancel
+                    </button>
+
+                    <button
+                        type="button"
+                        @click="updateComment"
+                        :disabled="
+                            commentUpdatePending ||
+                            !editingComment.comment.trim()
+                        "
+                        class="rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-500 disabled:opacity-50"
+                    >
+                        {{
+                            commentUpdatePending
+                                ? 'Updating...'
+                                : 'Update'
+                        }}
+                    </button>
+
+                </div>
+            </div>
+
+
+            <!-- Normal comment -->
+            <p
+                v-else
+                class="text-sm whitespace-pre-wrap ml-12"
+            >
+                {{ comment.comment }}
+            </p>
+
         </div>
+        <!-- NEW BLOCK ENDS HERE -->
+
+    </div>
+
+
+    <div
+        v-else
+        class="text-sm text-gray-500"
+    >
+        No comments yet.
+    </div>
 
     </DisclosurePanel>
 

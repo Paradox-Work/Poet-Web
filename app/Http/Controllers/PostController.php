@@ -14,6 +14,7 @@ use App\Models\PostReaction;
 use Illuminate\Validation\Rule;
 use App\Http\Resources\CommentResource;
 use App\Models\Comment;
+use App\Http\Requests\UpdateCommentRequest;
 
 class PostController extends Controller
 {
@@ -300,5 +301,31 @@ class PostController extends Controller
     )
         ->response()
         ->setStatusCode(201);
+}
+
+public function updateComment(UpdateCommentRequest $request, Comment $comment) {
+    $data = $request->validated();
+
+    $comment->update([
+        'comment' => $data['comment'],
+    ]);
+
+    $comment->load('user');
+
+    return new CommentResource($comment);
+}
+
+public function deleteComment(Comment $comment)
+{
+    if ($comment->user_id !== auth()->id()) {
+        abort(
+            403,
+            "You don't have permission to delete this comment."
+        );
+    }
+
+    $comment->delete();
+
+    return response()->noContent();
 }
 }

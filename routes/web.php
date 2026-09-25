@@ -50,6 +50,16 @@ Route::middleware('auth')->group(function () {
         [\App\Http\Controllers\PostController::class, 'createComment']
     )->name('post.comment.create');
     
+    Route::put(
+        '/comments/{comment}',
+        [\App\Http\Controllers\PostController::class, 'updateComment']
+    )->name('post.comment.update');
+
+    Route::delete(
+        '/comments/{comment}',
+        [\App\Http\Controllers\PostController::class, 'deleteComment']
+    )->name('post.comment.delete');
+    
 //   Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
 
     Route::patch(
