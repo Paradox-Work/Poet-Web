@@ -1,6 +1,12 @@
 <script setup>
-   import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/vue' 
-   import GroupListItems from './GroupListItems.vue';
+import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/vue' 
+import GroupListItems from './GroupListItems.vue';
+import { ref } from 'vue';
+
+import GroupModal from '@/Components/app/GroupModal.vue';
+
+const showNewGroupModal = ref(false);
+
 </script>
 
 <template>
