@@ -6,7 +6,6 @@ use Illuminate\Validation\Rules\File;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Http\UploadedFile;
 use App\Rules\TotalAttachmentSize;
 
 class UpdatePostRequest extends FormRequest

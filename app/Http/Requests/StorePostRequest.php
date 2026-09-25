@@ -5,7 +5,6 @@ namespace App\Http\Requests;
 use App\Rules\TotalAttachmentSize;
 use Illuminate\Validation\Rules\File;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Http\UploadedFile;
 
 class StorePostRequest extends FormRequest
 {

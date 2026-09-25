@@ -40,6 +40,11 @@ Route::middleware('auth')->group(function () {
          [ProfileController::class, 'updateImage']
     )->name('profile.updateImages');
 
+    Route::post(
+        '/posts/{post}/reaction',
+        [\App\Http\Controllers\PostController::class, 'postReaction']
+    )->name('post.reaction');
+    
 //   Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
 
     Route::patch(

@@ -12,12 +12,18 @@ import {
 import {
     PencilIcon,
     TrashIcon,
-    EllipsisVerticalIcon
+    EllipsisVerticalIcon,
+    HandThumbUpIcon
         } from '@heroicons/vue/20/solid';
+
+import {
+    computed,
+    ref
+} from 'vue';
 
 import PostUserHeader from '@/Components/app/PostUserHeader.vue';
 import { router } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import axios from 'axios';
 import { isImage } from '@/helpers.js';
 
 const props = defineProps({
@@ -59,6 +65,47 @@ function deletePost() {
                 preserveScroll: true
             }
         );
+    }
+}
+
+const reactionPending = ref(false);
+
+async function sendReaction() {
+
+    if (reactionPending.value) {
+        return;
+    }
+
+    reactionPending.value = true;
+
+    try {
+
+        const { data } = await axios.post(
+            route(
+                'post.reaction',
+                props.post.id
+            ),
+            {
+                reaction: 'like'
+            }
+        );
+
+        props.post.current_user_has_reaction =
+            data.current_user_has_reaction;
+
+        props.post.num_of_reactions =
+            data.num_of_reactions;
+
+    } catch (error) {
+
+        console.error(
+            'Failed to update reaction:',
+            error
+        );
+
+    } finally {
+
+        reactionPending.value = false;
     }
 }
 
@@ -222,11 +269,34 @@ function deletePost() {
             </template>
         </div>
         <div class="flex gap-2 mt-3">
-            <button class=" text-gray-800 flex gap-1 items-center justify-center py-2 px-4 bg-gray-100 hover:bg-gray-200 rounded-lg flex-1">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
-                </svg>
-                Like 
+            <button
+                type="button"
+                @click="sendReaction"
+                :disabled="reactionPending"
+                class="text-gray-800 flex gap-1 items-center justify-center rounded-lg py-2 px-4 flex-1 transition"
+                :class="[
+                    post.current_user_has_reaction
+                        ? 'bg-sky-100 hover:bg-sky-200'
+                        : 'bg-gray-100 hover:bg-gray-200',
+
+                    reactionPending
+                        ? 'opacity-60 cursor-wait'
+                        : ''
+                ]"
+            >
+                <HandThumbUpIcon
+                    class="w-5 h-5"
+                />
+
+                <span class="mr-1">
+                    {{ post.num_of_reactions ?? 0 }}
+                </span>
+
+                {{
+                    post.current_user_has_reaction
+                        ? 'Unlike'
+                        : 'Like'
+                }}
             </button>
             <button class=" text-gray-800 flex gap-1 items-center justify-center py-2 px-4 bg-gray-100 hover:bg-gray-200 rounded-lg flex-1">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">

@@ -9,6 +9,9 @@ use App\Http\Requests\StorePostRequest;
 use App\Http\Requests\UpdatePostRequest;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use App\Enums\PostReactionEnum;
+use App\Models\PostReaction;
+use Illuminate\Validation\Rule;
 
 class PostController extends Controller
 {
@@ -216,5 +219,56 @@ class PostController extends Controller
             $attachment->path,
             $attachment->name
         );
+    }
+
+    public function postReaction(
+        Request $request,
+        Post $post
+    ) {
+        $data = $request->validate([
+            'reaction' => [
+                'required',
+                Rule::enum(
+                    PostReactionEnum::class
+                ),
+            ],
+        ]);
+
+        $userId = $request->user()->id;
+
+        $reaction = PostReaction::query()
+            ->where('post_id', $post->id)
+            ->where('user_id', $userId)
+            ->first();
+
+        if ($reaction) {
+
+            $reaction->delete();
+
+            $hasReaction = false;
+
+        } else {
+
+            PostReaction::create([
+                'post_id' => $post->id,
+                'user_id' => $userId,
+                'type' => $data['reaction'],
+            ]);
+
+            $hasReaction = true;
+        }
+
+        $reactionCount =
+            PostReaction::query()
+                ->where('post_id', $post->id)
+                ->count();
+
+        return response()->json([
+            'num_of_reactions' =>
+                $reactionCount,
+
+            'current_user_has_reaction' =>
+                $hasReaction,
+        ]);
     }
 }
