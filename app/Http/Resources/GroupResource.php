@@ -2,14 +2,13 @@
 
 namespace App\Http\Resources;
 
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class GroupResource extends JsonResource
 {
-
     public function toArray(Request $request): array
     {
         return [
@@ -27,6 +26,12 @@ class GroupResource extends JsonResource
                 $this->thumbnail_path
                     ? Storage::disk('public')
                         ->url($this->thumbnail_path)
+                    : null,
+
+            'cover_url' =>
+                $this->cover_path
+                    ? Storage::disk('public')
+                        ->url($this->cover_path)
                     : null,
 
             'auto_approval' =>

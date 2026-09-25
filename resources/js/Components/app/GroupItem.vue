@@ -1,4 +1,6 @@
 <script setup>
+import { Link } from '@inertiajs/vue3';
+
 defineProps({
     group: Object
 });
@@ -7,15 +9,18 @@ defineProps({
 
 <template>
 
-    <div
-        class="mb-2 cursor-pointer hover:bg-gray-100 rounded"
+    <Link
+        :href="route(
+            'group.profile',
+            group.slug
+        )"
+        class="block mb-2 cursor-pointer hover:bg-gray-100 rounded"
     >
 
         <div
             class="flex items-start gap-2 py-2 px-2"
         >
 
-            <!-- Thumbnail -->
             <img
                 v-if="group.thumbnail_url"
                 :src="group.thumbnail_url"
@@ -23,10 +28,9 @@ defineProps({
                 alt="Group thumbnail"
             />
 
-            <!-- Temporary fallback -->
             <div
                 v-else
-                class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold"
+                class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold shrink-0"
             >
                 {{
                     group.name
@@ -42,12 +46,9 @@ defineProps({
                     class="flex justify-between gap-2"
                 >
 
-                    <h3
-                        class="font-bold truncate"
-                    >
+                    <h3 class="font-bold truncate">
                         {{ group.name }}
                     </h3>
-
 
                     <span
                         v-if="group.role === 'admin'"
@@ -67,7 +68,6 @@ defineProps({
 
                 </div>
 
-
                 <div
                     class="text-xs text-gray-500"
                 >
@@ -78,6 +78,6 @@ defineProps({
 
         </div>
 
-    </div>
+    </Link>
 
 </template>
