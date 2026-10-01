@@ -1,104 +1,92 @@
 # Attachment Size Validation
 
-Poet-Web validates attachment uploads at both the individual-file level and the complete-request level.
+## Overview
 
-The validation is shared between post creation and post editing so both operations follow the same upload restrictions.
+Poet-Web validates attachment uploads at both the individual-file level and the request level.
 
-## Validation limits
+The same rules are used for post creation and post editing.
 
-Current application limits:
+---
+
+## Application Limits
+
+The current Laravel validation rules are:
 
 ```text
-Maximum attachments:       10
-Maximum individual size:   25 MB
-Maximum combined size:     90 MB
+Maximum newly uploaded files per request: 10
+Maximum size of one uploaded file:        25 MB
+Maximum combined size per request:        90 MB
 ```
 
-These are application-level Laravel restrictions.
+These limits apply to the files contained in the current request.
 
-The development PHP environment currently allows larger individual uploads and a `100M` POST request, so the 90 MB application limit stays below the PHP request limit.
+During post editing, attachments that are already stored in the database are not uploaded again and therefore are not included in the request-level count or combined-size calculation.
 
-## Validation structure
+This means a post can theoretically end up containing more than ten stored attachments across multiple edit operations, because `max:10` limits only the new `attachments` array submitted in one request.
+
+---
+
+## Validation Flow
 
 ```mermaid
 flowchart TD
-    A[User submits attachments] --> B[Laravel receives attachments]
+    A[User submits attachments]
+    B[Laravel receives attachments array]
+    C{More than 10 newly uploaded files?}
+    D[Return array-level validation error]
+    E[TotalAttachmentSize rule]
+    F[Calculate combined size]
+    G{More than 90 MB?}
+    H[Validate each file]
+    I{Allowed type and <= 25 MB?}
+    J[Return per-file validation error]
+    K[Validation succeeds]
+    L[PostController processes upload]
 
-    B --> C[Validate attachments array]
-
-    C --> D{More than 10 files?}
-    D -->|Yes| E[Return attachments validation error]
-    D -->|No| F[TotalAttachmentSize rule]
-
-    F --> G[Calculate combined file size]
-    G --> H{Total greater than 90 MB?}
-
-    H -->|Yes| E
-    H -->|No| I[Validate each attachment]
-
-    I --> J{Valid file type?}
-    J -->|No| K[Return individual attachment error]
-    J -->|Yes| L{File greater than 25 MB?}
-
-    L -->|Yes| K
-    L -->|No| M[Validation succeeds]
-
-    M --> N[Controller processes upload]
+    A --> B
+    B --> C
+    C -- Yes --> D
+    C -- No --> E
+    E --> F
+    F --> G
+    G -- Yes --> D
+    G -- No --> H
+    H --> I
+    I -- No --> J
+    I -- Yes --> K
+    K --> L
 ```
 
-## Shared validation rule
+---
 
-Combined attachment size validation is implemented using:
+## Shared Combined-Size Rule
+
+Combined attachment size validation is implemented in:
 
 ```text
 app/Rules/TotalAttachmentSize.php
 ```
 
-Instead of copying the same validation closure into multiple Form Requests, the rule contains the shared logic once.
-
-Conceptually:
+Both form requests use:
 
 ```php
 new TotalAttachmentSize(90)
 ```
 
-means:
+The rule:
 
-> The files contained in this field may have a maximum combined size of 90 MB.
+1. receives the uploaded attachment array;
+2. sums the byte size of all `UploadedFile` instances;
+3. converts the configured megabyte limit to bytes;
+4. fails validation when the total exceeds the limit.
 
-The rule receives the attachment array, calculates the size of all uploaded files, converts the configured megabyte limit to bytes, and fails validation when the calculated size exceeds the limit.
+This avoids duplicating the calculation between create and update validation.
 
-## Why a custom rule is used
-
-Both post creation and post editing accept new attachments.
-
-Without a shared rule, the same calculation would need to exist separately inside:
-
-```text
-StorePostRequest
-UpdatePostRequest
-```
-
-That would create duplicated code.
-
-The shared design is:
-
-```text
-                    TotalAttachmentSize
-                           │
-                  combined size <= 90 MB
-                           │
-              ┌────────────┴────────────┐
-              │                         │
-     StorePostRequest          UpdatePostRequest
-       create post                edit post
-```
-
-If the combined-size calculation changes later, only the validation rule needs to be updated.
+---
 
 ## StorePostRequest
 
-Post creation applies validation to the complete attachment array:
+Post creation validates:
 
 ```php
 'attachments' => [
@@ -109,23 +97,23 @@ Post creation applies validation to the complete attachment array:
 ],
 ```
 
-The rules have separate responsibilities:
+The rules mean:
 
 ```text
 nullable
 └── attachments are optional
 
 array
-└── attachments must be submitted as an array
+└── submitted attachments must form an array
 
 max:10
-└── maximum of 10 attachments
+└── no more than 10 new files in this request
 
 TotalAttachmentSize(90)
-└── maximum combined upload size of 90 MB
+└── those uploaded files may total at most 90 MB
 ```
 
-Each individual attachment is then validated separately:
+Each item is also validated separately:
 
 ```php
 'attachments.*' => [
@@ -136,11 +124,13 @@ Each individual attachment is then validated separately:
 ],
 ```
 
-This checks that each item is a real uploaded file, uses an allowed file type, and does not exceed 25 MB.
+This ensures every uploaded item is a file, uses an allowed type, and is at most 25 MB.
+
+---
 
 ## UpdatePostRequest
 
-`UpdatePostRequest` uses the same combined-size rule:
+Post editing uses the same attachment rules:
 
 ```php
 'attachments' => [
@@ -151,62 +141,51 @@ This checks that each item is a real uploaded file, uses an allowed file type, a
 ],
 ```
 
-This keeps create and edit behaviour consistent.
+and:
 
-For an update request, the combined-size rule applies to the **new files uploaded in that request**.
+```php
+'attachments.*' => [
+    'file',
 
-Existing attachments already stored for the post are not uploaded again and therefore are not included in this calculation.
-
-## Individual and combined limits
-
-Individual and global validation solve different problems.
-
-For example:
-
-```text
-File A = 24 MB
-File B = 24 MB
-File C = 24 MB
+    File::types(
+        StorePostRequest::$extensions
+    )->max('25mb')
+],
 ```
 
-Every individual file satisfies:
+Only newly selected files are present in `attachments` during an update.
+
+Existing attachment records remain separate and are controlled through `deleted_file_ids` when the user chooses to remove them.
+
+---
+
+## Example
+
+Three new files:
 
 ```text
-24 MB <= 25 MB
+24 MB + 24 MB + 24 MB = 72 MB
 ```
 
-Their combined size is:
+Each file is below 25 MB and the total is below 90 MB, so the size checks pass.
+
+Four new files:
 
 ```text
-24 + 24 + 24 = 72 MB
+24 MB + 24 MB + 24 MB + 24 MB = 96 MB
 ```
 
-so the request also satisfies:
-
-```text
-72 MB <= 90 MB
-```
-
-However:
-
-```text
-File A = 24 MB
-File B = 24 MB
-File C = 24 MB
-File D = 24 MB
-```
-
-produces:
+Each file is individually valid, but the request fails because:
 
 ```text
 96 MB > 90 MB
 ```
 
-Although all four files are individually valid, the complete request is rejected by `TotalAttachmentSize`.
+---
 
-## Validation errors
+## Validation Errors
 
-Individual-file errors are returned using keys such as:
+Per-file errors use keys such as:
 
 ```text
 attachments.0
@@ -214,15 +193,20 @@ attachments.1
 attachments.2
 ```
 
-These can be displayed beside the corresponding file in `PostModal.vue`.
+`PostModal.vue` maps these errors back to the corresponding newly selected file so it can show a red border and message beside that file.
 
-The combined-size error belongs to the entire attachment array:
+Array-level errors use:
 
 ```text
 attachments
 ```
 
-The modal already displays this through Inertia's form errors:
+Examples include:
+
+- too many newly uploaded files in one request;
+- combined uploaded size greater than 90 MB.
+
+The modal displays these through:
 
 ```vue
 <div
@@ -233,63 +217,47 @@ The modal already displays this through Inertia's form errors:
 </div>
 ```
 
-Therefore, no separate frontend error state is required for the combined-size rule.
+---
 
-## PHP and Laravel limits
+## PHP and Laravel Limits
 
-Upload limits exist at two different levels:
+The application-level rules described above are committed in the Poet-Web source code.
 
-```text
-Browser
-   ↓
-PHP / server limits
-   ↓
-Laravel validation
-   ↓
-PostController
-```
-
-PHP controls whether the request is accepted by the server at all.
-
-Laravel controls what Poet-Web considers valid.
-
-The development environment currently uses approximately:
+PHP also has server-level upload settings such as:
 
 ```text
-upload_max_filesize = 100M
-post_max_size = 100M
-max_file_uploads = 20
+upload_max_filesize
+post_max_size
+max_file_uploads
 ```
 
-Poet-Web intentionally uses a lower combined Laravel limit:
+Those values belong to the runtime environment rather than this repository's validation code and may differ between development and deployment environments.
 
-```text
-90 MB
-```
+PHP must allow a request to reach Laravel before Laravel can return its own validation errors.
 
-This gives Laravel room to receive the request and return a readable application validation error before reaching PHP's 100 MB request ceiling.
+---
 
-## Responsibility separation
+## Responsibility Separation
 
 ```text
 TotalAttachmentSize.php
-└── validates combined size of uploaded files
+└── validates combined size of newly uploaded files
 
 StorePostRequest.php
-├── maximum attachment count
-├── shared total-size validation
-├── individual file size
-└── file type validation
+├── upload count per create request
+├── combined size
+├── individual size
+└── file type
 
 UpdatePostRequest.php
-├── authorization
-├── maximum attachment count
-├── shared total-size validation
-├── individual file size
-└── file type validation
+├── post ownership authorization
+├── upload count per edit request
+├── combined size
+├── individual size
+└── file type
 
 PostModal.vue
-└── displays returned validation errors
+└── displays array-level and per-file validation errors
 ```
 
-This keeps attachment validation reusable, consistent, and easier to maintain.
+This keeps the backend validation reusable while making the frontend errors understandable to the user.
