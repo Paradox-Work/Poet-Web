@@ -43,6 +43,8 @@ const commentUpdatePending = ref(false);
 
 const deletingCommentId = ref(null);
 
+const reactingCommentId = ref(null);
+
 const plainBody = computed(() => {
 
     const body = props.post.body ?? '';
@@ -273,6 +275,51 @@ async function createComment() {
         } finally {
 
             commentUpdatePending.value = false;
+        }
+    }
+
+    async function sendCommentReaction(comment) {
+
+        if (
+            reactingCommentId.value ===
+            comment.id
+        ) {
+            return;
+        }
+
+        reactingCommentId.value =
+            comment.id;
+
+        try {
+
+            const { data } =
+                await axios.post(
+                    route(
+                        'post.comment.reaction',
+                        comment.id
+                    ),
+                    {
+                        reaction: 'like'
+                    }
+                );
+
+            comment.current_user_has_reaction =
+                data.current_user_has_reaction;
+
+            comment.num_of_reactions =
+                data.num_of_reactions;
+
+        } catch (error) {
+
+            console.error(
+                'Failed to update comment reaction:',
+                error
+            );
+
+        } finally {
+
+            reactingCommentId.value =
+                null;
         }
     }
     
@@ -561,6 +608,44 @@ async function createComment() {
             >
                 {{ comment.comment }}
             </p>
+
+            <div class="ml-12 mt-1">
+
+                <button
+                    type="button"
+                    @click="sendCommentReaction(comment)"
+                    :disabled="
+                        reactingCommentId === comment.id
+                    "
+                    class="flex items-center gap-1 rounded px-2 py-1 text-xs transition"
+                    :class="[
+                        comment.current_user_has_reaction
+                            ? 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
+                            : 'text-gray-500 hover:bg-gray-100',
+
+                        reactingCommentId === comment.id
+                            ? 'opacity-50 cursor-wait'
+                            : ''
+                    ]"
+                >
+
+                    <HandThumbUpIcon
+                        class="w-3 h-3"
+                    />
+
+                    <span>
+                        {{ comment.num_of_reactions ?? 0 }}
+                    </span>
+
+                    {{
+                        comment.current_user_has_reaction
+                            ? 'Unlike'
+                            : 'Like'
+                    }}
+
+                </button>
+
+            </div>
 
         </div>
         <!-- NEW BLOCK ENDS HERE -->

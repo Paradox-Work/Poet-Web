@@ -24,6 +24,13 @@ class CommentResource extends JsonResource
                     'Y-m-d H:i:s'
                 ),
 
+            'num_of_reactions' =>
+                $this->reactions_count ?? 0,
+
+            'current_user_has_reaction' =>
+                $this->relationLoaded('reactions')
+                    && $this->reactions->isNotEmpty(),
+
             'user' =>
                 new UserResource($this->user),
         ];

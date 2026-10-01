@@ -349,7 +349,9 @@ class PostController extends Controller
             'user_id' => $request->user()->id,
         ]);
 
-    $comment->load('user');
+    $comment
+        ->load('user')
+        ->loadCount('reactions');
 
     return (
         new CommentResource($comment)
@@ -365,7 +367,21 @@ public function updateComment(UpdateCommentRequest $request, Comment $comment) {
         'comment' => $data['comment'],
     ]);
 
-    $comment->load('user');
+    $userId = $request->user()->id;
+
+    $comment->loadCount('reactions');
+
+    $comment->load([
+        'user',
+
+        'reactions' =>
+            function ($query) use ($userId) {
+                $query->where(
+                    'user_id',
+                    $userId
+                );
+            },
+    ]);
 
     return new CommentResource($comment);
 }
