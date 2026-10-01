@@ -1,48 +1,85 @@
 # Attachment Preview Flow
 
-The attachment preview feature allows a user to click an attachment displayed on a post and open it in a full-screen modal.
+## Overview
 
-The preview modal receives the post's complete attachment list and the index of the attachment that was clicked. This allows the user to move between attachments without closing the modal.
+Poet-Web allows users to click an attachment preview on a post and open the post's full attachment collection in a full-screen modal.
 
-## Component flow
+Only the first four attachments are shown directly in the post feed, but the preview modal receives the complete attachment array. This means users can continue navigating to attachments that are not shown in the compact feed preview.
+
+---
+
+## Component Flow
+
+Attachment rendering is handled by `PostAttachments.vue` rather than directly inside `PostItem.vue`.
+
+The current event flow is:
 
 ```mermaid
 flowchart TD
-    A[User clicks attachment in PostItem] --> B[openAttachment index]
-    B --> C["emit attachmentClick(post, index)"]
+    A[User clicks attachment]
+    B[PostAttachments.vue]
+    C[Emit attachmentClick with index]
+    D[PostItem.vue openAttachment]
+    E[Emit attachmentClick with post and index]
+    F[PostList.vue]
+    G[openAttachmentPreviewModal]
+    H[Store selected post]
+    I[Store selected index]
+    J[Open AttachmentPreviewModal]
+    K[Display attachments index]
 
-    C --> D[PostList receives attachmentClick]
-    D --> E[openAttachmentPreviewModal]
-    E --> F[Store selected post]
-    E --> G[Store selected attachment index]
-    E --> H[showAttachmentsModal = true]
-
-    H --> I[AttachmentPreviewModal opens]
-
-    F --> I
+    A --> B
+    B --> C
+    C --> D
+    D --> E
+    E --> F
+    F --> G
+    G --> H
     G --> I
-
-    I --> J["attachments[index]"]
-    J --> K{Attachment type}
-
-    K -->|Image| L[Display image]
-    K -->|Other file| M[Display file icon and filename]
-
-    I --> N[Previous button]
-    I --> O[Next button]
-
-    N --> P[Decrease index]
-    O --> Q[Increase index]
-
-    P --> J
-    Q --> J
+    H --> J
+    I --> J
+    J --> K
 ```
 
-## Event flow
+---
 
-`PostItem.vue` does not open the preview modal itself.
+## Step 1: PostAttachments Emits the Index
 
-Instead, it tells its parent that an attachment was clicked:
+`PostItem.vue` passes the complete attachment array into:
+
+```vue
+<PostAttachments
+    :attachments="post.attachments"
+    @attachmentClick="openAttachment"
+/>
+```
+
+`PostAttachments.vue` renders up to four attachment cards:
+
+```js
+attachments.slice(0, 4)
+```
+
+When one is clicked, it emits the visible attachment index:
+
+```text
+attachmentClick(index)
+```
+
+For example:
+
+```text
+0 = first attachment
+1 = second attachment
+2 = third attachment
+3 = fourth attachment
+```
+
+---
+
+## Step 2: PostItem Adds the Post Context
+
+`PostItem.vue` receives the index and forwards both the post and index:
 
 ```js
 function openAttachment(index) {
@@ -54,20 +91,11 @@ function openAttachment(index) {
 }
 ```
 
-For example, clicking the second attachment sends:
+`PostItem.vue` therefore acts as the bridge between the attachment component and the post list.
 
-```text
-post = selected post
-index = 1
-```
+---
 
-JavaScript arrays start from zero:
-
-```text
-0 = first attachment
-1 = second attachment
-2 = third attachment
-```
+## Step 3: PostList Opens the Preview
 
 `PostList.vue` listens for the event:
 
@@ -78,10 +106,22 @@ JavaScript arrays start from zero:
 />
 ```
 
-The parent then stores the selected post and attachment index:
+The selected post and attachment index are stored in:
 
 ```js
-function openAttachmentPreviewModal(post, index) {
+const previewAttachmentsPost = ref({
+    post: null,
+    index: 0
+});
+```
+
+When an attachment is clicked:
+
+```js
+function openAttachmentPreviewModal(
+    post,
+    index
+) {
     previewAttachmentsPost.value = {
         post,
         index
@@ -91,7 +131,9 @@ function openAttachmentPreviewModal(post, index) {
 }
 ```
 
-## Preview modal data
+---
+
+## Preview Modal Data
 
 `AttachmentPreviewModal.vue` receives:
 
@@ -101,13 +143,25 @@ index
 modelValue
 ```
 
-`attachments` contains all attachments belonging to the selected post.
+`PostList.vue` passes the complete attachment collection:
 
-`index` identifies which attachment should currently be displayed.
+```vue
+<AttachmentPreviewModal
+    :attachments="
+        previewAttachmentsPost.post?.attachments ?? []
+    "
+    v-model:index="previewAttachmentsPost.index"
+    v-model="showAttachmentsModal"
+/>
+```
 
-`modelValue` controls whether the modal is open.
+This is important because `PostAttachments.vue` displays only the first four attachments, while the modal can navigate through all attachments belonging to the post.
 
-The current attachment is calculated from the array:
+---
+
+## Current Attachment
+
+The modal calculates the selected attachment from the supplied array:
 
 ```js
 const attachment = computed(() => {
@@ -115,15 +169,10 @@ const attachment = computed(() => {
 });
 ```
 
-For example:
+Example:
 
 ```text
-attachments = [
-    image1,
-    image2,
-    image3
-]
-
+attachments = [image1, image2, file3]
 currentIndex = 1
 ```
 
@@ -133,15 +182,17 @@ results in:
 attachment = image2
 ```
 
-## Two-way index binding
+---
 
-`PostList.vue` connects the preview index using:
+## Two-Way Index Binding
+
+The preview index is connected with:
 
 ```vue
 v-model:index="previewAttachmentsPost.index"
 ```
 
-Inside `AttachmentPreviewModal.vue`, the index is wrapped in a computed property:
+Inside `AttachmentPreviewModal.vue`:
 
 ```js
 const currentIndex = computed({
@@ -153,39 +204,23 @@ const currentIndex = computed({
 });
 ```
 
-This provides two-way communication:
+This creates two-way communication:
 
 ```text
-PostList index
-      ↕
-AttachmentPreviewModal currentIndex
+PostList.vue index
+        ↕
+AttachmentPreviewModal.vue currentIndex
 ```
 
-When the preview modal changes:
+When the modal moves to another attachment, the parent index changes too.
 
-```js
-currentIndex.value++;
-```
+---
 
-it emits:
+## Previous and Next Navigation
 
-```text
-update:index
-```
+The modal prevents the index from moving outside the attachment array.
 
-and the value in `PostList.vue` is updated as well.
-
-The same system is used to control whether the modal is open:
-
-```vue
-v-model="showAttachmentsModal"
-```
-
-which connects to the modal's `modelValue`.
-
-## Previous and next navigation
-
-The previous button decreases the index:
+Previous:
 
 ```js
 function prev() {
@@ -197,7 +232,7 @@ function prev() {
 }
 ```
 
-The next button increases it:
+Next:
 
 ```js
 function next() {
@@ -212,25 +247,15 @@ function next() {
 }
 ```
 
-The boundary checks prevent the index from going outside the attachment array.
+The UI only renders navigation controls when movement in that direction is possible.
 
-```text
-First attachment
-← disabled
+---
 
-Middle attachment
-← available
-→ available
+## Attachment Rendering
 
-Last attachment
-→ disabled
-```
+Images are identified using the shared `isImage()` helper.
 
-## Attachment rendering
-
-Images are detected with the shared `isImage()` helper.
-
-Image attachments display the stored attachment URL:
+Image attachments display their stored URL:
 
 ```vue
 <img
@@ -240,43 +265,43 @@ Image attachments display the stored attachment URL:
 />
 ```
 
-Other attachment types currently display a file icon and their original filename.
+Non-image attachments display a file icon and original filename.
 
-## Download interaction
+---
 
-The download link exists inside the clickable attachment card.
+## Download Interaction
 
-The download link uses:
+Visible attachment cards include a download button.
+
+The download action uses:
 
 ```vue
 @click.stop
 ```
 
-to prevent the click event from reaching the parent attachment card.
+This stops the click from reaching the attachment card itself.
 
-Without `.stop`, clicking Download could perform both actions:
+Without `.stop`:
 
 ```text
-Download file
+Download
 +
-Open preview modal
+Open preview
 ```
 
-With `.stop`:
+could happen from one click.
+
+With `.stop`, only the download action occurs.
+
+---
+
+## Overall Architecture
 
 ```text
-Download button clicked
-        ↓
-download starts
-        ↓
-click propagation stops
-        ↓
-preview does not open
-```
-
-## Overall architecture
-
-```text
+PostAttachments.vue
+    │
+    │ attachmentClick(index)
+    ▼
 PostItem.vue
     │
     │ attachmentClick(post, index)
@@ -296,8 +321,9 @@ AttachmentPreviewModal.vue
     └── close
 ```
 
-This keeps responsibilities separated:
+Responsibilities are separated so that:
 
-* `PostItem.vue` displays a post and reports attachment clicks.
-* `PostList.vue` coordinates which post and attachment are being previewed.
-* `AttachmentPreviewModal.vue` handles the full-screen preview and navigation.
+- `PostAttachments.vue` renders the compact attachment grid and reports which visible attachment was clicked;
+- `PostItem.vue` supplies the surrounding post context;
+- `PostList.vue` coordinates preview state;
+- `AttachmentPreviewModal.vue` displays and navigates the complete attachment collection.
