@@ -1,38 +1,53 @@
 # Attachment Validation Flow
 
-The post attachment validation system checks uploaded files on both the frontend and backend.
+## Overview
 
-Frontend validation gives users immediate feedback, while Laravel performs the authoritative validation before any file is stored.
+Poet-Web validates uploaded post attachments on both the frontend and backend.
 
-## Validation flow
+Vue provides immediate feedback about unsupported filename extensions, while Laravel performs the authoritative validation before the controller stores any file.
+
+---
+
+## Validation Flow
 
 ```mermaid
 flowchart TD
-    A[User selects attachments] --> B[PostModal reads file extensions]
-    B --> C{Extension allowed?}
+    A[User selects attachments]
+    B[PostModal stores selected files]
+    C[Computed extension check]
+    D{Any unsupported extension?}
+    E[Show supported extension notice]
+    F[User submits post]
+    G[Laravel FormRequest validation]
+    H{Valid request?}
+    I[PostController stores files]
+    J[Laravel returns validation errors]
+    K[Inertia returns errors to PostModal]
+    L[processErrors]
+    M[Map attachments.X errors to selected files]
+    N[Show red border and error text]
 
-    C -->|No| D[Show frontend extension warning]
-    C -->|Yes| E[Add file to attachment preview]
-
-    D --> E
-
-    E --> F[User submits post]
-    F --> G[Laravel FormRequest validation]
-
-    G --> H{Valid attachments?}
-
-    H -->|Yes| I[PostController stores files]
-    H -->|No| J[Laravel returns validation errors]
-
-    J --> K[Inertia sends errors back to PostModal]
-    K --> L[processErrors]
-    L --> M[Map attachments.X error to selected file]
-    M --> N[Show red border and error message]
+    A --> B
+    B --> C
+    C --> D
+    D -- Yes --> E
+    D -- No --> F
+    E --> F
+    F --> G
+    G --> H
+    H -- Yes --> I
+    H -- No --> J
+    J --> K
+    K --> L
+    L --> M
+    M --> N
 ```
 
-## Shared allowed extensions
+---
 
-Allowed attachment extensions are defined in one place inside `StorePostRequest`:
+## Shared Allowed Extensions
+
+Allowed extensions are defined once in `StorePostRequest`:
 
 ```php
 public static array $extensions = [
@@ -56,14 +71,14 @@ public static array $extensions = [
 ];
 ```
 
-The create request uses:
+Post creation uses:
 
 ```php
 File::types(self::$extensions)
     ->max('25mb')
 ```
 
-The update request reuses the same list:
+Post editing reuses the same list:
 
 ```php
 File::types(
@@ -71,55 +86,68 @@ File::types(
 )->max('25mb')
 ```
 
-This avoids maintaining two separate attachment-type lists.
+This keeps the create and update rules synchronized.
 
-```text
-StorePostRequest::$extensions
-            │
-            ├── Create post validation
-            │
-            └── Update post validation
-```
+---
 
-## Inertia shared property
+## Inertia Shared Property
 
-`HandleInertiaRequests` exposes the backend extension list to Vue:
+`HandleInertiaRequests` exposes the backend list to Vue:
 
 ```php
 'attachmentExtensions' =>
     StorePostRequest::$extensions,
 ```
 
-`PostModal.vue` receives it using:
+`PostModal.vue` receives it with:
 
 ```js
 const attachmentExtensions =
     usePage().props.attachmentExtensions ?? [];
 ```
 
-This allows the frontend and backend to use the same allowed extension list.
+The data flow is:
 
 ```text
-StorePostRequest
-      ↓
+StorePostRequest::$extensions
+        ↓
 HandleInertiaRequests
-      ↓
+        ↓
 Inertia shared props
-      ↓
+        ↓
 PostModal.vue
 ```
 
-## Frontend extension check
+This prevents the frontend from maintaining a separate hard-coded list.
 
-When a file is selected, `PostModal.vue` extracts its extension:
+---
+
+## Frontend Extension Check
+
+`showExtensionsText` is a computed property.
+
+It loops through the newly selected attachment files and derives whether any selected file has an unsupported extension.
+
+Conceptually:
 
 ```js
-const parts = file.name.split('.');
+const showExtensionsText = computed(() => {
+    for (const myFile of attachmentFiles.value) {
+        const file = myFile.file;
+        const parts = file.name.split('.');
 
-const extension =
-    parts.length > 1
-        ? parts.pop().toLowerCase()
-        : '';
+        const extension =
+            parts.length > 1
+                ? parts.pop().toLowerCase()
+                : '';
+
+        if (!attachmentExtensions.includes(extension)) {
+            return true;
+        }
+    }
+
+    return false;
+});
 ```
 
 For example:
@@ -134,40 +162,42 @@ becomes:
 pdf
 ```
 
-The extension is checked using:
+If at least one selected file has an unsupported extension, the computed value becomes `true` and the modal displays the supported extension list.
 
-```js
-attachmentExtensions.includes(extension)
+There is no manual assignment such as:
+
+```text
+showExtensionsText.value = true
 ```
 
-If it is not allowed:
+because the value is derived from `attachmentFiles` automatically.
 
-```js
-showExtensionsText.value = true;
-```
+This check improves the user experience but is not a security boundary. Laravel still performs the trusted validation.
 
-The user immediately sees the supported file extensions.
+---
 
-This frontend check is only for user feedback. Laravel validation is still required because frontend checks can be bypassed.
-
-## Backend validation
+## Backend Validation
 
 Laravel validates:
 
 ```text
-maximum number of attachments
+attachment array type
+maximum 10 newly uploaded files per request
+maximum combined size of 90 MB per request
 file validity
 allowed file type
-maximum file size
+maximum individual size of 25 MB
 ```
 
-The attachment array is limited to 10 files.
+If validation fails, the controller is not called.
 
-Each individual attachment is limited to 25 MB.
+Laravel returns validation errors through Inertia instead.
 
-If validation fails, Laravel sends the errors back through Inertia instead of calling the controller.
+---
 
-For example:
+## Processing Per-File Errors
+
+Individual file errors use keys such as:
 
 ```text
 attachments.0
@@ -175,11 +205,7 @@ attachments.1
 attachments.2
 ```
 
-represent validation errors for individual uploaded files.
-
-## Processing validation errors
-
-`PostModal.vue` processes the returned errors using:
+`PostModal.vue` maps them into `attachmentErrors`:
 
 ```js
 function processErrors(errors) {
@@ -202,7 +228,7 @@ function processErrors(errors) {
 }
 ```
 
-For example:
+Example response:
 
 ```js
 {
@@ -214,7 +240,7 @@ For example:
 }
 ```
 
-is mapped approximately to:
+becomes approximately:
 
 ```js
 [
@@ -224,25 +250,26 @@ is mapped approximately to:
 ]
 ```
 
-## Existing and newly uploaded attachments
+---
 
-When editing a post, the modal displays both:
+## Existing and New Attachments During Editing
+
+When editing a post, the modal combines:
 
 ```text
 existing database attachments
 +
-newly selected attachments
+newly selected attachmentFiles
 ```
 
-However, Laravel validation indexes only the newly uploaded files.
+through `computedAttachments`.
 
-Because of this, the visual attachment index cannot be used directly.
+Laravel validation indexes only the newly uploaded files in the request.
 
-The helper:
+Because of that, `getAttachmentError()` first checks whether an item represents a new local file:
 
 ```js
 function getAttachmentError(myFile) {
-
     if (!myFile.file) {
         return null;
     }
@@ -254,74 +281,30 @@ function getAttachmentError(myFile) {
 }
 ```
 
-checks whether an attachment is newly selected.
+Existing database attachments do not contain `myFile.file`, so upload-validation errors are not incorrectly attached to them.
 
-Existing attachments do not contain:
+---
 
-```text
-myFile.file
-```
+## Per-File Error Display
 
-so they do not receive upload validation errors.
+Each attachment preview can display an error under its card.
 
-New attachments are searched inside `attachmentFiles`, which matches Laravel's attachment indexing.
+When `getAttachmentError(myFile)` returns a message, the preview receives a red border and the message is displayed below it.
 
-## Per-file error display
+This makes it clear which newly selected file failed backend validation.
 
-Each displayed attachment has an outer wrapper.
+---
 
-Inside it is the visual attachment card:
+## Array-Level Errors
 
-```text
-Attachment wrapper
-│
-├── Attachment card
-│   ├── image or file icon
-│   ├── filename
-│   ├── delete button
-│   └── deletion status
-│
-└── validation error
-```
+Some errors belong to the entire `attachments` field rather than one file.
 
-If an attachment has an error, the card receives a red border:
+Examples include:
 
-```vue
-:class="
-    getAttachmentError(myFile)
-        ? 'border-red-500'
-        : 'border-transparent'
-"
-```
+- more than 10 newly uploaded files in one request;
+- combined upload size above 90 MB.
 
-The validation message is shown underneath:
-
-```vue
-<small
-    v-if="getAttachmentError(myFile)"
-    class="text-red-500"
->
-    {{ getAttachmentError(myFile) }}
-</small>
-```
-
-## Array-level errors
-
-Some errors apply to the entire attachment array instead of one file.
-
-For example, uploading more than 10 attachments produces an error on:
-
-```text
-attachments
-```
-
-rather than:
-
-```text
-attachments.0
-```
-
-This is displayed using:
+These errors are displayed using:
 
 ```vue
 <div
@@ -332,21 +315,24 @@ This is displayed using:
 </div>
 ```
 
-## Error reset
+---
 
-Attachment errors and warnings are cleared when the modal is reopened or closed:
+## Reset Behavior
+
+When the modal opens for another post or is closed, the local attachment state is reset:
 
 ```js
 attachmentFiles.value = [];
 attachmentErrors.value = [];
-showExtensionsText.value = false;
 ```
 
-They are also cleared before another submission.
+Because `showExtensionsText` is computed from `attachmentFiles`, its warning disappears automatically when the selected files are cleared.
 
-This prevents errors from a previous create or edit attempt from appearing on another post.
+The errors are also cleared before another submit attempt.
 
-## Responsibility separation
+---
+
+## Responsibility Separation
 
 ```text
 StorePostRequest
@@ -355,21 +341,24 @@ StorePostRequest
 └── validation messages
 
 UpdatePostRequest
-├── update authorization
-├── attachment validation
-└── validation messages
+├── ownership authorization
+├── update validation
+└── reuses StorePostRequest extensions
+
+TotalAttachmentSize
+└── validates combined size of new uploads
 
 HandleInertiaRequests
 └── shares allowed extensions with Vue
 
 PostModal.vue
-├── frontend extension warning
-├── displays Laravel errors
-├── maps errors to new attachments
-└── highlights invalid files
+├── computed frontend extension warning
+├── maps backend per-file errors
+├── displays array-level errors
+└── highlights invalid new files
 
 PostController
-└── only receives attachments after validation succeeds
+└── receives files only after validation succeeds
 ```
 
-This keeps Laravel responsible for trusted validation while Vue provides immediate and readable feedback to the user.
+Laravel remains the authoritative validator while Vue provides immediate and readable feedback.
