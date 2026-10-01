@@ -47,8 +47,19 @@ class HomeController extends Controller
                         );
                     },
             ])
-            ->latest()
-            ->paginate(20);
+
+        ->latest()
+        ->paginate(10)
+        ->withQueryString();
+
+        $posts =
+            PostResource::collection(
+                $posts
+            );
+
+        if ($request->wantsJson()) {
+            return $posts;
+        }
         
         $groups = Group::query()
             ->select([
@@ -71,7 +82,7 @@ class HomeController extends Controller
             ->get();
 
         return Inertia::render('Home', [
-            'posts' => PostResource::collection($posts),
+            'posts' => $posts,
 
             'groups' => GroupResource::collection($groups),
         ]);

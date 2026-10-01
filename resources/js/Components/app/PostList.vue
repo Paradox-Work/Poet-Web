@@ -1,33 +1,86 @@
 <script setup>
-import { ref } from 'vue';
+import {
+    onBeforeUnmount,
+    onMounted,
+    ref,
+    watch
+} from 'vue';
 
-import PostItem from '@/Components/app/PostItem.vue';
-import PostModal from '@/Components/app/PostModal.vue';
-import AttachmentPreviewModal from '@/Components/app/AttachmentPreviewModal.vue';
+import axios from 'axios';
 
-defineProps({
-    posts: Array
+import PostItem
+    from '@/Components/app/PostItem.vue';
+
+import PostModal
+    from '@/Components/app/PostModal.vue';
+
+import AttachmentPreviewModal
+    from '@/Components/app/AttachmentPreviewModal.vue';
+
+
+const props = defineProps({
+
+    posts: {
+        type: Object,
+        required: true
+    }
+
 });
 
-const showEditModal = ref(false);
-const editPost = ref({});
 
-const showAttachmentsModal = ref(false);
+const allPosts =
+    ref([
+        ...(props.posts.data ?? [])
+    ]);
 
-const previewAttachmentsPost = ref({
-    post: null,
-    index: 0
-});
+const nextPageUrl =
+    ref(
+        props.posts.links?.next
+        ?? null
+    );
+
+const loadingMore =
+    ref(false);
+
+const loadMoreIntersect =
+    ref(null);
+
+const postListContainer =
+    ref(null);
+
+
+let observer = null;
+
+
+const showEditModal =
+    ref(false);
+
+const editPost =
+    ref({});
+
+const showAttachmentsModal =
+    ref(false);
+
+const previewAttachmentsPost =
+    ref({
+        post: null,
+        index: 0
+    });
+
 
 function openEditModal(post) {
+
     editPost.value = post;
+
     showEditModal.value = true;
 }
+
 
 function openAttachmentPreviewModal(
     post,
     index
 ) {
+
     previewAttachmentsPost.value = {
         post,
         index
@@ -36,31 +89,188 @@ function openAttachmentPreviewModal(
     showAttachmentsModal.value = true;
 }
 
+
+async function loadMore() {
+
+    if (
+        !nextPageUrl.value ||
+        loadingMore.value
+    ) {
+        return;
+    }
+
+
+    loadingMore.value = true;
+
+
+    try {
+
+        const { data } =
+            await axios.get(
+                nextPageUrl.value,
+                {
+                    headers: {
+                        Accept:
+                            'application/json'
+                    }
+                }
+            );
+
+
+        const existingIds =
+            new Set(
+                allPosts.value.map(
+                    post => post.id
+                )
+            );
+
+
+        const newPosts =
+            (data.data ?? [])
+                .filter(
+                    post =>
+                        !existingIds.has(
+                            post.id
+                        )
+                );
+
+
+        allPosts.value.push(
+            ...newPosts
+        );
+
+
+        nextPageUrl.value =
+            data.links?.next
+            ?? null;
+
+    } catch (error) {
+
+        console.error(
+            'Failed to load more posts:',
+            error
+        );
+
+    } finally {
+
+        loadingMore.value = false;
+    }
+}
+
+
+watch(
+    () => props.posts,
+
+    posts => {
+
+        allPosts.value = [
+            ...(posts?.data ?? [])
+        ];
+
+        nextPageUrl.value =
+            posts?.links?.next
+            ?? null;
+    }
+);
+
+
+onMounted(() => {
+
+    observer =
+        new IntersectionObserver(
+            entries => {
+
+                if (
+                    entries.some(
+                        entry =>
+                            entry.isIntersecting
+                    )
+                ) {
+                    loadMore();
+                }
+
+            },
+            {
+                root:
+                    postListContainer.value,
+
+                rootMargin:
+                    '0px 0px 300px 0px'
+            }
+        );
+
+
+    if (loadMoreIntersect.value) {
+
+        observer.observe(
+            loadMoreIntersect.value
+        );
+    }
+});
+
+
+onBeforeUnmount(() => {
+
+    observer?.disconnect();
+});
 </script>
 
 <template>
 
-    <div class="overflow-auto flex-1">
+    <div
+        ref="postListContainer"
+        class="overflow-auto flex-1"
+    >
+
         <PostItem
-            v-for="post of posts"
+            v-for="post of allPosts"
             :key="post.id"
             :post="post"
-            @editClick="openEditModal"
-            @attachmentClick="openAttachmentPreviewModal"
+            @editClick="
+                openEditModal
+            "
+            @attachmentClick="
+                openAttachmentPreviewModal
+            "
         />
+
+
+        <div
+            ref="loadMoreIntersect"
+            class="h-px"
+            aria-hidden="true"
+        />
+
+
+        <div
+            v-if="loadingMore"
+            class="text-center text-sm text-gray-400 py-3"
+        >
+            Loading more posts...
+        </div>
+
 
         <PostModal
             :post="editPost"
             v-model="showEditModal"
         />
 
+
         <AttachmentPreviewModal
             :attachments="
-                previewAttachmentsPost.post?.attachments ?? []
+                previewAttachmentsPost
+                    .post
+                    ?.attachments
+                ?? []
             "
-            v-model:index="previewAttachmentsPost.index"
-            v-model="showAttachmentsModal"
+            v-model:index="
+                previewAttachmentsPost.index
+            "
+            v-model="
+                showAttachmentsModal
+            "
         />
+
     </div>
 
 </template>
