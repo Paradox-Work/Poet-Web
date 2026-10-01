@@ -1,4 +1,7 @@
 <script setup>
+import InviteUserModal
+    from '@/Pages/Group/InviteUserModal.vue';
+
 import {
     computed,
     ref
@@ -46,6 +49,7 @@ const isAdmin = computed(
     () => props.group.role === 'admin'
 );
 
+const showInviteUserModal = ref(false);
 
 const coverPreview = ref(null);
 
@@ -359,6 +363,15 @@ function submitThumbnail() {
                         class="mt-4 flex items-start justify-between gap-4"
                     >
 
+                    <button
+                        v-if="isAdmin"
+                        type="button"
+                        @click="showInviteUserModal = true"
+                        class="shrink-0 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500"
+                    >
+                        Invite user
+                    </button>
+
                         <div>
 
                             <div
@@ -542,5 +555,10 @@ function submitThumbnail() {
         </div>
 
     </AuthenticatedLayout>
+
+    <InviteUserModal
+        v-model="showInviteUserModal"
+        :group="group"
+    />
 
 </template>

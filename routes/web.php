@@ -83,6 +83,16 @@ Route::middleware('auth')->group(function () {
     )->name('group.updateImages');
 
     Route::post(
+        '/groups/{group:slug}/invitations',
+        [GroupController::class, 'inviteUsers']
+    )->name('group.inviteUsers');
+
+    Route::get(
+        '/groups/invitations/{token}/accept',
+        [GroupController::class, 'approveInvitation']
+    )->name('group.approveInvitation');
+
+    Route::post(
         '/users/{user}/follow',
         [UserController::class, 'follow']
     )->name('user.follow');
