@@ -1,25 +1,285 @@
 # Implementation Notes
 
-## Rich text editing with Tiptap
+## Overview
 
-- Replaced plain textarea editing with Tiptap.
-- Post content is stored as HTML in `posts.body`.
+This file summarizes the currently implemented Poet-Web features that affect the post feed and related social functionality.
+
+It is intended as a compact technical overview. More detailed flows are documented in the dedicated files under `docs/`.
+
+---
+
+## Rich Text Editing with Tiptap
+
+Poet-Web uses Tiptap for post body editing.
+
 - `TiptapEditor.vue` is reused inside `PostModal.vue`.
-- Added formatting for headings, bold, italic, lists, quotes, links, undo/redo.
+- Post content is stored as HTML in `posts.body`.
+- The editor supports formatted rich text instead of a plain textarea.
+- `PostItem.vue` renders stored HTML when displaying the full post body.
 
-## Unified post creation and editing
+---
 
-- `PostModal.vue` now handles both creating and updating posts.
-- If `post.id` is `null`, a POST request is sent.
-- If `post.id` exists, a PUT request is sent.
-- `CreatePost.vue` now acts mainly as a launcher for the modal.
+## Unified Post Creation and Editing
 
-See: [PostModal flow](post-modal-flow.md)
+`PostModal.vue` is reused for both creating and updating posts.
 
-## Attachment selection and previews
+The modal determines its mode from the post ID:
 
-- Added `attachmentFiles` state in `PostModal.vue`.
-- Images are previewed locally using `FileReader`.
-- Non-image files show their filename and attachment icon.
-- Files can be removed before submission.
-- Backend upload is not implemented yet.
+```text
+post.id is null
+└── create post
+
+post.id exists
+└── edit existing post
+```
+
+Both operations use Inertia's `form.post()` so attachments can be submitted as multipart `FormData`.
+
+Create:
+
+```text
+POST /posts
+_method = POST
+```
+
+Update:
+
+```text
+POST /posts/{post}
+_method = PUT
+```
+
+Laravel method spoofing routes the update request to the `PUT /posts/{post}` route.
+
+See: [Post creation and editing flow](post-modal-flow.md)
+
+---
+
+## Attachment Uploads
+
+Backend attachment upload is fully implemented.
+
+New attachments are stored under:
+
+```text
+storage/app/public/attachments/{post_id}
+```
+
+A `PostAttachment` record stores metadata including:
+
+```text
+post_id
+name
+path
+url
+mime
+size
+created_by
+```
+
+The controller stores uploaded files only after Laravel validation succeeds.
+
+See: [Post attachment upload flow](attachment-flow.md)
+
+---
+
+## Attachment Validation
+
+Create and update requests share the same allowed file-extension list.
+
+Current application rules include:
+
+```text
+maximum new files per request: 10
+maximum one-file size:         25 MB
+maximum combined size:         90 MB
+```
+
+The combined limit is implemented through `TotalAttachmentSize`.
+
+The allowed extension list is shared with Vue through Inertia so `PostModal.vue` can show an immediate warning when an unsupported extension is selected.
+
+See:
+
+- [Attachment validation flow](attachment-validation-flow.md)
+- [Attachment size validation](attachment-size-validation.md)
+
+---
+
+## Attachment Editing
+
+When editing a post, `PostModal.vue` displays both:
+
+```text
+existing database attachments
++
+newly selected files
+```
+
+Existing files selected for removal are tracked in:
+
+```text
+deleted_file_ids
+```
+
+New files are submitted through:
+
+```text
+attachments
+```
+
+The user can also undo a pending deletion before saving.
+
+After the database transaction succeeds, selected physical files are removed from storage.
+
+---
+
+## Attachment Feed Component
+
+Attachment rendering has been extracted from `PostItem.vue` into:
+
+```text
+PostAttachments.vue
+```
+
+The component:
+
+- renders image previews;
+- renders non-image files with an attachment icon and filename;
+- provides download links;
+- emits the clicked attachment index;
+- displays a maximum of four previews in the feed;
+- displays `+X more` on the fourth preview when additional attachments exist.
+
+See: [Post attachments display flow](post-attachments-flow.md)
+
+---
+
+## Attachment Preview Modal
+
+Clicking an attachment eventually opens `AttachmentPreviewModal.vue`.
+
+The event chain is:
+
+```text
+PostAttachments.vue
+    ↓ index
+PostItem.vue
+    ↓ post + index
+PostList.vue
+    ↓
+AttachmentPreviewModal.vue
+```
+
+The modal receives the complete attachment array, so users can navigate to attachments that are not displayed in the four-item feed preview.
+
+See: [Attachment preview flow](attachment-preview-flow.md)
+
+---
+
+## Attachment Downloads
+
+The route:
+
+```text
+GET /posts/attachments/{attachment}/download
+```
+
+uses Laravel route model binding to resolve the attachment and `Storage::disk('public')->download()` to return the physical file using its original filename.
+
+See: [Attachment downloads and route model binding](attachment-download-route-model-binding.md)
+
+---
+
+## Post and Comment Reactions
+
+The original post-only reaction implementation has been refactored into a shared polymorphic system.
+
+The `reactions` table identifies its target using:
+
+```text
+object_id
+object_type
+```
+
+Both `Post` and `Comment` define a polymorphic `reactions()` relationship.
+
+Currently the supported reaction type is:
+
+```text
+like
+```
+
+Users can like and unlike both posts and comments without reloading the page.
+
+See: [Reaction system flow](reaction-system-flow.md)
+
+---
+
+## Comments
+
+Authenticated users can:
+
+- create comments;
+- view comments loaded with posts;
+- edit their own comments;
+- delete their own comments;
+- like and unlike comments.
+
+Comment creation uses:
+
+```text
+POST /posts/{post}/comments
+```
+
+The comments table also now contains a nullable self-referencing `parent_id` column to prepare the database for threaded replies.
+
+The reply UI and reply-creation logic are not implemented yet; only the database field has been prepared.
+
+See:
+
+- [Post comments flow](post-comments-flow.md)
+- [Comment update and delete flow](comment-management-flow.md)
+
+---
+
+## Groups
+
+Poet-Web currently supports:
+
+- group creation;
+- creator membership as an approved admin;
+- loading authenticated-user groups;
+- client-side group search;
+- slug-based group profile pages;
+- cover and thumbnail uploads;
+- approved-admin authorization for group image changes.
+
+See:
+
+- [Group loading flow](group-loading-flow.md)
+- [Group profile flow](group-profile-flow.md)
+
+---
+
+## Following Users
+
+Authenticated users can follow and unfollow other users from profile pages.
+
+The system provides:
+
+- follower count;
+- current-user follow state;
+- profile navigation from post authors;
+- backend self-follow protection;
+- application-level duplicate avoidance through `firstOrCreate()`.
+
+See: [User follow and unfollow flow](user-follow-flow.md)
+
+---
+
+## Documentation Principle
+
+The current application code is the source of truth.
+
+When a feature changes, its related documentation should be updated so route names, request methods, component responsibilities, validation limits, and database relationships remain consistent with the implementation.
