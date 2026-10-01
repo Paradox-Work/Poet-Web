@@ -331,34 +331,51 @@ class PostController extends Controller
     }
 
     public function createComment(
-    Request $request,
-    Post $post
-) {
-    $data = $request->validate([
-        'comment' => [
-            'required',
-            'string',
-            'max:2000',
-        ],
-    ]);
+        Request $request,
+        Post $post
+    ) {
+        $data = $request->validate([
+            'comment' => [
+                'required',
+                'string',
+                'max:2000',
+            ],
 
-    $comment = $post
-        ->comments()
-        ->create([
-            'comment' => $data['comment'],
-            'user_id' => $request->user()->id,
+            'parent_id' => [
+                'nullable',
+                'integer',
+
+                Rule::exists(
+                    'comments',
+                    'id'
+                )->where(
+                    fn ($query) =>
+                        $query->where(
+                            'post_id',
+                            $post->id
+                        )
+                ),
+            ],
         ]);
 
-    $comment
-        ->load('user')
-        ->loadCount('reactions');
+        $comment = $post
+            ->comments()
+            ->create([
+                'comment' =>
+                    $data['comment'],
 
-    return (
-        new CommentResource($comment)
-    )
-        ->response()
-        ->setStatusCode(201);
-}
+                'user_id' =>
+                    $request->user()->id,
+
+                'parent_id' =>
+                    $data['parent_id'] ?? null,
+            ]);
+        return (
+            new CommentResource($comment)
+        )
+            ->response()
+            ->setStatusCode(201);
+    }
 
 public function updateComment(UpdateCommentRequest $request, Comment $comment) {
     $data = $request->validated();
@@ -369,7 +386,10 @@ public function updateComment(UpdateCommentRequest $request, Comment $comment) {
 
     $userId = $request->user()->id;
 
-    $comment->loadCount('reactions');
+    $comment->loadCount([
+        'reactions',
+        'comments',
+    ]);
 
     $comment->load([
         'user',
@@ -395,8 +415,13 @@ public function deleteComment(Comment $comment)
         );
     }
 
+    $post = $comment->post;
+
     $comment->delete();
 
-    return response()->noContent();
+    return response()->json([
+        'num_of_comments' =>
+            $post->comments()->count(),
+    ]);
 }
 }

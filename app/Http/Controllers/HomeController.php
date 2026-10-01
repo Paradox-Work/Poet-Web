@@ -14,6 +14,35 @@ class HomeController extends Controller
     public function index(Request $request)
     {
         $userId = $request->user()->id;
+
+        $loadCommentTree = null;
+
+        $loadCommentTree =
+            function ($query) use (
+                &$loadCommentTree,
+                $userId
+            ) {
+
+                $query
+                    ->with('user')
+                    ->withCount([
+                        'reactions',
+                        'comments',
+                    ])
+                    ->with([
+                        'reactions' =>
+                            function ($query) use ($userId) {
+
+                                $query->where(
+                                    'user_id',
+                                    $userId
+                                );
+                            },
+
+                        'comments' =>
+                            $loadCommentTree,
+                    ]);
+            };
  
         $posts = Post::query()
             ->withCount([
@@ -22,21 +51,15 @@ class HomeController extends Controller
             ])
             ->with([
                 'comments' =>
-                    function ($query) use ($userId) {
+                    function ($query) use (
+                        $loadCommentTree
+                    ) {
 
-                        $query
-                            ->with('user')
-                            ->withCount('reactions')
-                            ->with([
-                                'reactions' =>
-                                    function ($query) use ($userId) {
+                        $query->whereNull(
+                            'parent_id'
+                        );
 
-                                        $query->where(
-                                            'user_id',
-                                            $userId
-                                        );
-                                    },
-                            ]);
+                        $loadCommentTree($query);
                     },
 
                 'reactions' =>

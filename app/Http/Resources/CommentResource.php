@@ -12,6 +12,9 @@ class CommentResource extends JsonResource
         return [
             'id' => $this->id,
 
+            'parent_id' =>
+                $this->parent_id,
+
             'comment' => $this->comment,
 
             'created_at' =>
@@ -31,6 +34,14 @@ class CommentResource extends JsonResource
                 $this->relationLoaded('reactions')
                     && $this->reactions->isNotEmpty(),
 
+            'num_of_comments' =>
+                $this->comments_count ?? 0,
+
+            'comments' =>
+                CommentResource::collection(
+                    $this->whenLoaded('comments')
+                ),
+    
             'user' =>
                 new UserResource($this->user),
         ];
