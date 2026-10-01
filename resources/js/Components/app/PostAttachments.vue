@@ -21,7 +21,7 @@ defineEmits([
 <template>
 
     <template
-        v-for="(attachment, index) in attachments"
+        v-for="(attachment, index) in attachments.slice(0, 4)"
         :key="attachment.id"
     >
 
@@ -32,6 +32,16 @@ defineEmits([
             )"
             class="group bg-blue-100 flex flex-col items-center justify-center text-gray-500 rounded h-48 relative cursor-pointer"
         >
+
+            <div
+                v-if="
+                    index === 3 &&
+                    attachments.length > 4
+                "
+                class="absolute inset-0 z-10 bg-black/60 text-white flex items-center justify-center text-2xl rounded"
+            >
+                +{{ attachments.length - 4 }} more
+            </div>
 
             <!-- Download -->
             <a

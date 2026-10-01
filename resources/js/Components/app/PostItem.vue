@@ -380,7 +380,12 @@ async function createComment() {
         </div>
         <div
             v-if="post.attachments?.length"
-            class="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-3"
+            class="grid gap-3 mb-3"
+            :class="
+                post.attachments.length === 1
+                    ? 'grid-cols-1'
+                    : 'grid-cols-2'
+            "
         >
 
             <PostAttachments
