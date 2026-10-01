@@ -41,19 +41,19 @@ function openAttachmentPreviewModal(
 <template>
 
     <div class="overflow-auto flex-1">
-        <PostItem 
+        <PostItem
             v-for="post of posts"
             :key="post.id"
             :post="post"
             @editClick="openEditModal"
             @attachmentClick="openAttachmentPreviewModal"
-/>
         />
+
         <PostModal
             :post="editPost"
             v-model="showEditModal"
         />
-        
+
         <AttachmentPreviewModal
             :attachments="
                 previewAttachmentsPost.post?.attachments ?? []
