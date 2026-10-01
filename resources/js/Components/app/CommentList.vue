@@ -15,7 +15,6 @@ import {
 
 import {
     ref,
-    useAttrs
 } from 'vue';
 
 import {
@@ -47,6 +46,10 @@ const props = defineProps({
 
 });
 
+const emit = defineEmits([
+    'commentCreate',
+    'commentDelete'
+]);
 
 const authUser =
     usePage().props.auth.user;
@@ -127,6 +130,11 @@ async function createComment() {
 
         newCommentText.value = '';
 
+        emit(
+            'commentCreate',
+            data
+        );
+
     } catch (error) {
 
         console.error(
@@ -206,9 +214,13 @@ async function updateComment() {
                     ...previous,
                     ...data,
 
+                    num_of_comments:
+                        previous.num_of_comments
+                        ?? 0,
+
+
                     comments:
-                        data.comments
-                        ?? previous.comments
+                        previous.comments
                         ?? []
                 }
             );
@@ -230,7 +242,13 @@ async function updateComment() {
     }
 }
 
-
+const removedCount =
+    1 +
+    (
+        comment.num_of_comments
+        ?? 0
+    );
+    
 async function deleteComment(comment) {
 
     if (
@@ -290,14 +308,19 @@ async function deleteComment(comment) {
 
                     (
                         props.parentComment
-                            .num_of_comments ?? 1
-                    ) - 1
+                            .num_of_comments ?? 0
+                    ) - removedCount
                 );
         }
 
 
         props.post.num_of_comments =
             data.num_of_comments;
+
+        emit(
+            'commentDelete',
+            removedCount
+        );
 
     } catch (error) {
 
@@ -362,6 +385,49 @@ async function sendCommentReaction(
         reactingCommentId.value =
             null;
     }
+}
+
+function onCommentCreate(comment) {
+
+    if (props.parentComment) {
+
+        props.parentComment.num_of_comments =
+            (
+                props.parentComment
+                    .num_of_comments ?? 0
+            ) + 1;
+    }
+
+
+    emit(
+        'commentCreate',
+        comment
+    );
+}
+
+
+function onCommentDelete(
+    removedCount
+) {
+
+    if (props.parentComment) {
+
+        props.parentComment.num_of_comments =
+            Math.max(
+                0,
+
+                (
+                    props.parentComment
+                        .num_of_comments ?? 0
+                ) - removedCount
+            );
+    }
+
+
+    emit(
+        'commentDelete',
+        removedCount
+    );
 }
 </script>
 
@@ -622,6 +688,12 @@ async function sendCommentReaction(
                             "
                             :parent-comment="
                                 comment
+                            "
+                            @comment-create="
+                                onCommentCreate
+                            "
+                            @comment-delete="
+                                onCommentDelete
                             "
                         />
 

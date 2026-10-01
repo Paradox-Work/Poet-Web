@@ -14,52 +14,28 @@ class HomeController extends Controller
     public function index(Request $request)
     {
         $userId = $request->user()->id;
-
-        $loadCommentTree = null;
-
-        $loadCommentTree =
-            function ($query) use (
-                &$loadCommentTree,
-                $userId
-            ) {
-
-                $query
-                    ->with('user')
-                    ->withCount([
-                        'reactions',
-                        'comments',
-                    ])
-                    ->with([
-                        'reactions' =>
-                            function ($query) use ($userId) {
-
-                                $query->where(
-                                    'user_id',
-                                    $userId
-                                );
-                            },
-
-                        'comments' =>
-                            $loadCommentTree,
-                    ]);
-            };
  
         $posts = Post::query()
-            ->withCount([
-                'reactions',
-                'comments',
-            ])
+            ->withCount('reactions')
             ->with([
                 'comments' =>
-                    function ($query) use (
-                        $loadCommentTree
-                    ) {
+                    function ($query) use ($userId) {
 
-                        $query->whereNull(
-                            'parent_id'
-                        );
+                        $query
+                            ->with('user')
+                            ->withCount('reactions')
+                            ->with([
+                                'reactions' =>
+                                    function ($query) use (
+                                        $userId
+                                    ) {
 
-                        $loadCommentTree($query);
+                                        $query->where(
+                                            'user_id',
+                                            $userId
+                                        );
+                                    },
+                            ]);
                     },
 
                 'reactions' =>

@@ -321,4 +321,81 @@ visible attachment limit
 attachment click events
 ```
 
-Separating these responsibilities keeps each component focused
+Separating these responsibilities keeps each component focused on a smaller part of the interface.
+
+---
+
+## Before Refactoring
+
+Previously:
+
+```text
+PostItem.vue
+    |
+    +-- post content
+    +-- reactions
+    +-- comments
+    +-- attachment loop
+    +-- image detection
+    +-- file icons
+    +-- download links
+    +-- attachment click handling
+```
+
+Attachment-related markup was directly embedded inside the already large post component.
+
+---
+
+## After Refactoring
+
+Now:
+
+```text
+PostItem.vue
+    |
+    +-- post content
+    +-- reactions
+    +-- comments
+    |
+    +-- PostAttachments.vue
+            |
+            +-- previews
+            +-- downloads
+            +-- visible limit
+            +-- +X more overlay
+```
+
+This reduces duplication and makes future attachment changes easier to implement without modifying the main post component.
+
+---
+
+## Main Files
+
+### `resources/js/Components/app/PostAttachments.vue`
+
+Responsible for rendering attachments, limiting the visible preview to four files, displaying the remaining attachment count, and emitting attachment click events.
+
+### `resources/js/Components/app/PostItem.vue`
+
+Passes attachment data to `PostAttachments.vue` and connects attachment selection to the existing attachment viewer.
+
+### `resources/js/helpers.js`
+
+Provides the `isImage()` helper used to determine whether an attachment should be rendered as an image.
+
+---
+
+## Result
+
+After this refactor:
+
+1. attachment rendering is separated from `PostItem.vue`;
+2. posts display at most four attachment previews;
+3. posts with additional files display a `+X more` indicator;
+4. images continue to display as previews;
+5. non-image files continue to display with file information;
+6. visible attachments can still be downloaded;
+7. attachment clicks continue to open the existing viewer;
+8. the complete attachment collection remains available even when only four files are shown in the feed.
+
+The result is a smaller `PostItem.vue` component and a more compact attachment layout for posts containing many files.

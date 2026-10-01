@@ -35,12 +35,10 @@ class CommentResource extends JsonResource
                     && $this->reactions->isNotEmpty(),
 
             'num_of_comments' =>
-                $this->comments_count ?? 0,
+                0,
 
             'comments' =>
-                CommentResource::collection(
-                    $this->whenLoaded('comments')
-                ),
+                [],
     
             'user' =>
                 new UserResource($this->user),

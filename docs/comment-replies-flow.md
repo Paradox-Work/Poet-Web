@@ -1,368 +1,359 @@
-# Recursive Comment Replies Flow
+## Single-query Comment Loading and PHP Tree Construction
 
-## Overview
+### Purpose
 
-Poet-Web supports threaded comments by allowing a comment to belong either directly to a post or to another comment.
-
-This makes structures such as the following possible:
-
-```text
-Post
-└── Comment
-    ├── Reply
-    │   └── Reply to reply
-    └── Reply
-```
-
-The system uses the nullable `parent_id` column in the `comments` table to distinguish top-level comments from replies.
-
-Top-level comments have:
-
-```text
-parent_id = null
-```
-
-Replies contain the ID of their parent comment:
-
-```text
-parent_id = parent comment ID
-```
-
-The frontend renders these comments recursively through the reusable:
-
-```text
-CommentList.vue
-```
-
-component.
-
----
-
-## Database Structure
-
-The `comments` table contains:
-
-```text
-id
-parent_id
-post_id
-comment
-user_id
-created_at
-updated_at
-```
-
-`parent_id` is a nullable self-referencing foreign key.
+The initial threaded-comment implementation recursively eager-loaded child comments through Eloquent.
 
 Conceptually:
 
 ```text
-comments.id
-    ↑
-    │
-comments.parent_id
+Post
+↓
+root comments
+↓
+children
+↓
+children of children
+↓
+children of children of children
+```
+
+Although this correctly produced a nested structure, the database-loading strategy depended on the depth of the comment tree.
+
+Poet-Web instead loads all comments belonging to the posts on the current page as one flat comment collection and constructs the hierarchical structure in PHP.
+
+The architecture becomes:
+
+```text
+Database
+↓
+flat comment collection
+↓
+group comments by parent_id
+↓
+construct comment tree in PHP
+↓
+PostResource
+↓
+Vue CommentList
+```
+
+---
+
+### Flat Database Structure
+
+Replies do not use a separate table.
+
+Every comment is stored in the `comments` table.
+
+A top-level comment has:
+
+```text
+parent_id = NULL
+```
+
+A reply has:
+
+```text
+parent_id = ID of its direct parent comment
 ```
 
 For example:
 
 ```text
-Comment 5
-id = 5
-parent_id = null
-
-Reply 8
-id = 8
-parent_id = 5
-
-Reply 12
-id = 12
-parent_id = 8
+id | parent_id | comment
+---+-----------+-----------------------
+1  | NULL      | Comment A
+2  | NULL      | Comment B
+3  | 1         | Reply C
+4  | 1         | Reply D
+5  | 3         | Reply E
 ```
 
-produces:
+represents:
 
 ```text
-Comment 5
-└── Reply 8
-    └── Reply 12
+A
+├── C
+│   └── E
+└── D
+
+B
 ```
 
-The foreign key uses cascade deletion.
-
-Therefore, deleting a parent comment also deletes replies that depend on it.
+The database therefore stores a flat set of rows while `parent_id` describes the relationships between those rows.
 
 ---
 
-## Comment Model Relationships
+### Loading the Comments
 
-The `Comment` model contains a child relationship:
+`HomeController` eager-loads all comments belonging to posts in the current paginated result.
 
-```php
-public function comments(): HasMany
-{
-    return $this->hasMany(
-        self::class,
-        'parent_id'
-    );
-}
-```
-
-This returns comments whose:
+The comment query also loads the information required by the frontend:
 
 ```text
-parent_id = current comment ID
+comment author
+reaction count
+current user's reaction
 ```
 
-The reverse relationship can be represented using:
-
-```php
-public function parent(): BelongsTo
-{
-    return $this->belongsTo(
-        self::class,
-        'parent_id'
-    );
-}
-```
-
-This creates the following model structure:
-
-```text
-Comment
-├── parent()
-└── comments()
-```
-
-`parent_id` is also included in `$fillable` so Laravel can assign it when creating a reply.
-
----
-
-## Loading Top-Level Comments
-
-The post itself only loads comments where:
+The query does not restrict comments using:
 
 ```text
 parent_id IS NULL
 ```
 
-This prevents replies from also appearing as normal top-level comments.
+because both root comments and nested replies are required when building the complete tree.
+
+The database therefore returns a flat collection similar to:
+
+```text
+A(parent_id = null)
+B(parent_id = null)
+C(parent_id = A)
+D(parent_id = A)
+E(parent_id = C)
+```
+
+---
+
+### Why the Tree Is Built in PHP
+
+The database relationships describe which comment belongs under another comment, but the frontend requires nested JSON.
+
+The flat collection therefore needs to become:
+
+```text
+A
+├── C
+│   └── E
+└── D
+
+B
+```
+
+This transformation is performed inside `PostResource`.
+
+The database is responsible for retrieving the rows.
+
+PHP is responsible for arranging those rows into the structure expected by Vue.
+
+---
+
+### Grouping by `parent_id`
+
+Before recursively constructing the tree, the comments are grouped according to their parent.
+
+Given:
+
+```text
+A(parent = null)
+B(parent = null)
+C(parent = A)
+D(parent = A)
+E(parent = C)
+```
+
+the grouped lookup is approximately:
+
+```text
+root
+├── A
+└── B
+
+A
+├── C
+└── D
+
+C
+└── E
+```
+
+Conceptually, the structure answers:
+
+```text
+Given a parent ID,
+which comments belong directly underneath it?
+```
+
+This means PHP does not need to repeatedly search the complete comment collection to locate a comment's children.
+
+---
+
+### Performance Difference
+
+A simpler recursive implementation can repeatedly scan the full comment collection.
+
+Conceptually:
+
+```php
+foreach ($comments as $comment) {
+
+    if ($comment->parent_id === $parentId) {
+
+        findChildren($comment->id);
+
+    }
+}
+```
+
+Every recursive call searches the entire collection again.
+
+With many nested comments, this can approach:
+
+```text
+O(n²)
+```
+
+behaviour.
+
+For example, with approximately 1,000 comments, repeatedly scanning the same 1,000-element collection can result in a very large number of comparisons.
+
+Poet-Web instead performs two main operations.
+
+First:
+
+```text
+iterate over comments once
+↓
+group each comment by parent_id
+```
+
+Then:
+
+```text
+walk the grouped structure
+↓
+construct the nested tree
+```
+
+Each comment is grouped once and then processed while constructing the tree.
+
+The resulting approach is approximately:
+
+```text
+O(n)
+```
+
+rather than repeatedly scanning the entire collection for each comment.
+
+---
+
+### Constructing the Tree
+
+Tree construction begins with:
+
+```text
+parent_id = NULL
+```
+
+which identifies top-level comments.
+
+For every top-level comment, PHP retrieves its children from the grouped lookup.
+
+It then performs the same operation for each child.
 
 Conceptually:
 
 ```text
-Post
+buildTree(null)
 │
-├── Comment A
-│   └── Reply A1
+├── A
+│   └── buildTree(A)
+│       ├── C
+│       │   └── buildTree(C)
+│       │       └── E
+│       └── D
 │
-└── Comment B
-    └── Reply B1
+└── B
 ```
 
-Without the `parent_id IS NULL` restriction, the initial post comment collection could contain:
+A comment without children produces:
 
 ```text
-Comment A
-Reply A1
-Comment B
-Reply B1
+comments = []
 ```
 
-which would duplicate replies in the interface.
-
-Therefore `HomeController` starts from root comments and loads descendants through each comment's `comments()` relationship.
+which ends that recursive branch.
 
 ---
 
-## Recursive Loading
+### Example Result
 
-Each comment can load:
-
-```text
-user
-reaction count
-current user's reaction
-reply count
-child comments
-```
-
-The child comments load the same relationships again.
-
-This produces a recursive structure:
+The flat database collection:
 
 ```text
-Post
-└── comments
-    └── Comment
-        ├── user
-        ├── reactions
-        ├── comments_count
-        └── comments
-            └── Comment
-                ├── user
-                ├── reactions
-                ├── comments_count
-                └── comments
+A(parent = null)
+B(parent = null)
+C(parent = A)
+D(parent = A)
+E(parent = C)
 ```
 
-Because the same structure is repeated at every level, replies can themselves contain replies.
+becomes approximately:
+
+```json
+[
+    {
+        "id": "A",
+        "comments": [
+            {
+                "id": "C",
+                "comments": [
+                    {
+                        "id": "E",
+                        "comments": []
+                    }
+                ]
+            },
+            {
+                "id": "D",
+                "comments": []
+            }
+        ]
+    },
+    {
+        "id": "B",
+        "comments": []
+    }
+]
+```
+
+The nested JSON can then be rendered recursively by `CommentList.vue`.
 
 ---
 
-## CommentResource
+### Subcomments
 
-`CommentResource` exposes the information required by the recursive frontend.
+A subcomment is not a different model or database entity.
 
-Important values include:
-
-```text
-id
-parent_id
-comment
-created_at
-updated_at
-num_of_reactions
-current_user_has_reaction
-num_of_comments
-comments
-user
-```
-
-`num_of_comments` represents the number of direct replies belonging to that comment.
-
-`comments` contains the nested replies themselves.
+It is a normal `Comment` whose `parent_id` points to another comment.
 
 For example:
 
-```json
-{
-    "id": 5,
-    "parent_id": null,
-    "comment": "Great poem",
-    "num_of_comments": 1,
-    "comments": [
-        {
-            "id": 8,
-            "parent_id": 5,
-            "comment": "I agree",
-            "num_of_comments": 0,
-            "comments": []
-        }
-    ]
-}
+```text
+Comment A
+└── Reply B
+    └── Reply C
 ```
+
+is stored as:
+
+```text
+A.parent_id = NULL
+B.parent_id = A.id
+C.parent_id = B.id
+```
+
+A reply can therefore itself become a parent.
+
+This allows comment nesting to continue without creating separate tables or components for each nesting depth.
 
 ---
 
-## Creating a Top-Level Comment
+### Recursive Vue Rendering
 
-A normal post comment is submitted with:
-
-```text
-parent_id = null
-```
-
-The frontend sends:
-
-```text
-POST /posts/{post}/comments
-```
-
-with approximately:
-
-```json
-{
-    "comment": "Great poem",
-    "parent_id": null
-}
-```
-
-Laravel creates a comment containing:
-
-```text
-post_id = current post
-user_id = authenticated user
-parent_id = null
-```
-
-The created comment therefore becomes a root comment.
-
----
-
-## Creating a Reply
-
-When `CommentList.vue` is rendered beneath another comment, it receives that comment through:
-
-```text
-parentComment
-```
-
-A reply request contains:
-
-```json
-{
-    "comment": "I agree",
-    "parent_id": 5
-}
-```
-
-The backend verifies that the requested parent comment exists and belongs to the same post.
-
-This prevents a reply for one post from being attached to a comment belonging to another post.
-
-The new comment is then created with:
-
-```text
-post_id = current post
-parent_id = parent comment ID
-user_id = authenticated user
-```
-
----
-
-## Reply Creation Flow
-
-```mermaid
-flowchart TD
-    A[User enters reply]
-    B[CommentList.vue]
-    C[Read parentComment ID]
-    D[POST post.comment.create]
-    E[Validate comment and parent_id]
-    F{Parent belongs to current post?}
-    G[Create comment]
-    H[Set parent_id]
-    I[Load user reactions and child count]
-    J[CommentResource]
-    K[Insert reply into parent comments array]
-    L[Increment parent reply count]
-    M[Increment post total comment count]
-
-    A --> B
-    B --> C
-    C --> D
-    D --> E
-    E --> F
-    F -- Yes --> G
-    G --> H
-    H --> I
-    I --> J
-    J --> K
-    K --> L
-    L --> M
-```
-
----
-
-## Recursive `CommentList.vue`
-
-Comment rendering was moved out of `PostItem.vue` into:
-
-```text
-resources/js/Components/app/CommentList.vue
-```
-
-`PostItem.vue` now only starts the comment tree:
+`PostItem.vue` starts the comment tree:
 
 ```vue
 <CommentList
@@ -373,7 +364,7 @@ resources/js/Components/app/CommentList.vue
 
 `CommentList.vue` renders each comment.
 
-Inside each comment, the same component is used again for its replies:
+When a comment contains replies, `CommentList.vue` invokes itself:
 
 ```vue
 <CommentList
@@ -383,316 +374,152 @@ Inside each comment, the same component is used again for its replies:
 />
 ```
 
-This is called recursion.
-
-The component effectively renders:
+The rendering structure can therefore become:
 
 ```text
 CommentList
-└── Comment
-    └── CommentList
-        └── Comment
-            └── CommentList
-                └── Comment
+├── Comment A
+│   └── CommentList
+│       └── Reply B
+│           └── CommentList
+│               └── Reply C
+└── Comment D
 ```
 
-The same component can therefore display comments at any nesting level.
+The same component handles every depth of the comment tree.
 
 ---
 
-## Why Recursion Is Useful
+### Descendant Counts
 
-Without recursion, separate components or loops would be required for:
-
-```text
-comments
-replies
-replies to replies
-replies to replies to replies
-```
-
-That approach would duplicate code and impose a fixed nesting depth.
-
-Using recursion means one component handles every level:
-
-```text
-CommentList.vue
-```
-
-The data determines how deeply the structure continues.
-
----
-
-## Editing Comments and Replies
-
-Editing works the same way regardless of comment depth.
-
-The selected comment ID is sent to:
-
-```text
-PUT /comments/{comment}
-```
-
-using the route:
-
-```text
-post.comment.update
-```
-
-Laravel verifies ownership through the existing update authorization.
-
-After updating, the returned `CommentResource` replaces the matching item in the local comment array.
-
-Existing child comments are preserved when the edited comment is replaced.
-
----
-
-## Comment Reactions
-
-Posts and comments use the existing polymorphic reaction system.
-
-Every nested comment can therefore independently contain:
-
-```text
-num_of_reactions
-current_user_has_reaction
-```
-
-Clicking Like or Unlike sends:
-
-```text
-POST /comments/{comment}/reaction
-```
-
-through:
-
-```text
-post.comment.reaction
-```
-
-The response immediately updates the selected comment's reaction state without refreshing the page.
-
----
-
-## Deleting Replies
-
-Comment deletion uses:
-
-```text
-DELETE /comments/{comment}
-```
-
-through:
-
-```text
-post.comment.delete
-```
-
-Because `parent_id` uses a cascading foreign key, deleting a comment also removes its descendants.
+`num_of_comments` represents the total number of descendants below a comment.
 
 For example:
 
 ```text
-Comment A
-└── Reply A1
-    └── Reply A1.1
+A
+├── B
+│   ├── C
+│   └── D
+└── E
+```
+
+produces:
+
+```text
+A = 4
+B = 2
+C = 0
+D = 0
+E = 0
+```
+
+The count for A includes:
+
+```text
+B
+C
+D
+E
+```
+
+not only its immediate children.
+
+While constructing the tree, PHP calculates:
+
+```text
+direct children
++
+all descendants belonging to those children
+```
+
+This allows the interface to display the total size of a reply thread.
+
+---
+
+### Deleting Comment Trees
+
+PHP tree construction does not delete comments.
+
+Deletion is handled independently by the database relationship created for `parent_id`.
+
+The foreign key uses cascading deletion:
+
+```php
+->constrained('comments')
+->cascadeOnDelete();
+```
+
+Therefore, when a parent comment is deleted, comments that depend on it are also deleted.
+
+For example:
+
+```text
+A
+└── B
+    └── C
+        └── D
 ```
 
 Deleting:
 
 ```text
-Reply A1
+B
 ```
 
-also removes:
+causes the database to remove:
 
 ```text
-Reply A1.1
+B
+C
+D
 ```
 
-The backend returns the updated post comment count so the frontend can display the real database count after cascading deletion.
+while A remains.
 
----
-
-## Comment Counts
-
-Two different counts are used.
-
-### Post comment count
+The frontend calculates the size of the removed subtree as:
 
 ```text
-post.num_of_comments
-```
-
-represents the total number of comments belonging to the post, including replies.
-
-### Comment reply count
-
-```text
+1
++
 comment.num_of_comments
 ```
 
-represents the number of direct replies belonging to that comment.
+The `1` represents the selected comment itself, while `num_of_comments` contains all descendants beneath it.
 
-For example:
-
-```text
-Post
-└── Comment A
-    ├── Reply 1
-    └── Reply 2
-```
-
-produces approximately:
-
-```text
-Post comment count = 3
-Comment A reply count = 2
-```
+This allows ancestor reply counts to remain synchronized after a cascading deletion.
 
 ---
 
-## Duplicate Request Protection
-
-`CommentList.vue` keeps separate pending state for:
+### Responsibility Separation
 
 ```text
-comment creation
-comment update
-comment deletion
-comment reactions
+Database
+├── stores flat comment rows
+├── stores parent_id relationships
+└── enforces cascading deletion
+
+HomeController
+├── loads comments for the current posts
+├── loads comment users
+├── loads reaction counts
+└── loads current-user reaction state
+
+PostResource
+├── groups comments by parent_id
+├── constructs nested comment tree
+└── calculates descendant counts
+
+CommentResource
+└── serializes individual comment information
+
+CommentList.vue
+├── recursively renders the tree
+├── creates comments and replies
+├── edits comments
+├── deletes comments
+├── updates ancestor counts
+└── handles comment reactions
 ```
 
-Examples include:
-
-```text
-commentPending
-commentUpdatePending
-deletingCommentId
-reactingCommentId
-```
-
-These states prevent repeated clicks from sending unnecessary duplicate requests while a previous request is still being processed.
-
----
-
-## Component Responsibilities
-
-### `PostItem.vue`
-
-Responsible for:
-
-```text
-post content
-post attachments
-post reactions
-opening the comment section
-starting the CommentList tree
-```
-
-### `CommentList.vue`
-
-Responsible for:
-
-```text
-creating comments and replies
-displaying comments
-displaying nested replies
-editing comments
-deleting comments
-comment reactions
-reply disclosures
-recursive rendering
-```
-
-### `Comment.php`
-
-Responsible for:
-
-```text
-post relationship
-user relationship
-reaction relationship
-parent relationship
-child comment relationship
-```
-
-### `HomeController.php`
-
-Responsible for:
-
-```text
-loading root comments
-loading recursive reply data
-loading reaction states
-loading reply counts
-```
-
-### `PostController.php`
-
-Responsible for:
-
-```text
-creating comments and replies
-validating parent_id
-editing comments
-deleting comments
-comment reactions
-returning current comment counts
-```
-
-### `CommentResource.php`
-
-Responsible for:
-
-```text
-serializing comments
-serializing reaction information
-serializing reply counts
-serializing nested comments
-```
-
----
-
-## Overall Flow
-
-```mermaid
-flowchart TD
-    A[HomeController]
-    B[Load root comments]
-    C[Load child comments recursively]
-    D[CommentResource]
-    E[PostResource]
-    F[PostItem.vue]
-    G[CommentList.vue]
-    H[Comment]
-    I[Recursive CommentList]
-    J[Reply]
-
-    A --> B
-    B --> C
-    C --> D
-    D --> E
-    E --> F
-    F --> G
-    G --> H
-    H --> I
-    I --> J
-```
-
----
-
-## Result
-
-After this feature, an authenticated user can:
-
-1. create top-level comments;
-2. reply to comments;
-3. reply to existing replies;
-4. view nested comment threads;
-5. like and unlike comments at any depth;
-6. edit their own comments or replies;
-7. delete their own comments or replies;
-8. see immediate frontend updates without refreshing the page.
-
-The recursive design also removes comment-management logic from `PostItem.vue`, keeping post rendering separate from the increasingly complex comment system.
+This keeps database retrieval, tree construction, API serialization, and frontend rendering as separate responsibilities.
