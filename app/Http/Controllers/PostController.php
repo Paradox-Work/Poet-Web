@@ -9,8 +9,8 @@ use App\Http\Requests\StorePostRequest;
 use App\Http\Requests\UpdatePostRequest;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use App\Enums\PostReactionEnum;
-use App\Models\PostReaction;
+use App\Enums\ReactionEnum;
+use App\Models\Reaction;
 use Illuminate\Validation\Rule;
 use App\Http\Resources\CommentResource;
 use App\Models\Comment;
@@ -232,17 +232,21 @@ class PostController extends Controller
             'reaction' => [
                 'required',
                 Rule::enum(
-                    PostReactionEnum::class
+                    ReactionEnum::class
                 ),
             ],
         ]);
 
-        $userId = $request->user()->id;
+        $userId =
+            $request->user()->id;
 
-        $reaction = PostReaction::query()
-            ->where('post_id', $post->id)
-            ->where('user_id', $userId)
-            ->first();
+        $reaction =
+            $post->reactions()
+                ->where(
+                    'user_id',
+                    $userId
+                )
+                ->first();
 
         if ($reaction) {
 
@@ -252,23 +256,74 @@ class PostController extends Controller
 
         } else {
 
-            PostReaction::create([
-                'post_id' => $post->id,
-                'user_id' => $userId,
-                'type' => $data['reaction'],
+            $post->reactions()->create([
+                'user_id' =>
+                    $userId,
+
+                'type' =>
+                    $data['reaction'],
             ]);
 
             $hasReaction = true;
         }
 
-        $reactionCount =
-            PostReaction::query()
-                ->where('post_id', $post->id)
-                ->count();
+        return response()->json([
+            'num_of_reactions' =>
+                $post->reactions()->count(),
+
+            'current_user_has_reaction' =>
+                $hasReaction,
+        ]);
+    }
+
+    public function commentReaction(
+        Request $request,
+        Comment $comment
+    ) {
+        $data = $request->validate([
+            'reaction' => [
+                'required',
+                Rule::enum(
+                    ReactionEnum::class
+                ),
+            ],
+        ]);
+
+        $userId =
+            $request->user()->id;
+
+        $reaction =
+            $comment->reactions()
+                ->where(
+                    'user_id',
+                    $userId
+                )
+                ->first();
+
+        if ($reaction) {
+
+            $reaction->delete();
+
+            $hasReaction = false;
+
+        } else {
+
+            $comment->reactions()->create([
+                'user_id' =>
+                    $userId,
+
+                'type' =>
+                    $data['reaction'],
+            ]);
+
+            $hasReaction = true;
+        }
 
         return response()->json([
             'num_of_reactions' =>
-                $reactionCount,
+                $comment
+                    ->reactions()
+                    ->count(),
 
             'current_user_has_reaction' =>
                 $hasReaction,

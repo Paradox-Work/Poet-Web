@@ -29,10 +29,11 @@ class Post extends Model
         return $this->hasMany(PostAttachment::class);
     }
 
-    public function reactions(): HasMany
+    public function reactions(): MorphMany
     {
-        return $this->hasMany(
-            PostReaction::class
+        return $this->morphMany(
+            Reaction::class,
+            'object'
         );
     }
 
