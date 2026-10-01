@@ -6,6 +6,10 @@ import {
     watch
 } from 'vue';
 
+import {
+    useRemember
+} from '@inertiajs/vue3';
+
 import axios from 'axios';
 
 import PostItem
@@ -28,15 +32,20 @@ const props = defineProps({
 });
 
 
-const allPosts =
-    ref([
-        ...(props.posts.data ?? [])
-    ]);
+const feedState =
+    useRemember(
+        {
+            posts: [
+                ...(props.posts.data ?? [])
+            ],
 
-const nextPageUrl =
-    ref(
-        props.posts.links?.next
-        ?? null
+            nextPageUrl:
+                props.posts.links?.next
+                ?? null,
+
+            loadedBeyondFirstPage: false
+        },
+        'home-post-feed'
     );
 
 const loadingMore =
@@ -93,7 +102,7 @@ function openAttachmentPreviewModal(
 async function loadMore() {
 
     if (
-        !nextPageUrl.value ||
+        !feedState.nextPageUrl ||
         loadingMore.value
     ) {
         return;
@@ -107,7 +116,7 @@ async function loadMore() {
 
         const { data } =
             await axios.get(
-                nextPageUrl.value,
+                feedState.nextPageUrl,
                 {
                     headers: {
                         Accept:
@@ -119,7 +128,7 @@ async function loadMore() {
 
         const existingIds =
             new Set(
-                allPosts.value.map(
+                feedState.posts.map(
                     post => post.id
                 )
             );
@@ -135,14 +144,18 @@ async function loadMore() {
                 );
 
 
-        allPosts.value.push(
+        feedState.posts.push(
             ...newPosts
         );
 
 
-        nextPageUrl.value =
+        feedState.nextPageUrl =
             data.links?.next
             ?? null;
+
+
+        feedState.loadedBeyondFirstPage =
+            true;
 
     } catch (error) {
 
@@ -163,13 +176,76 @@ watch(
 
     posts => {
 
-        allPosts.value = [
-            ...(posts?.data ?? [])
-        ];
+        const incomingPosts =
+            posts?.data ?? [];
 
-        nextPageUrl.value =
-            posts?.links?.next
-            ?? null;
+
+        const incomingById =
+            new Map(
+                incomingPosts.map(
+                    post => [
+                        post.id,
+                        post
+                    ]
+                )
+            );
+
+
+        /*
+         * Refresh any posts we already have
+         * with newer server data.
+         */
+        feedState.posts =
+            feedState.posts.map(
+                post =>
+                    incomingById.get(
+                        post.id
+                    )
+                    ?? post
+            );
+
+
+        /*
+         * Add genuinely new first-page posts
+         * to the beginning of the feed.
+         */
+        const existingIds =
+            new Set(
+                feedState.posts.map(
+                    post => post.id
+                )
+            );
+
+
+        const newPosts =
+            incomingPosts.filter(
+                post =>
+                    !existingIds.has(
+                        post.id
+                    )
+            );
+
+
+        if (newPosts.length) {
+
+            feedState.posts.unshift(
+                ...newPosts
+            );
+        }
+
+
+        /*
+         * Only reset pagination if the user
+         * has not already loaded later pages.
+         */
+        if (
+            !feedState.loadedBeyondFirstPage
+        ) {
+
+            feedState.nextPageUrl =
+                posts?.links?.next
+                ?? null;
+        }
     }
 );
 
@@ -219,11 +295,12 @@ onBeforeUnmount(() => {
 
     <div
         ref="postListContainer"
-        class="overflow-auto flex-1"
+        class="scrollbar-hidden overflow-auto flex-1"
+        scroll-region
     >
 
         <PostItem
-            v-for="post of allPosts"
+            v-for="post of feedState.posts"
             :key="post.id"
             :post="post"
             @editClick="

@@ -132,53 +132,30 @@ function next() {
                     >
 
                         <DialogPanel
-                            class="relative flex w-full h-screen bg-slate-800"
+                            class="relative flex w-full h-screen items-center justify-center bg-slate-900/95 p-6"
+                            @click.self="closeModal"
                         >
-
-                            <button
-                                type="button"
-                                @click="closeModal"
-                                class="absolute right-4 top-4 z-30 w-10 h-10 rounded-full hover:bg-black/30 flex items-center justify-center text-white"
-                            >
-                                <XMarkIcon class="w-6 h-6" />
-                            </button>
-
-
-                            <button
-                                v-if="currentIndex > 0"
-                                type="button"
-                                @click="prev"
-                                class="absolute z-20 left-0 top-0 h-full w-14 flex items-center justify-center text-white hover:bg-black/20"
-                            >
-                                <ChevronLeftIcon class="w-10" />
-                            </button>
-
-
-                            <button
-                                v-if="
-                                    currentIndex <
-                                    attachments.length - 1
-                                "
-                                type="button"
-                                @click="next"
-                                class="absolute z-20 right-0 top-0 h-full w-14 flex items-center justify-center text-white hover:bg-black/20"
-                            >
-                                <ChevronRightIcon class="w-10" />
-                            </button>
-
 
                             <div
                                 v-if="attachment"
-                                class="flex items-center justify-center w-full h-full p-10"
+                                class="
+                                    relative
+                                    inline-flex
+                                    max-h-full
+                                    max-w-full
+                                    items-center
+                                    justify-center
+                                    px-16
+                                    py-14
+                                "
                             >
 
                                 <img
                                     v-if="isImage(attachment)"
                                     :src="attachment.url"
                                     :alt="attachment.name"
-                                    class="max-w-full max-h-full object-contain"
+                                    class="block max-w-[calc(100vw-6rem)] max-h-[calc(100vh-6rem)] object-contain"
                                 />
-
 
                                 <div
                                     v-else
@@ -190,6 +167,98 @@ function next() {
                                         {{ attachment.name }}
                                     </span>
                                 </div>
+                            
+                                <button
+                                    type="button"
+                                    @click="closeModal"
+                                    class="
+                                        absolute
+                                        right-2
+                                        top-2
+                                        z-30
+                                        flex
+                                        h-11
+                                        w-11
+                                        items-center
+                                        justify-center
+                                        rounded-full
+                                        bg-black/75
+                                        text-white
+                                        shadow-lg
+                                        ring-1
+                                        ring-white/30
+                                        backdrop-blur-sm
+                                        transition
+                                        hover:bg-black/90
+                                    "
+                                    aria-label="Close attachment preview"
+                                >
+                                    <XMarkIcon class="w-7 h-7" />
+                                </button>
+                                
+                                <button
+                                    v-if="currentIndex > 0"
+                                    type="button"
+                                    @click="prev"
+                                    class="
+                                        absolute
+                                        left-2
+                                        top-1/2
+                                        z-20
+                                        flex
+                                        h-12
+                                        w-12
+                                        -translate-y-1/2
+                                        items-center
+                                        justify-center
+                                        rounded-full
+                                        bg-black/55
+                                        text-white
+                                        shadow-md
+                                        ring-1
+                                        ring-white/20
+                                        backdrop-blur-sm
+                                        transition
+                                        hover:bg-black/75
+                                    "
+                                    aria-label="Previous attachment"
+                                >
+                                    <ChevronLeftIcon class="w-8 h-8" />
+                                </button>
+
+
+                                <button
+                                    v-if="
+                                        currentIndex <
+                                        attachments.length - 1
+                                    "
+                                    type="button"
+                                    @click="next"
+                                    class="
+                                        absolute
+                                        right-2
+                                        top-1/2
+                                        z-20
+                                        flex
+                                        h-12
+                                        w-12
+                                        -translate-y-1/2
+                                        items-center
+                                        justify-center
+                                        rounded-full
+                                        bg-black/55
+                                        text-white
+                                        shadow-md
+                                        ring-1
+                                        ring-white/20
+                                        backdrop-blur-sm
+                                        transition
+                                        hover:bg-black/75
+                                    "
+                                    aria-label="Next attachment"
+                                >
+                                    <ChevronRightIcon class="w-8 h-8" />
+                                </button>
 
                             </div>
 
