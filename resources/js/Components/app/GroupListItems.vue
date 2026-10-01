@@ -17,6 +17,10 @@ const props = defineProps({
     }
 });
 
+const emit = defineEmits([
+    'createGroup'
+]);
+
 const searchKeyword = ref('');
 
 const filteredGroups = computed(() => {
@@ -49,11 +53,32 @@ const filteredGroups = computed(() => {
 
 <template>
 
-    <TextInput
-        v-model="searchKeyword"
-        placeholder="Type to search..."
-        class="w-full"
-    />
+    <div class="flex gap-2">
+        
+        <TextInput
+            v-model="searchKeyword"
+            placeholder="Type to search..."
+            class="w-full"
+        />
+
+        <button
+            type="button"
+            @click="emit('createGroup')"
+            class="
+                shrink-0
+                rounded
+                bg-indigo-500
+                px-3
+                py-1
+                text-sm
+                text-white
+                hover:bg-indigo-600
+            "
+        >
+            New group
+        </button>
+
+    </div>
 
     <div
         class="mt-3 lg:min-h-full max-h-64 overflow-auto rounded border border-gray-100"

@@ -38,9 +38,24 @@ function onGroupCreated(group) {
 
          <!-- CHANGED: was "block flex-col min-h-0 flex-1" (block + flex conflict) -->
          <DisclosurePanel class="flex flex-col">
+
+            <div class="flex justify-end mb-3">
+               <button
+                     type="button"
+                     @click="showNewGroupModal = true"
+                     class="text-sm bg-indigo-500 hover:bg-indigo-600 text-white rounded py-1 px-2"
+               >
+                     New group
+               </button>
+            </div>
+
             <GroupListItems
                :groups="localGroups"
+               @create-group="
+                     showNewGroupModal = true
+               "
             />
+
          </DisclosurePanel>
       </Disclosure>
 
@@ -50,7 +65,7 @@ function onGroupCreated(group) {
          <div
             class="flex justify-between items-center mb-4"
          >
-            <h2 class="text-xl font-bold">
+            <h2 class="text-xl font-bold mb-4">
                My Groups
             </h2>
 
@@ -64,6 +79,9 @@ function onGroupCreated(group) {
          </div>
          <GroupListItems
             :groups="localGroups"
+            @create-group="
+               showNewGroupModal = true
+            "
          />
       </div>
 
