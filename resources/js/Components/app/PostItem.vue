@@ -234,7 +234,7 @@ async function sendReaction() {
 
 
     <!-- Everything below appears when Comment is clicked -->
-    <DisclosurePanel class="mt-4">
+    <DisclosurePanel class="comment-list mt-4 max-h-[400px] overflow-y-auto pr-2">
 
         <CommentList
             :post="post"
