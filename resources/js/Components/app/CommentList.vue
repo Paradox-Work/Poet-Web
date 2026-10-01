@@ -240,14 +240,10 @@ async function updateComment() {
 
         commentUpdatePending.value = false;
     }
+    
 }
 
-const removedCount =
-    1 +
-    (
-        comment.num_of_comments
-        ?? 0
-    );
+
     
 async function deleteComment(comment) {
 
@@ -267,6 +263,12 @@ async function deleteComment(comment) {
         return;
     }
 
+    const removedCount =
+        1 +
+        (
+            comment.num_of_comments
+            ?? 0
+        );
 
     deletingCommentId.value =
         comment.id;
