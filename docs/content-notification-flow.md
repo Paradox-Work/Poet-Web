@@ -117,7 +117,7 @@ The remaining users receive:
 PostCreated
 ```
 
-The email includes the group name and a link back to the group profile.
+The email includes the group name and a direct link to the dedicated post page through `post.view`.
 
 ---
 
@@ -148,7 +148,7 @@ If they are different, the post owner receives:
 CommentCreated
 ```
 
-The email contains a shortened version of the comment and links back to either the group feed or dashboard, depending on where the post belongs.
+The email contains a shortened version of the comment and links directly to the affected post through `post.view`.
 
 ---
 
@@ -184,7 +184,7 @@ If the reacting user is not the post owner, the owner receives:
 ReactionAddedOnPost
 ```
 
-The email identifies the reacting user's username and links back to the relevant feed.
+The email identifies the reacting user's username and links directly to the affected post through `post.view`.
 
 ---
 
@@ -212,7 +212,7 @@ If the reacting user is not the comment author, the comment author receives:
 ReactionAddedOnComment
 ```
 
-The email identifies the reacting user, includes a shortened version of the comment, and links back to the relevant feed.
+The email identifies the reacting user, includes a shortened version of the comment, and links directly to the affected post through `post.view`.
 
 ---
 
@@ -364,5 +364,5 @@ exclude self-notifications
         ↓
 send email notification
         ↓
-link user back to relevant feed
+link user directly to affected post
 ```
