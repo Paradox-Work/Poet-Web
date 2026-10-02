@@ -1,5 +1,9 @@
 <script setup>
 import {
+    computed
+} from 'vue';
+
+import {
     EllipsisVerticalIcon,
     PencilIcon,
     TrashIcon
@@ -15,7 +19,20 @@ import {
 import { usePage } from '@inertiajs/vue3';
 
 defineProps({
-    user: Object
+    user: {
+        type: Object,
+        required: true
+    },
+
+    post: {
+        type: Object,
+        default: null
+    },
+
+    comment: {
+        type: Object,
+        default: null
+    }
 });
 
 defineEmits([
@@ -25,11 +42,71 @@ defineEmits([
 
 const authUser =
     usePage().props.auth.user;
+
+const editAllowed =
+    computed(() => {
+
+        return (
+            props.user?.id ===
+            authUser.id
+        );
+    });
+
+
+const deleteAllowed =
+    computed(() => {
+
+        /*
+         * User owns the item.
+         */
+        if (
+            props.user?.id ===
+            authUser.id
+        ) {
+            return true;
+        }
+
+
+        /*
+         * Post owner may delete comments
+         * left on their post.
+         */
+        if (
+            props.comment &&
+            props.post?.user?.id ===
+                authUser.id
+        ) {
+            return true;
+        }
+
+
+        /*
+         * Backend-calculated permission,
+         * including group admins.
+         */
+        if (
+            !props.comment &&
+            props.post?.can_delete
+        ) {
+            return true;
+        }
+
+
+        return false;
+    });
+
+
+const showMenu =
+    computed(
+        () =>
+            editAllowed.value ||
+            deleteAllowed.value
+    );
 </script>
 
 <template>
     <Menu
-        v-if="user?.id === authUser.id"
+        v-if="showMenu"
         as="div"
         class="relative inline-block text-left"
     >
@@ -56,7 +133,10 @@ const authUser =
             >
                 <div class="px-1 py-1">
 
-                    <MenuItem v-slot="{ active }">
+                    <MenuItem
+                        v-if="editAllowed"
+                        v-slot="{ active }"
+                    >
                         <button
                             type="button"
                             @click="$emit('edit')"
@@ -76,7 +156,10 @@ const authUser =
                         </button>
                     </MenuItem>
 
-                    <MenuItem v-slot="{ active }">
+                    <MenuItem
+                        v-if="deleteAllowed"
+                        v-slot="{ active }"
+                    >
                         <button
                             type="button"
                             @click="$emit('delete')"

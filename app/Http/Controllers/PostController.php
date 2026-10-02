@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Notifications\CommentDeleted;
+use App\Notifications\PostDeleted;
 use App\Models\Post;
 use App\Models\PostAttachment;
 use Illuminate\Http\Request;
@@ -206,13 +208,42 @@ class PostController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Post $post)
-    {
-        if ($post->user_id !== auth()->id()) {
-            abort(403, "You don't have permission to delete this post.");
+    public function destroy(
+        Request $request,
+        Post $post
+    ) {
+        $userId = $request->user()->id;
+
+        $isOwner =
+            $post->user_id === $userId;
+
+        $isGroupAdmin =
+            $post->group &&
+            $post->group->isAdmin($userId);
+
+        if (
+            !$isOwner &&
+            !$isGroupAdmin
+        ) {
+            abort(
+                403,
+                "You don't have permission to delete this post."
+            );
         }
 
+        $postOwner = $post->user;
+        $group = $post->group;
+
         $post->delete();
+
+        if (
+            !$isOwner &&
+            $group
+        ) {
+            $postOwner->notify(
+                new PostDeleted($group)
+            );
+        }
 
         return back();
     }
@@ -406,18 +437,47 @@ public function updateComment(UpdateCommentRequest $request, Comment $comment) {
     return new CommentResource($comment);
 }
 
-public function deleteComment(Comment $comment)
-{
-    if ($comment->user_id !== auth()->id()) {
+public function deleteComment(
+    Request $request,
+    Comment $comment
+) {
+    $userId =
+        $request->user()->id;
+
+    $post =
+        $comment->post;
+
+    $isCommentOwner =
+        $comment->user_id ===
+        $userId;
+
+    $isPostOwner =
+        $post->user_id ===
+        $userId;
+
+    if (
+        !$isCommentOwner &&
+        !$isPostOwner
+    ) {
         abort(
             403,
             "You don't have permission to delete this comment."
         );
     }
 
-    $post = $comment->post;
+    $commentOwner =
+        $comment->user;
 
     $comment->delete();
+
+    if (!$isCommentOwner) {
+        $commentOwner->notify(
+            new CommentDeleted(
+                $comment,
+                $post
+            )
+        );
+    }
 
     return response()->json([
         'num_of_comments' =>

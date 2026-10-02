@@ -527,6 +527,8 @@ function onCommentDelete(
 
                 <EditDeleteDropdown
                     :user="comment.user"
+                    :post="post"
+                    :comment="comment"  
                     @edit="
                         startCommentEdit(comment)
                     "

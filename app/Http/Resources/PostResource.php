@@ -16,6 +16,22 @@ class PostResource extends JsonResource
     public function toArray(Request $request): array
     {
 
+        $userId =
+            $request->user()?->id;
+
+        $canDelete =
+            $userId &&
+            (
+                $this->user_id === $userId
+                ||
+                (
+                    $this->group &&
+                    $this->group->isAdmin(
+                        $userId
+                    )
+                )
+            );
+
         $comments =
             $this->relationLoaded('comments')
                 ? $this->comments
@@ -34,7 +50,15 @@ class PostResource extends JsonResource
             'updated_at' => $this->updated_at->format('Y-m-d H:i:s'),
      
             'user' => new UserResource($this->user),
-            'group' => $this->group,
+            'group' =>
+                $this->group
+                    ? new GroupResource(
+                        $this->group
+                    )
+                    : null,
+
+            'can_delete' =>
+                $canDelete,
             'attachments' => PostAttachmentResource::collection(
                 $this->attachments
             ),

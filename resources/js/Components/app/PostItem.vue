@@ -123,6 +123,7 @@ async function sendReaction() {
 
             <EditDeleteDropdown
                 :user="post.user"
+                :post="post"
                 @edit="openEditModal"
                 @delete="deletePost"
             />
