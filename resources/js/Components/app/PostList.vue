@@ -263,6 +263,17 @@ onBeforeUnmount(() => {
 
     observer?.disconnect();
 });
+
+function removePost(
+    postId
+) {
+
+    feedState.posts =
+        feedState.posts.filter(
+            post =>
+                post.id !== postId
+        );
+}
 </script>
 
 <template>
@@ -282,6 +293,9 @@ onBeforeUnmount(() => {
             "
             @attachmentClick="
                 openAttachmentPreviewModal
+            "
+            @deleted="
+                removePost
             "
         />
 

@@ -47,7 +47,8 @@ const plainBody = computed(() => {
 
 const emit = defineEmits([
     'editClick',
-    'attachmentClick'
+    'attachmentClick',
+    'deleted'
 ]);
 
 function openAttachment(index) {
@@ -63,14 +64,31 @@ function openEditModal() {
 }
 
 function deletePost() {
-    if (window.confirm('Are you sure you want to delete this post?')) {
-        router.delete(
-            route('post.destroy', props.post.id),
-            {
-                preserveScroll: true
-            }
-        );
+
+    if (
+        !window.confirm(
+            'Are you sure you want to delete this post?'
+        )
+    ) {
+        return;
     }
+
+    router.delete(
+        route(
+            'post.destroy',
+            props.post.id
+        ),
+        {
+            preserveScroll: true,
+
+            onSuccess: () => {
+                emit(
+                    'deleted',
+                    props.post.id
+                );
+            }
+        }
+    );
 }
 
 const reactionPending = ref(false);
