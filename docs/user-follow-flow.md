@@ -107,6 +107,23 @@ const UPDATED_AT = null;
 
 ---
 
+## User Model Relationships
+
+The `User` model exposes reusable self-referencing relationships:
+
+```text
+followers()
+followings()
+```
+
+`followers()` returns the users who follow the current user.
+
+`followings()` returns the users the current user follows.
+
+These relationships are reused by profile pages, the personalized Home feed, the Following sidebar, and normal-post follower notifications.
+
+---
+
 ## Loading a Profile
 
 When a profile is opened, `ProfileController::index()` calculates two follow-related values.
@@ -438,6 +455,10 @@ Validates and processes follow/unfollow requests.
 
 Represents the follower relationship.
 
+### `User.php`
+
+Defines the reusable `followers()` and `followings()` many-to-many relationships used throughout the application.
+
 ### `FollowUser.php`
 
 Builds follow and unfollow email notifications and links the recipient back to the acting user's profile.
@@ -470,3 +491,5 @@ Authenticated users can:
 8. avoid duplicate emails when the requested follower state is already in effect.
 
 Repeated ordinary Follow requests are handled safely by `firstOrCreate()`, while database-level uniqueness remains a possible future improvement.
+
+Follow relationships now also affect the Home experience: followed users can appear in the personalized timeline, followed accounts are listed in the Home sidebar, and followers receive `PostCreated` emails when an author publishes a normal post.

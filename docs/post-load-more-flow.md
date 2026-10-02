@@ -32,7 +32,7 @@ The shared post query is ordered newest first and paginated with:
 paginate(10)
 ```
 
-The Home feed uses `HomeController`.
+The Home feed uses `HomeController`. Before pagination, it filters the shared timeline query to the authenticated user's own posts, posts from users they follow, and accessible group posts.
 
 Group feeds use `GroupController`, which additionally limits posts to the current group and verifies approved membership.
 
@@ -238,7 +238,8 @@ and no further pagination request is made.
 ### HomeController.php
 
 ```text
-load timeline posts
+load timeline posts through postsForTimeline
+filter Home posts to own, followed-user, and accessible-group content
 paginate first and later pages
 return Inertia for normal request
 return JSON for pagination request

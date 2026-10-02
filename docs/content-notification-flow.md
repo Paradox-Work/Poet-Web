@@ -5,6 +5,7 @@
 Poet-Web sends email notifications for several content interactions:
 
 ```text
+new normal post from a followed user
 new group post
 new comment
 post like
@@ -34,6 +35,20 @@ Existing post and comment models provide the relationships used to determine the
 
 ## Notification Cases
 
+### New Normal Post From a Followed User
+
+When a user publishes a normal post outside a group, Poet-Web notifies that user's followers.
+
+```text
+normal post created
+        ↓
+load author's followers
+        ↓
+send PostCreated
+```
+
+The notification identifies the author and links directly to the dedicated post page.
+
 ### New Group Post
 
 When a post is created inside a group, Poet-Web notifies the other approved members of that group.
@@ -50,7 +65,7 @@ exclude post creator
 send PostCreated
 ```
 
-A normal post outside a group does not send a `PostCreated` notification because there is no group audience to notify.
+A group post uses the approved group-member audience instead of the author's ordinary follower audience.
 
 ### New Comment
 
@@ -83,6 +98,7 @@ The current recipient rules are:
 ```text
 Action                         Recipient
 ------------------------------------------------------------
+New normal post                Author's followers
 New group post                 Other approved group members
 Comment on another user's post Post owner
 Like another user's post       Post owner
@@ -90,6 +106,28 @@ Like another user's comment    Comment author
 ```
 
 Self-notifications are intentionally skipped.
+
+---
+
+## Normal Post Notification
+
+Normal post creation is handled in `PostController::store()`.
+
+After the post transaction succeeds, Poet-Web loads:
+
+```text
+$user->followers()
+```
+
+and sends:
+
+```text
+PostCreated
+```
+
+to those followers.
+
+The email identifies the author and links directly to the dedicated post page through `post.view`.
 
 ---
 
@@ -270,17 +308,17 @@ flowchart TD
 
 ### `PostCreated`
 
-Recipient:
+Recipients depend on the post type:
 
 ```text
-other approved group members
+normal post
+→ author's followers
+
+group post
+→ other approved group members
 ```
 
-Used when:
-
-```text
-a new group post is published
-```
+The same notification class formats the email differently depending on whether a group is present.
 
 ### `CommentCreated`
 
@@ -333,6 +371,9 @@ During local development, notification emails can be checked in Mailpit.
 Useful scenarios:
 
 ```text
+User A creates normal post
+→ followers of User A receive PostCreated
+
 User A creates group post
 → User B, an approved member, receives PostCreated
 → User A does not receive it
@@ -358,7 +399,7 @@ The completed content-notification flow keeps users informed about important act
 ```text
 content interaction
         ↓
-determine affected owner or group members
+determine followers, affected owner, or group members
         ↓
 exclude self-notifications
         ↓
