@@ -18,7 +18,7 @@ import {
 
 import { usePage } from '@inertiajs/vue3';
 
-defineProps({
+const props = defineProps({
     user: {
         type: Object,
         required: true
