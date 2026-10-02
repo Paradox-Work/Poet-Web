@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Notifications\GroupJoinRequestResolved;
+use App\Notifications\GroupRoleChanged;
+use App\Http\Resources\GroupMemberResource;
 use Illuminate\Validation\Rule;
 use App\Http\Resources\UserResource;
 use App\Notifications\RequestToJoinGroup;
@@ -21,6 +23,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
+
 
 class GroupController extends Controller
 {
@@ -116,7 +119,7 @@ class GroupController extends Controller
                         ->resolve($request),
 
                 'users' =>
-                    UserResource::collection($users)
+                    GroupMemberResource::collection($users)
                         ->resolve($request),
 
                 'requests' =>
@@ -526,6 +529,86 @@ class GroupController extends Controller
             ($approved
                 ? ' was approved.'
                 : ' was rejected.')
+        );
+    }
+    
+    public function changeRole(
+        Request $request,
+        Group $group
+    ) {
+        $actor = $request->user();
+
+        if (!$group->isAdmin($actor->id)) {
+            abort(
+                403,
+                "You don't have permission to change group roles."
+            );
+        }
+
+        $data = $request->validate([
+            'user_id' => [
+                'required',
+                'integer',
+                'exists:users,id',
+            ],
+
+            'role' => [
+                'required',
+                Rule::enum(GroupUserRole::class),
+            ],
+        ]);
+
+        if (
+            $group->isOwner(
+                (int) $data['user_id']
+            )
+        ) {
+            abort(
+                403,
+                "The group owner's role cannot be changed."
+            );
+        }
+
+        $membership = GroupUser::query()
+            ->with('user')
+            ->where(
+                'group_id',
+                $group->id
+            )
+            ->where(
+                'user_id',
+                $data['user_id']
+            )
+            ->where(
+                'status',
+                GroupUserStatus::APPROVED->value
+            )
+            ->firstOrFail();
+
+        if (
+            $membership->role ===
+            $data['role']
+        ) {
+            return back();
+        }
+
+        $membership->update([
+            'role' => $data['role'],
+        ]);
+
+        $membership->user->notify(
+            new GroupRoleChanged(
+                $group,
+                $data['role']
+            )
+        );
+
+        return back()->with(
+            'success',
+            $membership->user->name .
+            ' is now ' .
+            $data['role'] .
+            '.'
         );
     }
 }

@@ -69,7 +69,7 @@ function resolveRequest(
     user,
     action
 ) {
-    requestForm.user_id = user.id;me
+    requestForm.user_id = user.id;
     requestForm.action = action;
 
     requestForm.post(
@@ -105,6 +105,37 @@ const coverForm = useForm({
 const thumbnailForm = useForm({
     thumbnail: null
 });
+
+const roleForm = useForm({
+    user_id: null,
+    role: null
+});
+
+function changeMemberRole(
+    user,
+    role
+) {
+    if (user.role === role) {
+        return;
+    }
+
+    roleForm.user_id = user.id;
+    roleForm.role = role;
+
+    roleForm.post(
+        route(
+            'group.changeRole',
+            props.group.slug
+        ),
+        {
+            preserveScroll: true,
+
+            onFinish: () => {
+                roleForm.reset();
+            }
+        }
+    );
+}
 
 
 function onCoverChange(event) {
@@ -642,24 +673,18 @@ function joinToGroup() {
                                     class="overflow-hidden rounded-lg border"
                                 >
                                     <UserListItem
-                                        v-for="user in requests"
+                                        v-for="user in users"
                                         :key="user.id"
                                         :user="user"
-                                        show-actions
-                                        :processing="
-                                            requestForm.processing
+                                        :show-role-control="isAdmin"
+                                        :is-owner="
+                                            user.id === group.user_id
                                         "
-                                        @approve="
-                                            resolveRequest(
-                                                $event,
-                                                'approve'
-                                            )
+                                        :role-processing="
+                                            roleForm.processing
                                         "
-                                        @reject="
-                                            resolveRequest(
-                                                $event,
-                                                'reject'
-                                            )
+                                        @role-change="
+                                            changeMemberRole
                                         "
                                     />
                                 </div>

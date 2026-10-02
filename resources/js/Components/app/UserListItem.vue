@@ -17,12 +17,28 @@ defineProps({
     processing: {
         type: Boolean,
         default: false
+    },
+
+    showRoleControl: {
+        type: Boolean,
+        default: false
+    },
+
+    isOwner: {
+        type: Boolean,
+        default: false
+    },
+
+    roleProcessing: {
+        type: Boolean,
+        default: false
     }
 });
 
 defineEmits([
     'approve',
-    'reject'
+    'reject',
+    'role-change'
 ]);
 </script>
 
@@ -86,6 +102,39 @@ defineEmits([
             >
                 Reject
             </button>
+        </div>
+        <div
+            v-if="showRoleControl"
+            class="ml-2"
+        >
+            <span
+                v-if="isOwner"
+                class="rounded-md bg-indigo-100 px-3 py-1.5 text-sm font-medium text-indigo-700"
+            >
+                Owner
+            </span>
+
+            <select
+                v-else
+                :value="user.role"
+                :disabled="roleProcessing"
+                @change="
+                    $emit(
+                        'role-change',
+                        user,
+                        $event.target.value
+                    )
+                "
+                class="rounded-md border-gray-300 py-1.5 text-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50"
+            >
+                <option value="member">
+                    Member
+                </option>
+
+                <option value="admin">
+                    Admin
+                </option>
+            </select>
         </div>
     </div>
 </template>
