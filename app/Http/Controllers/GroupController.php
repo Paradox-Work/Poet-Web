@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers;
 
-
+use App\Notifications\RequestToJoinGroup;
+use Illuminate\Support\Facades\Notification;
 use App\Http\Requests\InviteUsersRequest;
 use App\Notifications\InvitationApproved;
 use App\Notifications\InvitationInGroup;
@@ -301,5 +302,101 @@ class GroupController extends Controller
                 $groupUser->group->name .
                 '".'
             );
+    }
+
+    public function join(
+        Request $request,
+        Group $group
+    ) {
+        $user = $request->user();
+
+        $membership = GroupUser::query()
+            ->where(
+                'user_id',
+                $user->id
+            )
+            ->where(
+                'group_id',
+                $group->id
+            )
+            ->first();
+
+        if (
+            $membership?->status ===
+            GroupUserStatus::APPROVED->value
+        ) {
+            return back()->with(
+                'success',
+                'You are already a member of this group.'
+            );
+        }
+
+        if (
+            $membership?->status ===
+                GroupUserStatus::PENDING->value
+        ) {
+            return back()->with(
+                'success',
+                'Your membership is already pending.'
+            );
+        }
+
+        if ($group->auto_approval) {
+            GroupUser::create([
+                'status' =>
+                    GroupUserStatus::APPROVED->value,
+
+                'role' =>
+                    GroupUserRole::MEMBER->value,
+
+                'user_id' =>
+                    $user->id,
+
+                'group_id' =>
+                    $group->id,
+
+                'created_by' =>
+                    $user->id,
+            ]);
+
+            return back()->with(
+                'success',
+                'You joined "' .
+                $group->name .
+                '".'
+            );
+        }
+
+        GroupUser::create([
+            'status' =>
+                GroupUserStatus::PENDING->value,
+
+            'role' =>
+                GroupUserRole::MEMBER->value,
+
+            'user_id' =>
+                $user->id,
+
+            'group_id' =>
+                $group->id,
+
+            'created_by' =>
+                $user->id,
+        ]);
+
+        Notification::send(
+            $group->adminUsers,
+            new RequestToJoinGroup(
+                $group,
+                $user
+            )
+        );
+
+        return back()->with(
+            'success',
+            'Your request to join "' .
+            $group->name .
+            '" has been sent.'
+        );
     }
 }

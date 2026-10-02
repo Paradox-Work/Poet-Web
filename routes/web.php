@@ -93,6 +93,11 @@ Route::middleware('auth')->group(function () {
     )->name('group.approveInvitation');
 
     Route::post(
+        '/groups/{group:slug}/join',
+        [GroupController::class, 'join']
+    )->name('group.join');
+
+    Route::post(
         '/users/{user}/follow',
         [UserController::class, 'follow']
     )->name('user.follow');

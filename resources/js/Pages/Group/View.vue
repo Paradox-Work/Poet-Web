@@ -9,7 +9,9 @@ import {
 
 import {
     Head,
-    useForm
+    Link,
+    useForm,
+    usePage
 } from '@inertiajs/vue3';
 
 import {
@@ -152,6 +154,26 @@ function submitThumbnail() {
 
                 thumbnailForm.reset();
             }
+        }
+    );
+}
+
+const page = usePage();
+
+const authUser = computed(
+    () => page.props.auth.user
+);
+
+const joinForm = useForm({});
+
+function joinToGroup() {
+    joinForm.post(
+        route(
+            'group.join',
+            props.group.slug
+        ),
+        {
+            preserveScroll: true
         }
     );
 }
@@ -363,14 +385,71 @@ function submitThumbnail() {
                         class="mt-4 flex items-start justify-between gap-4"
                     >
 
-                    <button
-                        v-if="isAdmin"
-                        type="button"
-                        @click="showInviteUserModal = true"
-                        class="shrink-0 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500"
-                    >
-                        Invite user
-                    </button>
+                        <button
+                            v-if="isAdmin"
+                            type="button"
+                            @click="showInviteUserModal = true"
+                            class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500"
+                        >
+                            Invite user
+                        </button>
+
+
+                        <Link
+                            v-else-if="!authUser"
+                            :href="route('login')"
+                            class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500"
+                        >
+                            Login to join
+                        </Link>
+
+
+                        <button
+                            v-else-if="
+                                !group.role &&
+                                group.auto_approval
+                            "
+                            type="button"
+                            :disabled="joinForm.processing"
+                            @click="joinToGroup"
+                            class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
+                        >
+                            {{
+                                joinForm.processing
+                                    ? 'Joining...'
+                                    : 'Join group'
+                            }}
+                        </button>
+
+
+                        <button
+                            v-else-if="
+                                !group.role &&
+                                !group.auto_approval
+                            "
+                            type="button"
+                            :disabled="joinForm.processing"
+                            @click="joinToGroup"
+                            class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
+                        >
+                            {{
+                                joinForm.processing
+                                    ? 'Sending...'
+                                    : 'Request to join'
+                            }}
+                        </button>
+
+
+                        <span
+                            v-else-if="
+                                group.status === 'pending'
+                            "
+                            class="rounded-md bg-amber-100 px-4 py-2 text-sm font-medium text-amber-700"
+                        >
+                            Membership pending
+                        </span>
+
+                                
 
                         <div>
 
