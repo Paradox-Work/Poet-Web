@@ -13,7 +13,9 @@ The feature provides:
 - Follow and Unfollow controls;
 - persistent follower relationships;
 - backend protection against following yourself;
-- application-level duplicate avoidance through `firstOrCreate()`.
+- application-level duplicate avoidance through `firstOrCreate()`;
+- email notifications when another user follows or unfollows a profile;
+- duplicate-notification avoidance when the follower state does not actually change.
 
 ---
 
@@ -271,6 +273,120 @@ After the request returns, the profile data is refreshed and the updated followe
 
 ---
 
+## Follow and Unfollow Notifications
+
+Poet-Web sends the target user an email when another user actually changes their follower relationship.
+
+The notification class is:
+
+```text
+app/Notifications/FollowUser.php
+```
+
+It receives:
+
+```text
+the acting user
+follow = true or false
+```
+
+### Follow Notification
+
+When a new follower row is created, the target user receives:
+
+```text
+subject: New follower
+message: @username started following you.
+```
+
+The email contains a link to the follower's profile.
+
+### Unfollow Notification
+
+When an existing follower row is deleted, the target user receives:
+
+```text
+subject: Follower update
+message: @username unfollowed you.
+```
+
+The email also links to the acting user's profile.
+
+### Avoiding Duplicate Notifications
+
+A Follow request uses:
+
+```php
+Follower::firstOrCreate(...)
+```
+
+The notification is only sent when:
+
+```php
+$follower->wasRecentlyCreated
+```
+
+is true.
+
+Therefore, submitting Follow again while the relationship already exists does not send another email.
+
+For Unfollow, the delete query returns the number of rows removed.
+
+The notification is only sent when:
+
+```text
+deleted rows > 0
+```
+
+Therefore, submitting Unfollow when no follower relationship exists does not send a false notification.
+
+The resulting behavior is:
+
+```text
+new follow relationship
+→ create row
+→ send FollowUser notification
+
+duplicate follow request
+→ reuse row
+→ no notification
+
+existing relationship unfollowed
+→ delete row
+→ send FollowUser notification
+
+unfollow without relationship
+→ delete nothing
+→ no notification
+```
+
+---
+
+## Notification Flow
+
+```mermaid
+flowchart TD
+    A[Authenticated user submits follow request] --> B{Following self?}
+    B -- Yes --> C[422 Unprocessable Entity]
+    B -- No --> D{follow value}
+
+    D -- true --> E[firstOrCreate follower row]
+    E --> F{New row created?}
+    F -- Yes --> G[Send FollowUser follow email]
+    F -- No --> H[Do not notify]
+
+    D -- false --> I[Delete follower row]
+    I --> J{Row deleted?}
+    J -- Yes --> K[Send FollowUser unfollow email]
+    J -- No --> H
+
+    G --> L[Return with success message]
+    K --> L
+    H --> L
+```
+
+---
+
 ## Self-Follow Protection
 
 The controller rejects attempts to follow yourself:
@@ -312,6 +428,10 @@ Validates and processes follow/unfollow requests.
 
 Represents the follower relationship.
 
+### `FollowUser.php`
+
+Builds follow and unfollow email notifications and links the recipient back to the acting user's profile.
+
 ### `Profile/View.vue`
 
 Displays follower count and Follow/Unfollow controls.
@@ -335,6 +455,8 @@ Authenticated users can:
 3. follow another user;
 4. unfollow a user they currently follow;
 5. keep the relationship persisted in the database;
-6. avoid self-following through backend validation.
+6. avoid self-following through backend validation;
+7. notify the target user when a real follow or unfollow state change occurs;
+8. avoid duplicate emails when the requested follower state is already in effect.
 
 Repeated ordinary Follow requests are handled safely by `firstOrCreate()`, while database-level uniqueness remains a possible future improvement.
