@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Http\Resources\UserResource;
+use App\Http\Resources\PostResource;
+use App\Models\Post;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,7 +20,10 @@ use App\Models\Follower;
 class ProfileController extends Controller
 {
 
-   public function index(User $user)
+    public function index(
+        Request $request,
+        User $user
+    )
     {
         $currentUserId = Auth::id();
 
@@ -44,6 +49,68 @@ class ProfileController extends Controller
                 )
                 ->count();
 
+        $posts = null;
+
+        if ($currentUserId) {
+
+            $posts =
+                PostResource::collection(
+                    Post::postsForTimeline(
+                        $currentUserId
+                    )
+                        ->where(
+                            'user_id',
+                            $user->id
+                        )
+                        ->paginate(10)
+                        ->withQueryString()
+                );
+
+            /*
+            * PostList infinite scrolling requests
+            * the next profile page as JSON.
+            */
+            if ($request->wantsJson()) {
+                return $posts;
+            }
+        }
+
+
+        $followers =
+            User::query()
+                ->select('users.*')
+                ->join(
+                    'followers as follower_links',
+                    'follower_links.follower_id',
+                    '=',
+                    'users.id'
+                )
+                ->where(
+                    'follower_links.user_id',
+                    $user->id
+                )
+                ->distinct()
+                ->orderBy('users.name')
+                ->get();
+
+
+        $followings =
+            User::query()
+                ->select('users.*')
+                ->join(
+                    'followers as follower_links',
+                    'follower_links.user_id',
+                    '=',
+                    'users.id'
+                )
+                ->where(
+                    'follower_links.follower_id',
+                    $user->id
+                )
+                ->distinct()
+                ->orderBy('users.name')
+                ->get();
+        
         return Inertia::render(
             'Profile/View',
             [
@@ -61,6 +128,19 @@ class ProfileController extends Controller
 
                 'followerCount' =>
                     $followerCount,
+
+                'posts' =>
+                    $posts,
+
+                'followers' =>
+                    UserResource::collection(
+                        $followers
+                    ),
+
+                'followings' =>
+                    UserResource::collection(
+                        $followings
+                    ),
 
                 'user' =>
                     new UserResource($user),

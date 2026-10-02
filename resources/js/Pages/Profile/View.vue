@@ -164,23 +164,90 @@
            
 
             <TabPanels class="mt-2">
-              <TabPanel
-                 class="bg-white p-3">
-                Posts
-              </TabPanel>
-              <TabPanel
-                 class="bg-white p-3">
-                Followers
-              </TabPanel>
-              <TabPanel
-                 class="bg-white p-3">
-                Following
-              </TabPanel>
-              <TabPanel
+                <TabPanel class="p-3">
+
+                    <template v-if="posts">
+
+                        <CreatePost
+                            v-if="isMyProfile"
+                        />
+
+                        <PostList
+                            v-if="posts.data?.length"
+                            :posts="posts"
+                        />
+
+                        <div
+                            v-else
+                            class="py-8 text-center text-gray-500"
+                        >
+                            No posts yet.
+                        </div>
+
+                    </template>
+
+
+                    <div
+                        v-else
+                        class="py-8 text-center text-gray-500"
+                    >
+                        Log in to view posts.
+                    </div>
+
+                </TabPanel>
+                <TabPanel class="p-3">
+
+                    <div
+                        v-if="followers.length"
+                        class="overflow-hidden rounded-lg border bg-white"
+                    >
+
+                        <UserListItem
+                            v-for="follower in followers"
+                            :key="follower.id"
+                            :user="follower"
+                        />
+
+                    </div>
+
+
+                    <div
+                        v-else
+                        class="py-8 text-center text-gray-500"
+                    >
+                        No followers yet.
+                    </div>
+
+                </TabPanel>
+                <TabPanel class="p-3">
+
+                    <div
+                        v-if="followings.length"
+                        class="overflow-hidden rounded-lg border bg-white"
+                    >
+
+                        <UserListItem
+                            v-for="following in followings"
+                            :key="following.id"
+                            :user="following"
+                        />
+
+                    </div>
+
+
+                    <div
+                        v-else
+                        class="py-8 text-center text-gray-500"
+                    >
+                        Not following anyone yet.
+                    </div>
+
+                </TabPanel>
+                <TabPanel
                  class="bg-white p-3">
                 Photos
-              </TabPanel>
-              <TabPanel v-if="isMyProfile">
+                </TabPanel>
+                <TabPanel v-if="isMyProfile">
                 <Edit :must-verify-email="mustVerifyEmail" :status="status"/>
               </TabPanel>
             </TabPanels>
@@ -193,6 +260,15 @@
 </template>
 
 <script setup>
+import CreatePost
+    from '@/Components/app/CreatePost.vue';
+
+import PostList
+    from '@/Components/app/PostList.vue';
+
+import UserListItem
+    from '@/Components/app/UserListItem.vue';
+
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { computed, ref } from 'vue';
 import { XMarkIcon, CheckCircleIcon, CameraIcon } from '@heroicons/vue/24/solid';
@@ -218,6 +294,22 @@ const props = defineProps({
         type: Number,
         default: 0,
     },
+    
+    posts: {
+        type: Object,
+        default: null
+    },
+
+    followers: {
+        type: Array,
+        default: () => []
+    },
+
+    followings: {
+        type: Array,
+        default: () => []
+},
+
 
     user: Object,
 });
