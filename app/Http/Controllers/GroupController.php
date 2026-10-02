@@ -364,43 +364,6 @@ class GroupController extends Controller
 
         if (
             $membership?->status ===
-                GroupUserStatus::PENDING->value
-        ) {
-            return back()->with(
-                'success',
-                'Your membership is already pending.'
-            );
-        }
-
-    public function join(
-        Request $request,
-        Group $group
-    ) {
-        $user = $request->user();
-
-        $membership = GroupUser::query()
-            ->where(
-                'user_id',
-                $user->id
-            )
-            ->where(
-                'group_id',
-                $group->id
-            )
-            ->first();
-
-        if (
-            $membership?->status ===
-            GroupUserStatus::APPROVED->value
-        ) {
-            return back()->with(
-                'success',
-                'You are already a member of this group.'
-            );
-        }
-
-        if (
-            $membership?->status ===
             GroupUserStatus::PENDING->value
         ) {
             return back()->with(

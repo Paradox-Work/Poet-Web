@@ -656,6 +656,7 @@ function joinToGroup() {
 
                         <TabPanel class="p-6">
 
+                            <!-- Pending requests -->
                             <div
                                 v-if="
                                     isAdmin &&
@@ -673,24 +674,31 @@ function joinToGroup() {
                                     class="overflow-hidden rounded-lg border"
                                 >
                                     <UserListItem
-                                        v-for="user in users"
+                                        v-for="user in requests"
                                         :key="user.id"
                                         :user="user"
-                                        :show-role-control="isAdmin"
-                                        :is-owner="
-                                            user.id === group.user_id
+                                        show-actions
+                                        :processing="
+                                            requestForm.processing
                                         "
-                                        :role-processing="
-                                            roleForm.processing
+                                        @approve="
+                                            resolveRequest(
+                                                $event,
+                                                'approve'
+                                            )
                                         "
-                                        @role-change="
-                                            changeMemberRole
+                                        @reject="
+                                            resolveRequest(
+                                                $event,
+                                                'reject'
+                                            )
                                         "
                                     />
                                 </div>
                             </div>
 
 
+                            <!-- Approved members -->
                             <h3
                                 class="mb-3 font-semibold text-gray-900"
                             >
@@ -705,6 +713,16 @@ function joinToGroup() {
                                     v-for="user in users"
                                     :key="user.id"
                                     :user="user"
+                                    :show-role-control="isAdmin"
+                                    :is-owner="
+                                        user.id === group.user_id
+                                    "
+                                    :role-processing="
+                                        roleForm.processing
+                                    "
+                                    @role-change="
+                                        changeMemberRole
+                                    "
                                 />
                             </div>
 

@@ -78,6 +78,11 @@ class Group extends Model
             );
     }
 
+    public function isOwner(int $userId): bool
+    {
+        return $this->user_id === $userId;
+    }
+
     public function pendingRequestUsers(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -97,9 +102,14 @@ class Group extends Model
             User::class,
             'group_users'
         )
+            ->withPivot([
+                'role',
+                'status',
+            ])
             ->wherePivot(
                 'status',
                 GroupUserStatus::APPROVED->value
             );
     }
+    
 }
