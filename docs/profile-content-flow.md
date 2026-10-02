@@ -14,7 +14,7 @@ Photos
 My Profile
 ```
 
-The first three tabs are populated from backend data.
+The Posts, Followers, Following, and Photos tabs are populated from backend data.
 
 The `My Profile` tab is only available when the authenticated user is viewing their own profile.
 
@@ -63,6 +63,7 @@ visible posts by profile owner
 followers
 followings
 profile user data
+visible image attachments
 ```
 
 These values are passed to:
@@ -343,7 +344,35 @@ Displays all users followed by the profile owner.
 
 ### Photos
 
-Currently remains a placeholder.
+Displays image attachments from posts authored by the profile owner that the current viewer is allowed to see.
+
+The backend first builds the visible post set through:
+
+```php
+Post::postsForTimeline($currentUserId)
+```
+
+then limits that query to the viewed profile owner and loads only attachments where:
+
+```text
+mime LIKE image/%
+```
+
+This means private group images are not exposed through a user's profile unless the viewer already has access to those group posts.
+
+Unauthenticated visitors receive:
+
+```text
+photos = null
+```
+
+and the Photos tab displays:
+
+```text
+Log in to view photos.
+```
+
+Authenticated viewers receive a photo array rendered through `TabPhotos.vue`.
 
 ### My Profile
 
@@ -383,6 +412,10 @@ profile link
 
 Provides the existing post creation modal on the authenticated user's own profile.
 
+### `TabPhotos.vue`
+
+Displays visible image attachments in a responsive grid, opens them in the shared attachment preview modal, and exposes the existing attachment download route.
+
 ---
 
 ## Visibility Summary
@@ -401,6 +434,7 @@ Guest profile visitor
 → profile visible
 → followers/following visible
 → posts not loaded
+→ photos not loaded
 
 Create Post
 → own profile only
@@ -424,6 +458,10 @@ scroll through paginated content
 inspect followers
     ↓
 inspect followed users
+    ↓
+browse visible post photos
+    ↓
+preview or download images
     ↓
 navigate to connected profiles
 ```

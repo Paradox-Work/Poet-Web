@@ -166,10 +166,53 @@ Group Profile
 └── Tabs
     ├── Posts
     ├── Members
+    ├── Photos
     └── About
 ```
 
-The Posts and Members tabs are prepared for later functionality.
+The Posts, Members, Photos, and About tabs are active parts of the group profile.
+
+---
+
+## Group Photos
+
+The Photos tab displays image attachments from posts inside the current group.
+
+Only approved group members receive these images.
+
+The backend first verifies approved membership and then derives the allowed group post IDs through the same timeline visibility query used for group posts:
+
+```php
+Post::postsForTimeline($userId)
+```
+
+The query is restricted to:
+
+```text
+posts.group_id = current group ID
+```
+
+and only attachments with:
+
+```text
+mime LIKE image/%
+```
+
+are included.
+
+For guests, pending members, and non-members:
+
+```text
+photos = []
+```
+
+The frontend displays:
+
+```text
+Join the group to view photos.
+```
+
+Approved members see the shared `TabPhotos.vue` gallery.
 
 ---
 
@@ -318,7 +361,7 @@ Defines group fields, group memberships, and administrator authorization.
 
 ### `GroupController.php`
 
-Loads group profile information and processes group image updates.
+Loads group profile information, visible group-post photos, and processes group image updates.
 
 ### `GroupResource.php`
 
@@ -330,7 +373,11 @@ Links sidebar groups to their profile pages.
 
 ### `Group/View.vue`
 
-Displays the complete group profile interface.
+Displays the complete group profile interface, including the approved-member Photos tab.
+
+### `Profile/TabPhotos.vue`
+
+Provides the reusable photo grid, attachment preview, and download controls used by group and user profiles.
 
 ### `web.php`
 
@@ -347,7 +394,9 @@ After this feature, users can:
 3. view group names and descriptions;
 4. see group membership role information;
 5. see group cover and thumbnail images;
-6. use fallback visuals when images do not exist.
+6. use fallback visuals when images do not exist;
+7. browse photos from visible group posts when they are approved members;
+8. preview and download those images.
 
 Approved group administrators can additionally:
 

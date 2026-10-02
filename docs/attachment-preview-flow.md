@@ -130,3 +130,35 @@ Escape / dialog close event
 ```
 
 The updated layout reduces unused modal space, keeps controls close to the attachment, and makes the full-screen preview behave more like a conventional image gallery.
+
+---
+
+## Profile Photo Gallery Reuse
+
+The same attachment preview modal is also reused by the user-profile and group-profile photo galleries.
+
+`TabPhotos.vue` keeps:
+
+```text
+currentPhotoIndex
+showModal
+```
+
+and passes the complete visible photo array into:
+
+```text
+AttachmentPreviewModal.vue
+```
+
+When a gallery image is clicked:
+
+```text
+click image
+→ set selected photo index
+→ open AttachmentPreviewModal
+→ preview selected image
+```
+
+Because the modal already supports previous and next navigation, users can move through the full visible gallery without leaving the profile page.
+
+The photo grid also exposes the existing attachment download route while stopping the download click from opening the preview modal.
