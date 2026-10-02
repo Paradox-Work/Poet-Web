@@ -251,7 +251,7 @@ watch(
                 posts?.links?.next
                 ?? null;
         }
-    }
+    },
 );
 
 
