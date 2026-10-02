@@ -1,4 +1,7 @@
 <script setup>
+import UserListItem
+    from '@/Components/app/UserListItem.vue';
+    
 import InviteUserModal
     from '@/Pages/Group/InviteUserModal.vue';
 
@@ -43,9 +46,46 @@ const props = defineProps({
     errors: {
         type: Object,
         default: () => ({})
-    }
+    },
+    
+    users: {
+        type: Array,
+        default: () => []
+    },
+
+    requests: {
+        type: Array,
+        default: () => []
+    },
+
 });
 
+const requestForm = useForm({
+    user_id: null,
+    action: null
+});
+
+function resolveRequest(
+    user,
+    action
+) {
+    requestForm.user_id = user.id;me
+    requestForm.action = action;
+
+    requestForm.post(
+        route(
+            'group.resolveJoinRequest',
+            props.group.slug
+        ),
+        {
+            preserveScroll: true,
+
+            onFinish: () => {
+                requestForm.reset();
+            }
+        }
+    );
+}
 
 const isAdmin = computed(
     () => props.group.role === 'admin'
@@ -583,10 +623,73 @@ function joinToGroup() {
                         </TabPanel>
 
 
-                        <TabPanel
-                            class="p-6 text-gray-500"
-                        >
-                            Group members will appear here.
+                        <TabPanel class="p-6">
+
+                            <div
+                                v-if="
+                                    isAdmin &&
+                                    requests.length
+                                "
+                                class="mb-6"
+                            >
+                                <h3
+                                    class="mb-3 font-semibold text-gray-900"
+                                >
+                                    Pending requests
+                                </h3>
+
+                                <div
+                                    class="overflow-hidden rounded-lg border"
+                                >
+                                    <UserListItem
+                                        v-for="user in requests"
+                                        :key="user.id"
+                                        :user="user"
+                                        show-actions
+                                        :processing="
+                                            requestForm.processing
+                                        "
+                                        @approve="
+                                            resolveRequest(
+                                                $event,
+                                                'approve'
+                                            )
+                                        "
+                                        @reject="
+                                            resolveRequest(
+                                                $event,
+                                                'reject'
+                                            )
+                                        "
+                                    />
+                                </div>
+                            </div>
+
+
+                            <h3
+                                class="mb-3 font-semibold text-gray-900"
+                            >
+                                Members
+                            </h3>
+
+                            <div
+                                v-if="users.length"
+                                class="overflow-hidden rounded-lg border"
+                            >
+                                <UserListItem
+                                    v-for="user in users"
+                                    :key="user.id"
+                                    :user="user"
+                                />
+                            </div>
+
+                            <p
+                                v-else
+                                class="text-gray-500"
+                            >
+                                No members yet.
+                            </p>
+
                         </TabPanel>
 
 

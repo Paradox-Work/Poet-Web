@@ -77,4 +77,29 @@ class Group extends Model
                 GroupUserStatus::APPROVED->value
             );
     }
+
+    public function pendingRequestUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            User::class,
+            'group_users'
+        )
+            ->wherePivot(
+                'status',
+                GroupUserStatus::PENDING->value
+            )
+            ->wherePivotNull('token');
+    }
+
+    public function approvedUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            User::class,
+            'group_users'
+        )
+            ->wherePivot(
+                'status',
+                GroupUserStatus::APPROVED->value
+            );
+    }
 }

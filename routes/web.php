@@ -98,6 +98,11 @@ Route::middleware('auth')->group(function () {
     )->name('group.join');
 
     Route::post(
+        '/groups/{group:slug}/requests/resolve',
+        [GroupController::class,'resolveJoinRequest']
+    )->name('group.resolveJoinRequest');
+
+    Route::post(
         '/users/{user}/follow',
         [UserController::class, 'follow']
     )->name('user.follow');

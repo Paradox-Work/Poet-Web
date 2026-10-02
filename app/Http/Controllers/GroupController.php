@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Notifications\GroupJoinRequestResolved;
+use Illuminate\Validation\Rule;
+use App\Http\Resources\UserResource;
 use App\Notifications\RequestToJoinGroup;
 use Illuminate\Support\Facades\Notification;
 use App\Http\Requests\InviteUsersRequest;
@@ -88,11 +91,36 @@ class GroupController extends Controller
                 $membership?->role;
         }
 
+        $users = $group
+            ->approvedUsers()
+            ->orderBy('users.name')
+            ->get();
+
+        $requests = collect();
+
+        if (
+            $userId &&
+            $group->isAdmin($userId)
+        ) {
+            $requests = $group
+                ->pendingRequestUsers()
+                ->orderBy('users.name')
+                ->get();
+        }
+
         return Inertia::render(
             'Group/View',
             [
                 'group' =>
                     (new GroupResource($group))
+                        ->resolve($request),
+
+                'users' =>
+                    UserResource::collection($users)
+                        ->resolve($request),
+
+                'requests' =>
+                    UserResource::collection($requests)
                         ->resolve($request),
 
                 'success' =>
@@ -397,6 +425,78 @@ class GroupController extends Controller
             'Your request to join "' .
             $group->name .
             '" has been sent.'
+        );
+    }
+    
+    public function resolveJoinRequest(
+        Request $request,
+        Group $group
+    ) {
+        $user = $request->user();
+
+        if (!$group->isAdmin($user->id)) {
+            abort(
+                403,
+                "You don't have permission to manage group requests."
+            );
+        }
+
+        $data = $request->validate([
+            'user_id' => [
+                'required',
+                'integer',
+                'exists:users,id',
+            ],
+
+            'action' => [
+                'required',
+                Rule::in([
+                    'approve',
+                    'reject',
+                ]),
+            ],
+        ]);
+
+        $membership = GroupUser::query()
+            ->with('user')
+            ->where(
+                'user_id',
+                $data['user_id']
+            )
+            ->where(
+                'group_id',
+                $group->id
+            )
+            ->where(
+                'status',
+                GroupUserStatus::PENDING->value
+            )
+            ->whereNull('token')
+            ->firstOrFail();
+
+        $approved =
+            $data['action'] === 'approve';
+
+        $membership->update([
+            'status' =>
+                $approved
+                    ? GroupUserStatus::APPROVED->value
+                    : GroupUserStatus::REJECTED->value,
+        ]);
+
+        $membership->user->notify(
+            new GroupJoinRequestResolved(
+                $group,
+                $approved
+            )
+        );
+
+        return back()->with(
+            'success',
+            $membership->user->name .
+            ($approved
+                ? ' was approved.'
+                : ' was rejected.')
         );
     }
 }
