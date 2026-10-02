@@ -2,7 +2,7 @@
 
 ## Overview
 
-Poet-Web supports posts that belong to individual groups.
+Poet-Web supports both normal timeline posts and posts that belong to a group.
 
 Approved group members can:
 
@@ -24,6 +24,7 @@ The group post flow is implemented through:
 app/Http/Controllers/GroupController.php
 app/Http/Controllers/HomeController.php
 app/Http/Requests/StorePostRequest.php
+app/Http/Resources/PostResource.php
 app/Models/Group.php
 app/Models/Post.php
 resources/js/Components/app/CreatePost.vue
@@ -38,15 +39,7 @@ The existing `PostController` is reused for storing posts and attachments.
 
 ## Post and Group Relationship
 
-The `posts` table already contains:
-
-```text
-group_id
-```
-
-The value is nullable.
-
-This allows Poet-Web to support two types of posts.
+The `posts` table contains a nullable `group_id`.
 
 ```text
 group_id = null
@@ -58,29 +51,13 @@ group_id = group ID
 group post
 ```
 
-The `Post` model includes `group_id` in its fillable properties so it can be stored when creating a post.
-
----
-
-## Post Model Relationship
-
-A post belongs to a group through:
-
-```text
-Post
-    ↓
-group_id
-    ↓
-Group
-```
-
-The relationship allows the application to display which group a post belongs to and to filter posts by group.
+The `Post` model includes `group_id` in its fillable properties and defines a `group()` relationship.
 
 ---
 
 ## Approved Group Membership
 
-The `Group` model contains a helper that determines whether a user has an approved membership.
+The `Group` model contains `hasApprovedUser()`, which checks whether a user has an approved membership.
 
 Conceptually:
 
@@ -94,15 +71,7 @@ group_id
 status = approved
 ```
 
-Only users whose membership status is:
-
-```text
-approved
-```
-
-are allowed to view or create posts inside that group.
-
-Pending or rejected memberships do not grant access.
+Pending or rejected memberships do not grant group-post access.
 
 ---
 
@@ -113,10 +82,8 @@ The group profile checks whether the current user is an approved member.
 ```mermaid
 flowchart TD
     A[Open group profile] --> B{Approved member?}
-
     B -- Yes --> C[Load group posts]
     B -- No --> D[Do not expose group posts]
-
     C --> E[Display post feed]
     D --> F[Display permission message]
 ```
@@ -127,41 +94,25 @@ The rest of the group profile can still be displayed independently of post acces
 
 ## Loading Group Posts
 
-Group posts are loaded using the same timeline query used by the main feed.
+Group posts reuse the shared timeline query:
 
-The group controller then limits the query using:
+```php
+Post::postsForTimeline($userId)
+```
+
+The group controller then limits the result to:
 
 ```text
 group_id = current group
 ```
 
-Conceptually:
-
-```text
-shared post query
-        ↓
-current approved user
-        ↓
-filter by current group
-        ↓
-latest group posts
-        ↓
-paginate
-```
-
-Posts are loaded in pages of:
-
-```text
-10 posts
-```
+Posts are paginated in groups of 10.
 
 ---
 
 ## Shared Timeline Query
 
-The `Post` model contains a reusable timeline query.
-
-This query loads the data required by the post interface, including:
+`Post::postsForTimeline()` loads the data required by the post interface, including:
 
 ```text
 post author
@@ -173,22 +124,20 @@ comments
 comment reactions
 ```
 
-The same query can be reused by:
+The same query is reused by:
 
 ```text
 HomeController
 GroupController
 ```
 
-This avoids duplicating the post-loading logic in multiple controllers.
+This avoids duplicating post-loading logic.
 
 ---
 
-## Protecting Group Posts in the Main Feed
+## Protecting Group Posts in the Home Feed
 
-The shared timeline query also checks access to posts that belong to groups.
-
-Normal posts are available through:
+Normal posts are visible through:
 
 ```text
 group_id = null
@@ -196,159 +145,134 @@ group_id = null
 
 Group posts are only included when the current user has an approved membership in the corresponding group.
 
-Conceptually:
-
 ```mermaid
 flowchart TD
     A[Load timeline] --> B{Post belongs to group?}
-
     B -- No --> C[Allow normal post]
-
     B -- Yes --> D{Approved member?}
-
     D -- Yes --> E[Allow group post]
     D -- No --> F[Exclude post]
 ```
 
-This prevents private group content from leaking into another user's home feed.
+This prevents group content from appearing for users who are not approved members.
 
 ---
 
-## StorePostRequest
+## Group Post Creation
 
-Group post permissions are also enforced during post creation.
-
-The request accepts:
-
-```text
-group_id
-```
-
-as:
-
-```text
-nullable
-integer
-existing group ID
-```
-
-If a `group_id` is supplied, Poet-Web checks whether the authenticated user has an approved membership for that group.
-
-If not, validation fails.
-
----
-
-## Backend Security
-
-Frontend controls alone are not trusted.
-
-A user could manually attempt to submit:
-
-```text
-group_id = another group's ID
-```
-
-The backend checks the membership before the post is created.
-
-```mermaid
-flowchart TD
-    A[Submit post] --> B{group_id supplied?}
-
-    B -- No --> C[Create normal post]
-
-    B -- Yes --> D[Find approved membership]
-
-    D -- No --> E[Validation rejected]
-    D -- Yes --> F[Create group post]
-```
-
-This ensures group posting permissions are enforced by Laravel.
-
----
-
-## Creating a Group Post
-
-The group profile passes the current group into:
+The group profile passes the current group to:
 
 ```text
 CreatePost.vue
 ```
 
-`CreatePost` then passes the group to:
+which passes it to:
 
 ```text
 PostModal.vue
 ```
 
-The modal adds the group's ID to the form:
+The modal includes:
 
 ```text
 group_id = group.id
 ```
 
-The existing post creation endpoint is then reused.
+when creating the post.
 
-No separate group-post controller endpoint is required.
-
----
-
-## Post Creation Flow
+`StorePostRequest` validates that the authenticated user has an approved membership before accepting a non-null `group_id`.
 
 ```mermaid
 flowchart TD
     A[Approved member opens group] --> B[Click Create Post]
     B --> C[Post modal opens]
-    C --> D[Group ID attached to form]
-    D --> E[Write content / attach files]
-    E --> F[Submit post]
-    F --> G[StorePostRequest]
-    G --> H{Approved membership?}
-
-    H -- No --> I[Validation error]
-    H -- Yes --> J[Post saved with group_id]
+    C --> D[Attach group_id]
+    D --> E[Submit post]
+    E --> F[StorePostRequest]
+    F --> G{Approved membership?}
+    G -- No --> H[Validation error]
+    G -- Yes --> I[Save post with group_id]
 ```
 
 ---
 
-## Attachments
+## Reactive Feed Synchronization
 
-Group posts use the same attachment system as normal posts.
-
-This includes existing validation for:
+`PostList.vue` keeps the visible feed in normal Vue reactive state:
 
 ```text
-file count
-allowed extensions
-individual file size
-combined attachment size
+feedState.posts
+feedState.nextPageUrl
+feedState.loadedBeyondFirstPage
 ```
 
-Attachments are therefore not implemented separately for groups.
+The feed does not persist the complete post array with Inertia `useRemember()`.
+
+When Inertia provides an updated `posts` prop after post creation, the component:
+
+```text
+receives the latest first-page posts
+        ↓
+refreshes posts already present in local state
+        ↓
+detects newly-created IDs
+        ↓
+prepends new posts to feedState.posts
+```
+
+This allows newly-created normal and group posts to appear immediately without requiring a full browser refresh.
 
 ---
 
-## Post Header
+## Infinite Scrolling
 
-Because the `Post` model has a group relationship, group posts can display both:
+The group feed reuses `PostList.vue`.
 
-```text
-author
-group
-```
-
-For example:
+An `IntersectionObserver` watches a marker at the bottom of the feed. When it becomes visible and a next page exists:
 
 ```text
-John Doe • Poetry Group
+nextPageUrl
+    ↓
+JSON request
+    ↓
+PostResource collection
+    ↓
+filter duplicate IDs
+    ↓
+append new posts
 ```
 
-The group name links back to the group profile.
+The group controller verifies approved membership for JSON pagination requests as well.
+
+---
+
+## Post Deletion and Feed State
+
+Post deletion is handled by `PostItem.vue`.
+
+After Laravel successfully deletes a post, `PostItem` emits:
+
+```text
+deleted(post.id)
+```
+
+`PostList.vue` then removes that ID from `feedState.posts`.
+
+```mermaid
+flowchart TD
+    A[Click Delete] --> B[DELETE post route]
+    B --> C{Deletion successful?}
+    C -- No --> D[Keep post visible]
+    C -- Yes --> E[PostItem emits deleted]
+    E --> F[PostList removePost]
+    F --> G[Remove post from reactive feed]
+```
+
+This is important because posts use Laravel soft deletion. A deleted post that remained in local frontend state would point to a model that route-model binding can no longer resolve and could produce a 404 on another edit or delete attempt.
 
 ---
 
 ## Group Posts Tab
-
-The Posts tab on the group profile behaves differently based on membership.
 
 ### Approved Member
 
@@ -359,149 +283,23 @@ Create Post
 Group post feed
 ```
 
-### Pending Member
+### Pending Member or Non-member
 
-A pending user sees a permission message instead of the feed.
-
-### Non-member
-
-A user who does not belong to the group also cannot view the group's posts.
+The post feed is not exposed and a permission message is shown instead.
 
 ---
 
-## Infinite Scrolling
+## Attachments
 
-The group feed reuses:
-
-```text
-PostList.vue
-```
-
-which already supports loading additional paginated posts using an intersection observer.
-
-When the bottom of the currently loaded feed is reached:
+Group posts reuse the same attachment system as normal posts, including:
 
 ```text
-current page
-    ↓
-next page URL
-    ↓
-JSON request
-    ↓
-new posts appended
+file count
+allowed extensions
+individual file size
+combined attachment size
+preview and download behavior
 ```
-
-The group controller returns `PostResource` pagination data for JSON requests.
-
----
-
-## Feed State Isolation
-
-The existing post list remembers loaded feed state.
-
-The Home feed uses its own remember key.
-
-Each group feed uses a separate key based on the group ID:
-
-```text
-group-post-feed-{group.id}
-```
-
-For example:
-
-```text
-home-post-feed
-
-group-post-feed-1
-
-group-post-feed-2
-```
-
-This prevents posts remembered from one feed from appearing in another feed.
-
----
-
-## Pagination Flow
-
-```mermaid
-flowchart TD
-    A[Group page loaded] --> B[First 10 posts]
-    B --> C[User scrolls down]
-    C --> D[Intersection observer triggered]
-
-    D --> E{Next page exists?}
-
-    E -- No --> F[Stop loading]
-
-    E -- Yes --> G[Request next page as JSON]
-    G --> H[GroupController verifies membership]
-    H --> I[Return PostResource collection]
-    I --> J[Append new posts]
-```
-
----
-
-## JSON Requests
-
-The same group profile route supports both:
-
-```text
-normal Inertia page requests
-JSON pagination requests
-```
-
-For an approved member, a JSON request returns the next page of group posts.
-
-If an unauthorized user requests the post pagination endpoint directly, access is rejected.
-
----
-
-## Relationship With Home Feed
-
-Group posts and normal posts use the same Post model and resource structure.
-
-The Home feed can therefore contain:
-
-```text
-normal posts
-group posts the user is allowed to see
-```
-
-while still excluding group content for groups where the user does not have approved membership.
-
----
-
-## Current UI Behavior
-
-Group posts are stored correctly and appear after the group page is refreshed.
-
-At the current stage, publishing a new group post does not yet insert the new post into the already-rendered group feed immediately.
-
-This is a frontend synchronization issue rather than a post persistence issue.
-
-The post is already stored in the database correctly.
-
----
-
-## Security Layers
-
-The group post system uses several protections:
-
-```text
-authenticated post creation
-        ↓
-group_id validation
-        ↓
-existing group validation
-        ↓
-approved membership check
-        ↓
-timeline access filtering
-        ↓
-group-specific post query
-```
-
-This protects both post creation and post viewing.
 
 ---
 
@@ -510,11 +308,8 @@ This protects both post creation and post viewing.
 ```mermaid
 flowchart TD
     A[User opens group] --> B{Approved member?}
-
     B -- No --> C[No group feed access]
-
-    B -- Yes --> D[Load group posts]
-
+    B -- Yes --> D[Load first page of group posts]
     D --> E[Display Create Post]
     D --> F[Display PostList]
 
@@ -522,30 +317,38 @@ flowchart TD
     G --> H[Attach group_id]
     H --> I[Validate membership]
     I --> J[Save post]
+    J --> K[Inertia returns updated posts]
+    K --> L[PostList prepends new post]
 
-    F --> K[Scroll]
-    K --> L[Load next page]
-    L --> M[Append group posts]
+    F --> M[Scroll]
+    M --> N[Load next page]
+    N --> O[Append unique posts]
+
+    F --> P[Delete post]
+    P --> Q[Soft-delete on backend]
+    Q --> R[Remove post from local feed]
 ```
 
 ---
 
 ## Result
 
-The group post system connects group membership with the existing social feed functionality.
+The group post system combines membership authorization with the existing social feed.
 
 ```text
-Approved membership
+approved membership
         ↓
-View group posts
+view group posts
         ↓
-Create group posts
+create group posts
         ↓
-Post stored with group_id
+immediate reactive feed update
         ↓
-Group feed paginated
+paginate additional posts
         ↓
-Access protected on backend
+remove deleted posts from local feed
+        ↓
+backend-protected access
 ```
 
-This allows groups to function as their own protected publishing spaces while continuing to reuse Poet-Web's existing post, attachment, reaction, comment, and pagination systems.
+This allows groups to function as protected publishing spaces while reusing Poet-Web's existing post, attachment, reaction, comment, pagination, and moderation systems.

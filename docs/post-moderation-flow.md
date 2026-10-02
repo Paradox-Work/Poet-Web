@@ -2,235 +2,41 @@
 
 ## Overview
 
-Poet-Web provides moderation rules for posts and comments.
+Poet-Web provides ownership and moderation rules for posts and comments.
 
 The system allows:
 
-- post authors to delete their own posts;
-- approved group administrators to delete posts published inside their groups;
-- comment authors to delete their own comments;
+- post authors to edit and delete their own posts;
+- approved group administrators to delete posts published by other users inside their groups;
+- comment authors to edit and delete their own comments;
 - post authors to delete comments published on their posts;
-- affected users to receive email notifications when their content is removed by another user.
+- affected users to receive email notifications when their content is removed by another authorized user.
 
-Editing permissions are not expanded by moderation permissions.
+Moderation permissions do not grant editing rights.
 
-A group administrator may therefore delete another user's group post, but may
-not edit that post.
-
-Likewise, a post owner may delete another user's comment on their post, but may
-not edit that comment.
+A group administrator may delete another user's group post, but may not edit it. A post owner may delete another user's comment on their post, but may not edit that comment.
 
 ---
 
 ## Main Files
 
-The moderation functionality is implemented mainly in:
-
 ```text
 app/Http/Controllers/PostController.php
 app/Http/Resources/PostResource.php
-
+app/Models/Group.php
 app/Notifications/PostDeleted.php
 app/Notifications/CommentDeleted.php
-
 resources/js/Components/app/EditDeleteDropdown.vue
 resources/js/Components/app/PostItem.vue
+resources/js/Components/app/PostList.vue
 resources/js/Components/app/CommentList.vue
 ```
 
-Existing group authorization is also used through:
-
-```text
-app/Models/Group.php
-```
-
 ---
 
-# Post Deletion
+## Post Deletion Authorization
 
-## Post Owner
-
-A user may always delete a post that they created.
-
-The backend verifies this using the authenticated user ID and the `user_id`
-stored on the post.
-
-```text
-authenticated user
-        |
-        v
-post.user_id == user.id
-        |
-       yes
-        |
-        v
-post may be deleted
-```
-
----
-
-## Group Administrator
-
-Posts associated with a group may additionally be deleted by an approved group
-administrator.
-
-The permission is checked through:
-
-```php
-$group->isAdmin($userId)
-```
-
-The `isAdmin()` method verifies that the user has:
-
-- an existing group membership;
-- the `admin` role;
-- the `approved` membership status.
-
-This check is performed on the backend and does not rely on frontend data.
-
----
-
-## Post Deletion Permission Flow
-
-```mermaid
-flowchart TD
-
-    A[User requests post deletion]
-    --> B{Is user the post owner?}
-
-    B -->|Yes| E[Allow deletion]
-
-    B -->|No| C{Does post belong to a group?}
-
-    C -->|No| F[403 Forbidden]
-
-    C -->|Yes| D{Is user an approved group admin?}
-
-    D -->|Yes| E
-    D -->|No| F
-
-    E --> G[Soft-delete post]
-```
-
-Posts use Laravel soft deletion, therefore the record is not immediately
-permanently removed from the database.
-
----
-
-# Post Removal Notification
-
-If the post author deletes their own post, no moderation notification is sent.
-
-If a group administrator deletes another user's post:
-
-```text
-group administrator
-        |
-        v
-deletes member post
-        |
-        v
-PostDeleted notification
-        |
-        v
-post author receives email
-```
-
-The notification contains the group name and provides a link back to the group
-profile.
-
-The implementation is located in:
-
-```text
-app/Notifications/PostDeleted.php
-```
-
----
-
-# Comment Deletion
-
-A comment may be deleted by either:
-
-1. the author of the comment;
-2. the owner of the post containing the comment.
-
-A different unrelated user cannot delete the comment.
-
----
-
-## Comment Permission Flow
-
-```mermaid
-flowchart TD
-
-    A[User requests comment deletion]
-    --> B{Is user the comment author?}
-
-    B -->|Yes| E[Allow deletion]
-
-    B -->|No| C{Is user the post owner?}
-
-    C -->|Yes| E
-    C -->|No| F[403 Forbidden]
-
-    E --> G[Delete comment]
-    G --> H[Return updated comment count]
-```
-
-The backend returns the current number of comments after deletion so that the
-frontend can update the displayed post comment count without requiring a page
-refresh.
-
----
-
-# Comment Removal Notification
-
-A user deleting their own comment does not receive a notification.
-
-When the post owner deletes another user's comment:
-
-```text
-post owner
-    |
-    v
-deletes another user's comment
-    |
-    v
-CommentDeleted notification
-    |
-    v
-comment author receives email
-```
-
-The notification includes a shortened version of the removed comment.
-
-For a group post, the notification links back to the group.
-
-For a normal timeline post, it links back to the dashboard.
-
-The implementation is located in:
-
-```text
-app/Notifications/CommentDeleted.php
-```
-
----
-
-# Backend-Calculated Delete Permission
-
-Post deletion permission is also exposed through `PostResource`.
-
-Example:
-
-```json
-{
-    "can_delete": true
-}
-```
-
-The value is calculated by the backend using the authenticated user.
-
-A post can be deleted when the current user is either:
+A post may be deleted when the authenticated user is either:
 
 ```text
 post owner
@@ -238,20 +44,51 @@ OR
 approved administrator of the post's group
 ```
 
-This is safer than determining group administration only in Vue because the
-server remains the authoritative source for permissions.
+The backend checks both conditions in `PostController::destroy()`.
 
-The frontend permission is only used to decide whether the Delete button should
-be displayed.
+```mermaid
+flowchart TD
+    A[DELETE post request] --> B{Current user owns post?}
+    B -- Yes --> E[Allow deletion]
+    B -- No --> C{Post belongs to a group?}
+    C -- No --> F[403 Forbidden]
+    C -- Yes --> D{Approved group admin?}
+    D -- Yes --> E
+    D -- No --> F
+    E --> G[Soft-delete post]
+```
 
-The backend repeats the authorization check when the delete request is actually
-sent.
+The group-admin check uses:
+
+```php
+$group->isAdmin($userId)
+```
+
+which requires an approved membership with the `admin` role.
 
 ---
 
-# Edit and Delete Controls
+## Backend-Calculated Delete Permission
 
-`EditDeleteDropdown.vue` receives information about the current:
+`PostResource` exposes:
+
+```json
+{
+    "can_delete": true
+}
+```
+
+The value is calculated from the authenticated user and is true when the user owns the post or is an approved administrator of its group.
+
+The frontend uses this value to decide whether a delete action should be displayed for a post.
+
+The backend still repeats the authorization check when the actual DELETE request is sent. The frontend is therefore not the security boundary.
+
+---
+
+## Edit and Delete Controls
+
+`EditDeleteDropdown.vue` receives:
 
 ```text
 user
@@ -259,40 +96,135 @@ post
 comment
 ```
 
-The component calculates two separate permissions:
+and calculates separate edit and delete permissions.
+
+The authenticated user is read reactively from Inertia page props through `usePage()`.
 
 ```text
 editAllowed
 deleteAllowed
+showMenu
 ```
 
-This separation is important because moderation does not grant editing rights.
+The intended behavior is:
 
-For example:
+| Situation | Edit | Delete |
+|---|---:|---:|
+| Own normal post | Yes | Yes |
+| Own group post | Yes | Yes |
+| Another user's group post as approved group admin | No | Yes |
+| Another user's group post as regular member | No | No |
+| Another user's normal post | No | No |
+| Own comment | Yes | Yes |
+| Another user's comment on own post | No | Yes |
+| Another user's comment on another post | No | No |
+
+---
+
+## Post Removal Notification
+
+If a user deletes their own post, no moderation notification is sent.
+
+If a group administrator deletes another user's group post:
 
 ```text
-Post author
-    Edit   ✅
-    Delete ✅
+group administrator
+        ↓
+deletes member post
+        ↓
+PostDeleted notification
+        ↓
+post author receives email
+```
 
-Group administrator viewing another user's group post
-    Edit   ❌
-    Delete ✅
+The notification contains the group name and links back to the group profile.
 
-Comment author
-    Edit   ✅
-    Delete ✅
+---
 
-Post owner viewing another user's comment
-    Edit   ❌
-    Delete ✅
+## Removing Deleted Posts From the Local Feed
+
+Posts use Laravel soft deletion.
+
+After the backend successfully deletes a post, `PostItem.vue` emits a `deleted` event containing the post ID.
+
+```text
+PostItem
+    ↓
+DELETE request succeeds
+    ↓
+emit deleted(post.id)
+    ↓
+PostList
+    ↓
+removePost(post.id)
+    ↓
+feedState.posts filters out the deleted ID
+```
+
+This keeps the visible feed synchronized with backend state.
+
+Without this step, a soft-deleted post could remain visible in the local array. A later edit or delete attempt would target a post that Laravel route-model binding no longer resolves, producing a 404.
+
+```mermaid
+flowchart TD
+    A[Visible post] --> B[User confirms Delete]
+    B --> C[Laravel authorizes deletion]
+    C --> D[Soft-delete post]
+    D --> E[Inertia request succeeds]
+    E --> F[PostItem emits deleted ID]
+    F --> G[PostList filters feedState.posts]
+    G --> H[Post disappears immediately]
 ```
 
 ---
 
-# Post Component Integration
+## Comment Deletion
 
-`PostItem.vue` supplies the complete post to the dropdown:
+A comment may be deleted by either:
+
+1. the comment author;
+2. the owner of the post containing the comment.
+
+An unrelated user cannot delete the comment.
+
+```mermaid
+flowchart TD
+    A[DELETE comment request] --> B{Current user owns comment?}
+    B -- Yes --> E[Allow deletion]
+    B -- No --> C{Current user owns parent post?}
+    C -- Yes --> E
+    C -- No --> F[403 Forbidden]
+    E --> G[Delete comment]
+    G --> H[Return updated comment count]
+```
+
+The response includes the current comment count so the frontend can update the post without a page refresh.
+
+---
+
+## Comment Removal Notification
+
+A user deleting their own comment does not receive a notification.
+
+When a post owner deletes another user's comment:
+
+```text
+post owner
+    ↓
+deletes another user's comment
+    ↓
+CommentDeleted notification
+    ↓
+comment author receives email
+```
+
+For a group post, the notification links to the group. For a normal timeline post, it links to the dashboard.
+
+---
+
+## Component Integration
+
+### PostItem.vue
 
 ```vue
 <EditDeleteDropdown
@@ -301,14 +233,13 @@ Post owner viewing another user's comment
 />
 ```
 
-This allows the component to read the backend-generated `can_delete`
-permission.
+The post component also emits `deleted` after a successful delete request.
 
----
+### PostList.vue
 
-# Comment Component Integration
+`PostList.vue` listens for the delete event and removes the post from reactive local state.
 
-`CommentList.vue` supplies both the post and comment:
+### CommentList.vue
 
 ```vue
 <EditDeleteDropdown
@@ -318,94 +249,64 @@ permission.
 />
 ```
 
-This allows the component to distinguish between:
+This gives the dropdown enough context to distinguish between the comment author, post owner, and unrelated users.
+
+---
+
+## Security Layers
 
 ```text
-comment author
-post owner
-unrelated user
+frontend visibility rules
+        ↓
+backend ownership check
+        ↓
+group admin check when applicable
+        ↓
+Laravel model binding
+        ↓
+soft deletion
+        ↓
+notification when another user removed the content
 ```
 
----
-
-# Permission Matrix
-
-| Action | Content author | Post owner | Group admin | Other user |
-|---|---:|---:|---:|---:|
-| Edit own post | Yes | — | No | No |
-| Delete own post | Yes | — | Yes if applicable | No |
-| Delete another user's group post | No | — | Yes | No |
-| Edit own comment | Yes | — | No | No |
-| Delete own comment | Yes | — | No | No |
-| Delete comment on own post | — | Yes | No | No |
-| Edit another user's comment | No | No | No | No |
+Hiding a button is only a user-interface decision. Authorization is enforced in Laravel.
 
 ---
 
-# Security
-
-The frontend does not provide the final authorization decision.
-
-Even if a user manually sends a DELETE request, Laravel checks the authenticated
-user before deleting the resource.
-
-Therefore hiding the Delete button is only a user-interface feature.
-
-Actual security is enforced by:
-
-```text
-PostController
-        +
-authenticated user
-        +
-post ownership
-        +
-group membership and role
-```
-
----
-
-# Complete Moderation Flow
+## Complete Moderation Flow
 
 ```mermaid
 flowchart TD
-
-    A[Authenticated user]
-    --> B{Post or comment?}
+    A[Authenticated user] --> B{Post or comment?}
 
     B -->|Post| C{Own post?}
-
     C -->|Yes| D[Delete post]
     C -->|No| E{Approved group admin?}
-
     E -->|No| Z[403 Forbidden]
     E -->|Yes| F[Delete group post]
-
     F --> G[Notify post author]
 
-    B -->|Comment| H{Own comment?}
+    D --> H[Emit deleted post ID]
+    F --> H
+    H --> I[Remove post from local feed]
 
-    H -->|Yes| I[Delete comment]
-    H -->|No| J{Owns parent post?}
-
-    J -->|No| Z
+    B -->|Comment| J{Own comment?}
     J -->|Yes| K[Delete comment]
+    J -->|No| L{Own parent post?}
+    L -->|No| Z
+    L -->|Yes| M[Delete comment]
+    M --> N[Notify comment author]
 
-    K --> L[Notify comment author]
-
-    I --> M[Return updated comment count]
-    K --> M
+    K --> O[Return updated comment count]
+    M --> O
 ```
 
 ---
 
-# Result
+## Result
 
-The moderation system allows content owners and group administrators to manage
-content without giving moderators unnecessary editing permissions.
+The moderation system separates content ownership from moderation authority.
 
-Authorization is verified on the backend, while the Vue interface displays only
-the actions available to the authenticated user.
+Post and comment authors retain control over their own content, group administrators can moderate posts inside their groups without receiving edit rights, and post owners can moderate comments on their own posts.
 
-Users whose content is removed by another authorized user receive an email
-notification explaining what happened.
+Successful post deletions are also reflected immediately in the reactive feed so deleted records do not remain as stale UI entries.
