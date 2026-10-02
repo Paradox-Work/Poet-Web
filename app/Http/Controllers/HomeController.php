@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\GroupResource;
 use App\Http\Resources\UserResource;
-
+use App\Http\Resources\PostResource;
 use App\Models\Group;
 use Illuminate\Http\Request;
 use App\Models\Post;
@@ -15,58 +15,57 @@ class HomeController extends Controller
     public function index(Request $request)
     {
         $userId = $request->user()->id;
- 
-        $group =
-            $post->group;
+        
+        $posts =
+            Post::postsForTimeline(
+                $userId
+            )
+                ->where(
+                    function ($query) use (
+                        $userId
+                    ) {
+                        $query
+                            // My own posts
+                            ->where(
+                                'posts.user_id',
+                                $userId
+                            )
 
+                            // Posts from groups I can access
+                            ->orWhereNotNull(
+                                'posts.group_id'
+                            )
 
-        if ($group) {
-
-            /*
-            * Private group post:
-            * notify approved group members.
-            */
-            $users =
-                $group
-                    ->approvedUsers()
-                    ->where(
-                        'users.id',
-                        '!=',
-                        $user->id
-                    )
-                    ->get();
-
-            Notification::send(
-                $users,
-                new PostCreated(
-                    $post,
-                    $user,
-                    $group
+                            // Posts from people I follow
+                            ->orWhereIn(
+                                'posts.user_id',
+                                function ($query) use (
+                                    $userId
+                                ) {
+                                    $query
+                                        ->select('user_id')
+                                        ->from('followers')
+                                        ->where(
+                                            'follower_id',
+                                            $userId
+                                        );
+                                }
+                            );
+                    }
                 )
+                ->paginate(10)
+                ->withQueryString();
+
+
+        $posts =
+            PostResource::collection(
+                $posts
             );
 
-        } else {
 
-            /*
-            * Normal post:
-            * notify followers.
-            */
-            $followers =
-                $user
-                    ->followers()
-                    ->get();
-
-            Notification::send(
-                $followers,
-                new PostCreated(
-                    $post,
-                    $user
-                )
-            );
+        if ($request->wantsJson()) {
+            return $posts;
         }
-
-
-        return back();
         
         $groups = Group::query()
             ->select([
