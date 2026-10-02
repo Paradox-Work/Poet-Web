@@ -697,9 +697,6 @@ function joinToGroup() {
 
                                 <PostList
                                     :posts="posts"
-                                    :remember-key="
-                                        `group-post-feed-${group.id}`
-                                    "
                                 />
 
                             </template>

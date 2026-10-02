@@ -2,13 +2,10 @@
 import {
     onBeforeUnmount,
     onMounted,
+    reactive,
     ref,
     watch
 } from 'vue';
-
-import {
-    useRemember
-} from '@inertiajs/vue3';
 
 import axios from 'axios';
 
@@ -29,29 +26,21 @@ const props = defineProps({
         required: true
     },
 
-    rememberKey: {
-        type: String,
-        default: 'home-post-feed'
-    }
-
 });
 
 
 const feedState =
-    useRemember(
-        {
-            posts: [
-                ...(props.posts.data ?? [])
-            ],
+    reactive({
+        posts: [
+            ...(props.posts.data ?? [])
+        ],
 
-            nextPageUrl:
-                props.posts.links?.next
-                ?? null,
+        nextPageUrl:
+            props.posts.links?.next
+            ?? null,
 
-            loadedBeyondFirstPage: false
-        },
-        props.rememberKey
-    );
+        loadedBeyondFirstPage: false
+    });
 
 const loadingMore =
     ref(false);
@@ -177,9 +166,18 @@ async function loadMore() {
 
 
 watch(
-    () => props.posts,
+    () =>
+        (props.posts?.data ?? [])
+            .map(
+                post =>
+                    `${post.id}:${post.updated_at}`
+            )
+            .join('|'),
 
-    posts => {
+    () => {
+
+        const posts =
+            props.posts;
 
         const incomingPosts =
             posts?.data ?? [];
@@ -197,8 +195,8 @@ watch(
 
 
         /*
-         * Refresh any posts we already have
-         * with newer server data.
+         * Refresh posts already present
+         * in remembered state.
          */
         feedState.posts =
             feedState.posts.map(
@@ -211,8 +209,7 @@ watch(
 
 
         /*
-         * Add genuinely new first-page posts
-         * to the beginning of the feed.
+         * Add newly-created posts.
          */
         const existingIds =
             new Set(
@@ -239,14 +236,9 @@ watch(
         }
 
 
-        /*
-         * Only reset pagination if the user
-         * has not already loaded later pages.
-         */
         if (
             !feedState.loadedBeyondFirstPage
         ) {
-
             feedState.nextPageUrl =
                 posts?.links?.next
                 ?? null;
