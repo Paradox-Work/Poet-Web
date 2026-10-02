@@ -5,14 +5,16 @@ namespace App\Http\Controllers;
 use App\Notifications\UserRemovedFromGroup;
 use App\Notifications\GroupJoinRequestResolved;
 use App\Notifications\GroupRoleChanged;
+use App\Notifications\InvitationApproved;
+use App\Notifications\InvitationInGroup;
 use App\Http\Resources\GroupMemberResource;
 use Illuminate\Validation\Rule;
 use App\Http\Resources\UserResource;
+use App\Http\Resources\PostAttachmentResource;
+use App\Models\PostAttachment;
 use App\Notifications\RequestToJoinGroup;
 use Illuminate\Support\Facades\Notification;
 use App\Http\Requests\InviteUsersRequest;
-use App\Notifications\InvitationApproved;
-use App\Notifications\InvitationInGroup;
 use Illuminate\Support\Str;
 use App\Enums\GroupUserRole;
 use App\Enums\GroupUserStatus;
@@ -167,6 +169,39 @@ if ($isApprovedMember) {
                 ->get();
         }
 
+        $photos = collect();
+
+        if ($isApprovedMember) {
+
+            $groupPostIds =
+                Post::postsForTimeline(
+                    $userId
+                )
+                    ->where(
+                        'posts.group_id',
+                        $group->id
+                    )
+                    ->reorder()
+                    ->select(
+                        'posts.id'
+                    );
+
+
+            $photos =
+                PostAttachment::query()
+                    ->where(
+                        'mime',
+                        'like',
+                        'image/%'
+                    )
+                    ->whereIn(
+                        'post_id',
+                        $groupPostIds
+                    )
+                    ->latest()
+                    ->get();
+        }
+
         return Inertia::render(
             'Group/View',
             [
@@ -179,6 +214,12 @@ if ($isApprovedMember) {
 
                 'group' =>
                     (new GroupResource($group))
+                        ->resolve($request),
+
+                'photos' =>
+                    PostAttachmentResource::collection(
+                        $photos
+                    )
                         ->resolve($request),
 
                 'users' =>

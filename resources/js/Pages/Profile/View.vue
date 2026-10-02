@@ -244,8 +244,19 @@
 
                 </TabPanel>
                 <TabPanel
-                 class="bg-white p-3">
-                Photos
+                    class="bg-white p-3"
+                >
+                    <TabPhotos
+                        v-if="photos"
+                        :photos="photos"
+                    />
+
+                    <div
+                        v-else
+                        class="py-8 text-center text-gray-500"
+                    >
+                        Log in to view photos.
+                    </div>
                 </TabPanel>
                 <TabPanel v-if="isMyProfile">
                 <Edit :must-verify-email="mustVerifyEmail" :status="status"/>
@@ -260,6 +271,9 @@
 </template>
 
 <script setup>
+import TabPhotos
+    from '@/Pages/Profile/TabPhotos.vue';
+
 import CreatePost
     from '@/Components/app/CreatePost.vue';
 
@@ -308,8 +322,12 @@ const props = defineProps({
     followings: {
         type: Array,
         default: () => []
-},
+    },
 
+    photos: {
+        type: Array,
+        default: null
+    },
 
     user: Object,
 });

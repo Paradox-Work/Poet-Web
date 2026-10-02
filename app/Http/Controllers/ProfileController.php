@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Http\Resources\UserResource;
 use App\Http\Resources\PostResource;
+use App\Http\Resources\PostAttachmentResource;
+use App\Models\PostAttachment;
 use App\Models\Post;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
@@ -89,6 +91,39 @@ class ProfileController extends Controller
                 ->orderBy('users.name')
                 ->get();
         
+        $photos = null;
+
+        if ($currentUserId) {
+
+            $visiblePostIds =
+                Post::postsForTimeline(
+                    $currentUserId
+                )
+                    ->where(
+                        'posts.user_id',
+                        $user->id
+                    )
+                    ->reorder()
+                    ->select(
+                        'posts.id'
+                    );
+
+
+            $photos =
+                PostAttachment::query()
+                    ->where(
+                        'mime',
+                        'like',
+                        'image/%'
+                    )
+                    ->whereIn(
+                        'post_id',
+                        $visiblePostIds
+                    )
+                    ->latest()
+                    ->get();
+        }
+
         return Inertia::render(
             'Profile/View',
             [
@@ -119,6 +154,13 @@ class ProfileController extends Controller
                     UserResource::collection(
                         $followings
                     ),
+
+                'photos' =>
+                    $photos
+                        ? PostAttachmentResource::collection(
+                            $photos
+                        )
+                        : null,
 
                 'user' =>
                     new UserResource($user),

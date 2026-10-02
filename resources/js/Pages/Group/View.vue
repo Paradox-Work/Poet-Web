@@ -1,4 +1,7 @@
 <script setup>
+import TabPhotos
+    from '@/Pages/Profile/TabPhotos.vue';
+
 import UserListItem
     from '@/Components/app/UserListItem.vue';
     
@@ -67,6 +70,11 @@ const props = defineProps({
     posts: {
         type: Object,
         default: null
+    },
+
+    photos: {
+        type: Array,
+        default: () => []
     },
 
 });
@@ -696,6 +704,22 @@ function joinToGroup() {
                             </button>
                         </Tab>
 
+                        <Tab
+                            v-slot="{ selected }"
+                            as="template"
+                        >
+                            <button
+                                :class="[
+                                    'px-5 py-3 text-sm font-medium',
+
+                                    selected
+                                        ? 'border-b-2 border-indigo-600 text-indigo-600'
+                                        : 'text-gray-500'
+                                ]"
+                            >
+                                Photos
+                            </button>
+                        </Tab>
 
                         <Tab
                             v-slot="{ selected }"
@@ -830,6 +854,21 @@ function joinToGroup() {
 
                         </TabPanel>
 
+                        <TabPanel class="p-6">
+
+                            <TabPhotos
+                                v-if="isApprovedMember"
+                                :photos="photos"
+                            />
+
+                            <div
+                                v-else
+                                class="py-8 text-center text-gray-500"
+                            >
+                                Join the group to view photos.
+                            </div>
+
+                        </TabPanel>
 
                         <TabPanel class="p-6">
 
