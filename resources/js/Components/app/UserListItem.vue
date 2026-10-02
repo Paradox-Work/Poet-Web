@@ -38,7 +38,8 @@ defineProps({
 defineEmits([
     'approve',
     'reject',
-    'role-change'
+    'role-change',
+    'remove'
 ]);
 </script>
 

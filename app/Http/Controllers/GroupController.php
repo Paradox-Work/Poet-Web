@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Notifications\UserRemovedFromGroup;
 use App\Notifications\GroupJoinRequestResolved;
 use App\Notifications\GroupRoleChanged;
 use App\Http\Resources\GroupMemberResource;
@@ -558,6 +559,73 @@ if ($isApprovedMember) {
         );
     }
     
+    public function removeUser(
+        Request $request,
+        Group $group
+    ) {
+        $actor =
+            $request->user();
+
+        if (!$group->isAdmin($actor->id)) {
+            abort(
+                403,
+                "You don't have permission to remove group members."
+            );
+        }
+
+        $data = $request->validate([
+            'user_id' => [
+                'required',
+                'integer',
+                'exists:users,id',
+            ],
+        ]);
+
+        $userId =
+            (int) $data['user_id'];
+
+        if ($group->isOwner($userId)) {
+            abort(
+                403,
+                "The group owner cannot be removed."
+            );
+        }
+
+        $membership =
+            GroupUser::query()
+                ->with('user')
+                ->where(
+                    'group_id',
+                    $group->id
+                )
+                ->where(
+                    'user_id',
+                    $userId
+                )
+                ->where(
+                    'status',
+                    GroupUserStatus::APPROVED->value
+                )
+                ->firstOrFail();
+
+        $user =
+            $membership->user;
+
+        $membership->delete();
+
+        $user->notify(
+            new UserRemovedFromGroup(
+                $group
+            )
+        );
+
+        return back()->with(
+            'success',
+            $user->name .
+            ' was removed from the group.'
+        );
+    }
+
     public function changeRole(
         Request $request,
         Group $group

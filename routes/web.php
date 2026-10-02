@@ -112,6 +112,11 @@ Route::middleware('auth')->group(function () {
         [GroupController::class, 'changeRole']
     )->name('group.changeRole');
 
+    Route::delete(
+        '/groups/{group:slug}/members',
+        [GroupController::class, 'removeUser']
+    )->name('group.removeUser');
+
     Route::post(
         '/users/{user}/follow',
         [UserController::class, 'follow']

@@ -128,6 +128,11 @@ const roleForm = useForm({
     role: null
 });
 
+const removeMemberForm =
+    useForm({
+        user_id: null
+    });
+
 const groupSettingsForm = useForm({
     name: props.group.name,
 
@@ -176,6 +181,34 @@ function changeMemberRole(
     );
 }
 
+function removeMember(
+    user
+) {
+    if (
+        !window.confirm(
+            `Are you sure you want to remove "${user.name}" from this group?`
+        )
+    ) {
+        return;
+    }
+
+    removeMemberForm.user_id =
+        user.id;
+
+    removeMemberForm.delete(
+        route(
+            'group.removeUser',
+            props.group.slug
+        ),
+        {
+            preserveScroll: true,
+
+            onFinish: () => {
+                removeMemberForm.reset();
+            }
+        }
+    );
+}
 
 function onCoverChange(event) {
 
@@ -732,24 +765,22 @@ function joinToGroup() {
                                     class="overflow-hidden rounded-lg border"
                                 >
                                     <UserListItem
-                                        v-for="user in requests"
+                                        v-for="user in users"
                                         :key="user.id"
                                         :user="user"
-                                        show-actions
-                                        :processing="
-                                            requestForm.processing
+                                        :show-role-control="isAdmin"
+                                        :is-owner="
+                                            user.id === group.user_id
                                         "
-                                        @approve="
-                                            resolveRequest(
-                                                $event,
-                                                'approve'
-                                            )
+                                        :role-processing="
+                                            roleForm.processing ||
+                                            removeMemberForm.processing
                                         "
-                                        @reject="
-                                            resolveRequest(
-                                                $event,
-                                                'reject'
-                                            )
+                                        @role-change="
+                                            changeMemberRole
+                                        "
+                                        @remove="
+                                            removeMember
                                         "
                                     />
                                 </div>
