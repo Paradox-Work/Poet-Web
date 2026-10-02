@@ -191,6 +191,16 @@ isCurrentUserFollower = true
 
 The follower count is displayed beside the profile information.
 
+The profile now also exposes dedicated `Followers` and `Following` tabs.
+
+The Followers tab lists users whose `follower_id` points to the viewed profile through a follower relationship, while the Following tab lists users the profile owner follows. Both lists use `UserListItem.vue`, so each displayed user links directly to their profile.
+
+The full profile-content implementation is documented in:
+
+```text
+docs/profile-content-flow.md
+```
+
 ---
 
 ## Follow Request
@@ -418,7 +428,7 @@ backend
 
 ### `ProfileController.php`
 
-Loads follower count and current-user follow state for the viewed profile.
+Loads follower count, current-user follow state, follower and following lists, and the profile owner's visible posts.
 
 ### `UserController.php`
 
