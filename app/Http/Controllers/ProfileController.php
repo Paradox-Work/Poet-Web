@@ -77,37 +77,15 @@ class ProfileController extends Controller
 
 
         $followers =
-            User::query()
-                ->select('users.*')
-                ->join(
-                    'followers as follower_links',
-                    'follower_links.follower_id',
-                    '=',
-                    'users.id'
-                )
-                ->where(
-                    'follower_links.user_id',
-                    $user->id
-                )
-                ->distinct()
+            $user
+                ->followers()
                 ->orderBy('users.name')
                 ->get();
 
 
         $followings =
-            User::query()
-                ->select('users.*')
-                ->join(
-                    'followers as follower_links',
-                    'follower_links.user_id',
-                    '=',
-                    'users.id'
-                )
-                ->where(
-                    'follower_links.follower_id',
-                    $user->id
-                )
-                ->distinct()
+            $user
+                ->followings()
                 ->orderBy('users.name')
                 ->get();
         

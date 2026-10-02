@@ -9,7 +9,16 @@ import CreatePost from '@/Components/app/CreatePost.vue';
 
 defineProps({
     posts: Object,
-    groups: Array,
+
+    groups: {
+        type: Array,
+        default: () => []
+    },
+
+    followings: {
+        type: Array,
+        default: () => []
+    }
 });
 
 function handleImageError() {
@@ -31,7 +40,9 @@ function handleImageError() {
                 <GroupList :groups="groups" />
             </div>
             <div class="lg:col-span-3 lg:order-3 h-full overflow-auto">
-               <FollowingList />
+               <FollowingList
+                    :users="followings"
+               />
             </div>
             <div class="lg:col-span-6 lg:order-2 overflow-hidden flex flex-col">
                 <CreatePost />

@@ -119,30 +119,6 @@ class PostController extends Controller
 
             DB::commit();
 
-                $group =
-                    $post->group;
-
-                if ($group) {
-
-                    $users =
-                        $group
-                            ->approvedUsers()
-                            ->where(
-                                'users.id',
-                                '!=',
-                                $user->id
-                            )
-                            ->get();
-
-                    Notification::send(
-                        $users,
-                        new PostCreated(
-                            $post,
-                            $group
-                        )
-                    );
-                }
-
         } catch (\Throwable $exception) {
 
             foreach ($storedPaths as $path) {
@@ -158,6 +134,46 @@ class PostController extends Controller
 
 
             throw $exception;
+        }
+
+        $group =
+            $post->group;
+
+        if ($group) {
+
+            $users =
+                $group
+                    ->approvedUsers()
+                    ->where(
+                        'users.id',
+                        '!=',
+                        $user->id
+                    )
+                    ->get();
+
+            Notification::send(
+                $users,
+                new PostCreated(
+                    $post,
+                    $user,
+                    $group
+                )
+            );
+
+        } else {
+
+            $followers =
+                $user
+                    ->followers()
+                    ->get();
+
+            Notification::send(
+                $followers,
+                new PostCreated(
+                    $post,
+                    $user
+                )
+            );
         }
 
         return back();

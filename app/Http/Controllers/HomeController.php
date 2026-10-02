@@ -3,8 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\GroupResource;
+use App\Http\Resources\UserResource;
+
 use App\Models\Group;
-use App\Http\Resources\PostResource;
 use Illuminate\Http\Request;
 use App\Models\Post;
 use Inertia\Inertia;
@@ -15,20 +16,57 @@ class HomeController extends Controller
     {
         $userId = $request->user()->id;
  
-        $posts = Post::postsForTimeline(
-            $userId
-        )
-            ->paginate(10)
-            ->withQueryString();
+        $group =
+            $post->group;
 
-        $posts =
-            PostResource::collection(
-                $posts
+
+        if ($group) {
+
+            /*
+            * Private group post:
+            * notify approved group members.
+            */
+            $users =
+                $group
+                    ->approvedUsers()
+                    ->where(
+                        'users.id',
+                        '!=',
+                        $user->id
+                    )
+                    ->get();
+
+            Notification::send(
+                $users,
+                new PostCreated(
+                    $post,
+                    $user,
+                    $group
+                )
             );
 
-        if ($request->wantsJson()) {
-            return $posts;
+        } else {
+
+            /*
+            * Normal post:
+            * notify followers.
+            */
+            $followers =
+                $user
+                    ->followers()
+                    ->get();
+
+            Notification::send(
+                $followers,
+                new PostCreated(
+                    $post,
+                    $user
+                )
+            );
         }
+
+
+        return back();
         
         $groups = Group::query()
             ->select([
@@ -50,10 +88,19 @@ class HomeController extends Controller
             ->orderBy('groups.name')
             ->get();
 
+        $followings =
+            $request
+                ->user()
+                ->followings()
+                ->orderBy('users.name')
+                ->get();
+
         return Inertia::render('Home', [
             'posts' => $posts,
 
             'groups' => GroupResource::collection($groups),
+
+            'followings' =>UserResource::collection($followings),
         ]);
     }
 }

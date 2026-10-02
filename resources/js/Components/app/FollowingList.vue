@@ -1,6 +1,13 @@
 <script setup>
    import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/vue'
    import FollowingListItems from './FollowingListItems.vue';
+
+   const props = defineProps({
+    users: {
+        type: Array,
+        default: () => []
+    }
+});
    
 </script>
 
@@ -19,14 +26,18 @@
          </DisclosureButton>
 
          <DisclosurePanel class="flex flex-col">
-            <FollowingListItems />
+            <FollowingListItems
+               :users="users"
+            />
          </DisclosurePanel>
       </Disclosure>
 
       <!-- DESKTOP: always open -->
       <div class="hidden lg:flex flex-col min-h-0 flex-1">
          <h2 class="text-xl font-bold mb-4">Following</h2>
-         <FollowingListItems />
+         <FollowingListItems
+            :users="users"
+         />
       </div>
 
    </div>
