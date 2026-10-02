@@ -765,22 +765,24 @@ function joinToGroup() {
                                     class="overflow-hidden rounded-lg border"
                                 >
                                     <UserListItem
-                                        v-for="user in users"
+                                        v-for="user in requests"
                                         :key="user.id"
                                         :user="user"
-                                        :show-role-control="isAdmin"
-                                        :is-owner="
-                                            user.id === group.user_id
+                                        show-actions
+                                        :processing="
+                                            requestForm.processing
                                         "
-                                        :role-processing="
-                                            roleForm.processing ||
-                                            removeMemberForm.processing
+                                        @approve="
+                                            resolveRequest(
+                                                $event,
+                                                'approve'
+                                            )
                                         "
-                                        @role-change="
-                                            changeMemberRole
-                                        "
-                                        @remove="
-                                            removeMember
+                                        @reject="
+                                            resolveRequest(
+                                                $event,
+                                                'reject'
+                                            )
                                         "
                                     />
                                 </div>
@@ -807,10 +809,14 @@ function joinToGroup() {
                                         user.id === group.user_id
                                     "
                                     :role-processing="
-                                        roleForm.processing
+                                        roleForm.processing ||
+                                        removeMemberForm.processing
                                     "
                                     @role-change="
                                         changeMemberRole
+                                    "
+                                    @remove="
+                                        removeMember
                                     "
                                 />
                             </div>
