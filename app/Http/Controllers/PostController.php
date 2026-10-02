@@ -2,6 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Notifications\CommentCreated;
+use App\Notifications\PostCreated;
+use App\Notifications\ReactionAddedOnComment;
+use App\Notifications\ReactionAddedOnPost;
+use Illuminate\Support\Facades\Notification;
 use App\Notifications\CommentDeleted;
 use App\Notifications\PostDeleted;
 use App\Models\Post;
@@ -12,7 +17,6 @@ use App\Http\Requests\UpdatePostRequest;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use App\Enums\ReactionEnum;
-use App\Models\Reaction;
 use Illuminate\Validation\Rule;
 use App\Http\Resources\CommentResource;
 use App\Models\Comment;
@@ -83,6 +87,30 @@ class PostController extends Controller
 
 
             DB::commit();
+
+                $group =
+                    $post->group;
+
+                if ($group) {
+
+                    $users =
+                        $group
+                            ->approvedUsers()
+                            ->where(
+                                'users.id',
+                                '!=',
+                                $user->id
+                            )
+                            ->get();
+
+                    Notification::send(
+                        $users,
+                        new PostCreated(
+                            $post,
+                            $group
+                        )
+                    );
+                }
 
         } catch (\Throwable $exception) {
 
@@ -296,6 +324,18 @@ class PostController extends Controller
             ]);
 
             $hasReaction = true;
+
+            if (
+                $post->user_id !==
+                $userId
+            ) {
+                $post->user->notify(
+                    new ReactionAddedOnPost(
+                        $post,
+                        $request->user()
+                    )
+                );
+            }
         }
 
         return response()->json([
@@ -348,6 +388,19 @@ class PostController extends Controller
             ]);
 
             $hasReaction = true;
+
+            if (
+                $comment->user_id !==
+                $userId
+            ) {
+                $comment->user->notify(
+                    new ReactionAddedOnComment(
+                        $comment->post,
+                        $comment,
+                        $request->user()
+                    )
+                );
+            }
         }
 
         return response()->json([
@@ -401,6 +454,18 @@ class PostController extends Controller
                 'parent_id' =>
                     $data['parent_id'] ?? null,
             ]);
+
+            if (
+                $post->user_id !==
+                $request->user()->id
+            ) {
+                $post->user->notify(
+                    new CommentCreated(
+                        $comment
+                    )
+                );
+            }
+
         return (
             new CommentResource($comment)
         )
