@@ -30,12 +30,10 @@ class CommentDeleted extends Notification
     ): MailMessage {
 
         $destination =
-            $this->post->group
-                ? route(
-                    'group.profile',
-                    $this->post->group->slug
-                )
-                : route('dashboard');
+            route(
+                'post.view',
+                $this->post->id
+            );
 
         return (new MailMessage)
             ->subject(

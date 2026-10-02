@@ -38,10 +38,10 @@ class PostCreated extends Notification
                 '".'
             )
             ->action(
-                'Open group',
+                'View post',
                 route(
-                    'group.profile',
-                    $this->group->slug
+                    'post.view',
+                    $this->post->id
                 )
             );
     }

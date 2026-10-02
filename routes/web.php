@@ -38,6 +38,11 @@ Route::middleware('auth')->group(function () {
     )->name('post.destroy');
 
     Route::get(
+        '/posts/{post}',
+        [\App\Http\Controllers\PostController::class, 'view']
+    )->name('post.view');
+
+    Route::get(
         '/posts/attachments/{attachment}/download',
         [\App\Http\Controllers\PostController::class, 'downloadAttachment']
     )->name('post.download');
@@ -122,6 +127,7 @@ Route::middleware('auth')->group(function () {
         [UserController::class, 'follow']
     )->name('user.follow');
 
+    
 
 //   Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
 

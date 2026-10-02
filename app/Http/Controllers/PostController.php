@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\PostResource;
 use App\Notifications\CommentCreated;
 use App\Notifications\PostCreated;
 use App\Notifications\ReactionAddedOnComment;
@@ -24,6 +25,36 @@ use App\Http\Requests\UpdateCommentRequest;
 
 class PostController extends Controller
 {
+    public function view(
+        Request $request,
+        Post $post
+    ) {
+        $userId =
+            $request->user()->id;
+
+        /*
+        * Re-query through the same visibility
+        * rules used by the timeline.
+        *
+        * Normal posts are visible.
+        * Group posts require approved membership.
+        */
+        $post =
+            Post::postsForTimeline(
+                $userId
+            )
+                ->whereKey($post->id)
+                ->firstOrFail();
+
+        return inertia(
+            'Post/View',
+            [
+                'post' =>
+                    (new PostResource($post))
+                        ->resolve($request),
+            ]
+        );
+    }
 
     /**
      * Store a newly created resource in storage.

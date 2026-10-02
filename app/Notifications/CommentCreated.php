@@ -31,12 +31,10 @@ class CommentCreated extends Notification
             $this->comment->post;
 
         $destination =
-            $post->group
-                ? route(
-                    'group.profile',
-                    $post->group->slug
-                )
-                : route('dashboard');
+            route(
+                'post.view',
+                $this->comment->post_id
+            );
 
         return (new MailMessage)
             ->subject(
