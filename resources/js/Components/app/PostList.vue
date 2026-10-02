@@ -27,6 +27,11 @@ const props = defineProps({
     posts: {
         type: Object,
         required: true
+    },
+
+    rememberKey: {
+        type: String,
+        default: 'home-post-feed'
     }
 
 });
@@ -45,7 +50,7 @@ const feedState =
 
             loadedBeyondFirstPage: false
         },
-        'home-post-feed'
+        props.rememberKey
     );
 
 const loadingMore =

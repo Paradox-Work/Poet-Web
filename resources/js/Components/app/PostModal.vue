@@ -75,6 +75,13 @@
                                         class="mb-4"
                                     />
 
+                                    <div
+                                        v-if="form.errors.group_id"
+                                        class="mb-3 rounded-md bg-red-100 px-3 py-2 text-sm text-red-700"
+                                    >
+                                        {{ form.errors.group_id }}
+                                    </div>
+
                                     <TiptapEditor
                                         v-model="form.body"
                                     />
@@ -255,10 +262,11 @@ import {
     ArrowUturnLeftIcon
         } from '@heroicons/vue/24/solid';
 
-import { 
+import {
+    router,
     useForm,
     usePage
-        } from '@inertiajs/vue3';
+} from '@inertiajs/vue3';
 
 import TiptapEditor from '@/Components/app/TiptapEditor.vue';
 import PostUserHeader from '@/Components/app/PostUserHeader.vue';
@@ -269,6 +277,11 @@ const props = defineProps({
     post: {
         type: Object,
         required: true
+    },
+
+    group: {
+        type: Object,
+        default: null
     },
 
     modelValue: Boolean
@@ -320,6 +333,7 @@ const computedAttachments = computed(() => {
 const form = useForm({
     id: null,
     body: '',
+    group_id: null,
     attachments: [],
     deleted_file_ids: [],
     _method: 'POST'
@@ -350,6 +364,11 @@ watch(
 
         form.id = post.id ?? null;
         form.body = post.body ?? '';
+
+        form.group_id =
+            props.group?.id
+            ?? post.group?.id
+            ?? null;
 
         form.deleted_file_ids = [];
         form.attachments = [];
@@ -476,6 +495,11 @@ function submit() {
 
     attachmentErrors.value = [];
 
+    if (!form.id) {
+        form.group_id =
+            props.group?.id ?? null;
+    }
+
     form.attachments =
         attachmentFiles.value.map(
             myFile => myFile.file
@@ -488,10 +512,10 @@ function submit() {
         onSuccess: () => {
             closeModal();
         },
-        
+
         onError: (errors) => {
-        processErrors(errors);
-    }
+            processErrors(errors);
+        }
     };
 
 

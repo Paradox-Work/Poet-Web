@@ -24,7 +24,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
-
+use App\Http\Resources\PostResource;
+use App\Models\Post;
 
 class GroupController extends Controller
 {
@@ -109,6 +110,45 @@ class GroupController extends Controller
                 $membership?->role;
         }
 
+        $isApprovedMember =
+    $group->hasApprovedUser(
+        $userId
+    );
+
+$posts = null;
+
+if ($isApprovedMember) {
+    $posts =
+        Post::postsForTimeline(
+            $userId
+        )
+            ->where(
+                'group_id',
+                $group->id
+            )
+            ->paginate(10)
+            ->withQueryString();
+}
+
+
+        /*
+        * Infinite-scroll requests use
+        * Accept: application/json.
+        */
+        if ($request->wantsJson()) {
+
+            if (!$isApprovedMember) {
+                abort(
+                    403,
+                    "You don't have permission to view posts in this group."
+                );
+            }
+
+            return PostResource::collection(
+                $posts
+            );
+        }
+
         $users = $group
             ->approvedUsers()
             ->orderBy('users.name')
@@ -129,6 +169,13 @@ class GroupController extends Controller
         return Inertia::render(
             'Group/View',
             [
+                'posts' =>
+                    $posts
+                        ? PostResource::collection(
+                            $posts
+                        )
+                        : null,
+
                 'group' =>
                     (new GroupResource($group))
                         ->resolve($request),
@@ -143,6 +190,7 @@ class GroupController extends Controller
 
                 'success' =>
                     session('success'),
+                    
             ]
         );
     }

@@ -9,12 +9,18 @@ const authUser = usePage().props.auth.user;
 
 const showModal = ref(false);
 
+const props = defineProps({
+    group: {
+        type: Object,
+        default: null
+    }
+});
 
 const newPost = {
     id: null,
     body: '',
     user: authUser,
-    group: null,
+    group: props.group ?? null,
     updated_at: null
 };
 
@@ -40,6 +46,7 @@ function showCreatePostModal() {
 
         <PostModal
             :post="newPost"
+            :group="group"
             v-model="showModal"
         />
 

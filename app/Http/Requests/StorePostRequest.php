@@ -2,9 +2,13 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\GroupUserStatus;
+use App\Models\GroupUser;
+use Closure;
 use App\Rules\TotalAttachmentSize;
 use Illuminate\Validation\Rules\File;
 use Illuminate\Foundation\Http\FormRequest;
+
 
 class StorePostRequest extends FormRequest
 {
@@ -57,7 +61,48 @@ class StorePostRequest extends FormRequest
 
             'user_id' => [
                 'numeric'
-            ]
+            ],
+
+            'group_id' => [
+                'nullable',
+                'integer',
+                'exists:groups,id',
+
+                function (
+                    string $attribute,
+                    mixed $value,
+                    Closure $fail
+                ) {
+                    if ($value === null) {
+                        return;
+                    }
+
+                    $user = $this->user();
+
+                    $approvedMember =
+                        $user &&
+                        GroupUser::query()
+                            ->where(
+                                'user_id',
+                                $user->id
+                            )
+                            ->where(
+                                'group_id',
+                                $value
+                            )
+                            ->where(
+                                'status',
+                                GroupUserStatus::APPROVED->value
+                            )
+                            ->exists();
+
+                    if (!$approvedMember) {
+                        $fail(
+                            "You don't have permission to create posts in this group."
+                        );
+                    }
+                },
+            ],
         ];
     }
 

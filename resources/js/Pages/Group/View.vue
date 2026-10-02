@@ -5,6 +5,12 @@ import UserListItem
 import InviteUserModal
     from '@/Pages/Group/InviteUserModal.vue';
 
+import CreatePost
+    from '@/Components/app/CreatePost.vue';
+
+import PostList
+    from '@/Components/app/PostList.vue';
+
 import {
     computed,
     ref
@@ -58,6 +64,11 @@ const props = defineProps({
         default: () => []
     },
 
+    posts: {
+        type: Object,
+        default: null
+    },
+
 });
 
 const requestForm = useForm({
@@ -89,6 +100,12 @@ function resolveRequest(
 
 const isAdmin = computed(
     () => props.group.role === 'admin'
+);
+
+const isApprovedMember = computed(
+    () =>
+        props.group.status ===
+        'approved'
 );
 
 const showInviteUserModal = ref(false);
@@ -669,10 +686,32 @@ function joinToGroup() {
 
                     <TabPanels>
 
-                        <TabPanel
-                            class="p-6 text-gray-500"
-                        >
-                            Group posts will appear here.
+                        <TabPanel class="p-3">
+
+                            <template v-if="posts">
+
+                                <CreatePost
+                                    v-if="isApprovedMember"
+                                    :group="group"
+                                />
+
+                                <PostList
+                                    :posts="posts"
+                                    :remember-key="
+                                        `group-post-feed-${group.id}`
+                                    "
+                                />
+
+                            </template>
+
+
+                            <div
+                                v-else
+                                class="py-8 text-center text-gray-500"
+                            >
+                                Only approved group members can view group posts.
+                            </div>
+
                         </TabPanel>
 
 
