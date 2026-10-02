@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Notifications\FollowUser;
 use App\Models\Follower;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -30,29 +31,49 @@ class UserController extends Controller
 
         if ($data['follow']) {
 
-            Follower::firstOrCreate([
-                'user_id' =>
-                    $user->id,
+            $follower =
+                Follower::firstOrCreate([
+                    'user_id' =>
+                        $user->id,
 
-                'follower_id' =>
-                    $currentUser->id,
-            ]);
+                    'follower_id' =>
+                        $currentUser->id,
+                ]);
+
+            if ($follower->wasRecentlyCreated) {
+                $user->notify(
+                    new FollowUser(
+                        $currentUser,
+                        true
+                    )
+                );
+            }
 
             $message =
                 "You are now following {$user->name}.";
 
         } else {
 
-            Follower::query()
-                ->where(
-                    'user_id',
-                    $user->id
-                )
-                ->where(
-                    'follower_id',
-                    $currentUser->id
-                )
-                ->delete();
+            $deleted =
+                Follower::query()
+                    ->where(
+                        'user_id',
+                        $user->id
+                    )
+                    ->where(
+                        'follower_id',
+                        $currentUser->id
+                    )
+                    ->delete();
+
+            if ($deleted) {
+                $user->notify(
+                    new FollowUser(
+                        $currentUser,
+                        false
+                    )
+                );
+            }
 
             $message =
                 "You unfollowed {$user->name}.";
