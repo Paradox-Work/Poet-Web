@@ -166,22 +166,12 @@ async function loadMore() {
 
 
 watch(
-    () =>
-        (props.posts?.data ?? [])
-            .map(
-                post =>
-                    `${post.id}:${post.updated_at}`
-            )
-            .join('|'),
+    () => props.posts,
 
-    () => {
-
-        const posts =
-            props.posts;
+    posts => {
 
         const incomingPosts =
             posts?.data ?? [];
-
 
         const incomingById =
             new Map(
@@ -193,11 +183,6 @@ watch(
                 )
             );
 
-
-        /*
-         * Refresh posts already present
-         * in remembered state.
-         */
         feedState.posts =
             feedState.posts.map(
                 post =>
@@ -207,17 +192,12 @@ watch(
                     ?? post
             );
 
-
-        /*
-         * Add newly-created posts.
-         */
         const existingIds =
             new Set(
                 feedState.posts.map(
                     post => post.id
                 )
             );
-
 
         const newPosts =
             incomingPosts.filter(
@@ -227,14 +207,11 @@ watch(
                     )
             );
 
-
         if (newPosts.length) {
-
             feedState.posts.unshift(
                 ...newPosts
             );
         }
-
 
         if (
             !feedState.loadedBeyondFirstPage

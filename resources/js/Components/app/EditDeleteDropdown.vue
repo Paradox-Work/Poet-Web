@@ -40,15 +40,20 @@ defineEmits([
     'delete'
 ]);
 
+const page =
+    usePage();
+
 const authUser =
-    usePage().props.auth.user;
+    computed(
+        () => page.props.auth.user
+    );
 
 const editAllowed =
     computed(() => {
 
         return (
             props.user?.id ===
-            authUser.id
+            authUser.value.id
         );
     });
 
@@ -61,7 +66,7 @@ const deleteAllowed =
          */
         if (
             props.user?.id ===
-            authUser.id
+            authUser.value.id
         ) {
             return true;
         }
@@ -74,7 +79,7 @@ const deleteAllowed =
         if (
             props.comment &&
             props.post?.user?.id ===
-                authUser.id
+                authUser.value.id
         ) {
             return true;
         }
