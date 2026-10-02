@@ -111,6 +111,28 @@ const roleForm = useForm({
     role: null
 });
 
+const groupSettingsForm = useForm({
+    name: props.group.name,
+
+    auto_approval:
+        Boolean(props.group.auto_approval),
+
+    about:
+        props.group.about ?? ''
+});
+
+function updateGroup() {
+    groupSettingsForm.put(
+        route(
+            'group.update',
+            props.group.slug
+        ),
+        {
+            preserveScroll: true
+        }
+    );
+}
+
 function changeMemberRole(
     user,
     role
@@ -736,37 +758,161 @@ function joinToGroup() {
                         </TabPanel>
 
 
-                        <TabPanel
-                            class="p-6"
-                        >
+                        <TabPanel class="p-6">
 
-                            <h3
-                                class="font-semibold text-lg"
+                            <!-- Admin settings -->
+                            <form
+                                v-if="isAdmin"
+                                @submit.prevent="updateGroup"
                             >
-                                About this group
-                            </h3>
-
-                            <p
-                                class="mt-2 whitespace-pre-wrap text-gray-600"
-                            >
-                                {{
-                                    group.about ||
-                                    'No description has been added yet.'
-                                }}
-                            </p>
+                                <h3
+                                    class="mb-5 text-lg font-semibold text-gray-900"
+                                >
+                                    Group settings
+                                </h3>
 
 
-                            <div
-                                class="mt-4 text-sm text-gray-500"
-                            >
-                                Auto approval:
-                                <strong>
+                                <!-- Name -->
+                                <div class="mb-5">
+                                    <label
+                                        for="group-name"
+                                        class="block text-sm font-medium text-gray-700"
+                                    >
+                                        Group name
+                                    </label>
+
+                                    <input
+                                        id="group-name"
+                                        v-model="groupSettingsForm.name"
+                                        type="text"
+                                        maxlength="255"
+                                        class="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    />
+
+                                    <p
+                                        v-if="groupSettingsForm.errors.name"
+                                        class="mt-1 text-sm text-red-600"
+                                    >
+                                        {{ groupSettingsForm.errors.name }}
+                                    </p>
+                                </div>
+
+
+                                <!-- Auto approval -->
+                                <div class="mb-5">
+                                    <label
+                                        class="flex items-center gap-2"
+                                    >
+                                        <input
+                                            v-model="
+                                                groupSettingsForm.auto_approval
+                                            "
+                                            type="checkbox"
+                                            class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                        />
+
+                                        <span
+                                            class="text-sm text-gray-700"
+                                        >
+                                            Automatically approve new members
+                                        </span>
+                                    </label>
+
+                                    <p
+                                        class="mt-1 text-xs text-gray-500"
+                                    >
+                                        When disabled, new members must be approved by a group administrator.
+                                    </p>
+
+                                    <p
+                                        v-if="
+                                            groupSettingsForm.errors.auto_approval
+                                        "
+                                        class="mt-1 text-sm text-red-600"
+                                    >
+                                        {{
+                                            groupSettingsForm.errors
+                                                .auto_approval
+                                        }}
+                                    </p>
+                                </div>
+
+
+                                <!-- About -->
+                                <div class="mb-5">
+                                    <label
+                                        for="group-about"
+                                        class="block text-sm font-medium text-gray-700"
+                                    >
+                                        About group
+                                    </label>
+
+                                    <textarea
+                                        id="group-about"
+                                        v-model="groupSettingsForm.about"
+                                        rows="6"
+                                        maxlength="5000"
+                                        class="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    />
+
+                                    <p
+                                        v-if="groupSettingsForm.errors.about"
+                                        class="mt-1 text-sm text-red-600"
+                                    >
+                                        {{ groupSettingsForm.errors.about }}
+                                    </p>
+                                </div>
+
+
+                                <button
+                                    type="submit"
+                                    :disabled="
+                                        groupSettingsForm.processing
+                                    "
+                                    class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
                                     {{
-                                        group.auto_approval
-                                            ? 'Enabled'
-                                            : 'Disabled'
+                                        groupSettingsForm.processing
+                                            ? 'Saving...'
+                                            : 'Save changes'
                                     }}
-                                </strong>
+                                </button>
+
+                            </form>
+
+
+                            <!-- Normal visitor view -->
+                            <div v-else>
+
+                                <h3
+                                    class="font-semibold text-lg"
+                                >
+                                    About this group
+                                </h3>
+
+                                <p
+                                    class="mt-2 whitespace-pre-wrap text-gray-600"
+                                >
+                                    {{
+                                        group.about ||
+                                        'No description has been added yet.'
+                                    }}
+                                </p>
+
+                                <div
+                                    class="mt-4 text-sm text-gray-500"
+                                >
+                                    Auto approval:
+
+                                    <strong>
+                                        {{
+                                            group.auto_approval
+                                                ? 'Enabled'
+                                                : 'Disabled'
+                                        }}
+                                    </strong>
+                                </div>
+
                             </div>
 
                         </TabPanel>
