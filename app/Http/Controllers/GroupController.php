@@ -369,24 +369,70 @@ class GroupController extends Controller
             );
         }
 
-        if ($group->auto_approval) {
-            GroupUser::create([
-                'status' =>
-                    GroupUserStatus::APPROVED->value,
+    public function join(
+        Request $request,
+        Group $group
+    ) {
+        $user = $request->user();
+
+        $membership = GroupUser::query()
+            ->where(
+                'user_id',
+                $user->id
+            )
+            ->where(
+                'group_id',
+                $group->id
+            )
+            ->first();
+
+        if (
+            $membership?->status ===
+            GroupUserStatus::APPROVED->value
+        ) {
+            return back()->with(
+                'success',
+                'You are already a member of this group.'
+            );
+        }
+
+        if (
+            $membership?->status ===
+            GroupUserStatus::PENDING->value
+        ) {
+            return back()->with(
+                'success',
+                'Your membership is already pending.'
+            );
+        }
+
+        $status = $group->auto_approval
+            ? GroupUserStatus::APPROVED->value
+            : GroupUserStatus::PENDING->value;
+
+        GroupUser::updateOrCreate(
+            [
+                'user_id' => $user->id,
+                'group_id' => $group->id,
+            ],
+            [
+                'status' => $status,
 
                 'role' =>
                     GroupUserRole::MEMBER->value,
 
-                'user_id' =>
-                    $user->id,
-
-                'group_id' =>
-                    $group->id,
-
                 'created_by' =>
                     $user->id,
-            ]);
 
+                'token' => null,
+
+                'token_expire_date' => null,
+
+                'token_used' => null,
+            ]
+        );
+
+        if ($group->auto_approval) {
             return back()->with(
                 'success',
                 'You joined "' .
@@ -394,23 +440,6 @@ class GroupController extends Controller
                 '".'
             );
         }
-
-        GroupUser::create([
-            'status' =>
-                GroupUserStatus::PENDING->value,
-
-            'role' =>
-                GroupUserRole::MEMBER->value,
-
-            'user_id' =>
-                $user->id,
-
-            'group_id' =>
-                $group->id,
-
-            'created_by' =>
-                $user->id,
-        ]);
 
         Notification::send(
             $group->adminUsers,
@@ -426,7 +455,7 @@ class GroupController extends Controller
             $group->name .
             '" has been sent.'
         );
-    }
+    }    
     
     public function resolveJoinRequest(
         Request $request,
