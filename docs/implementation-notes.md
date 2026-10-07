@@ -333,6 +333,38 @@ GroupItem.vue
 
 See: [Global search flow](global-search-flow.md)
 
+Post content also supports hashtag-based search.
+
+Hashtags inside rendered post content are converted into clickable search links by `PostItem.vue`.
+
+For example:
+
+```text
+#poetry
+```
+
+links to:
+
+```text
+/search/%23poetry
+```
+
+Search values are URL encoded because `#` would otherwise be interpreted by the browser as a URL fragment and would not be sent to Laravel.
+
+The same encoding is applied when searching through the navigation search input.
+
+When the search value starts with `#`, `Search.vue` hides user and group results and displays post results only.
+
+Hashtag searching reuses the existing global post-search query and therefore continues to use:
+
+```php
+Post::postsForTimeline($userId)
+```
+
+so private group post visibility remains enforced.
+
+See: [Global search flow](global-search-flow.md)
+
 ---
 
 ## Documentation Principle

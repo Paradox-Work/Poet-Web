@@ -605,6 +605,300 @@ This prevents global search from becoming a way to discover private group posts 
 
 ---
 
+## Hashtag Search
+
+Post content supports clickable hashtags.
+
+Hashtags are detected when posts are rendered in:
+
+```text
+resources/js/Components/app/PostItem.vue
+```
+
+The original stored post body is not modified.
+
+Instead, Poet-Web creates a computed rendered version of the post body and converts hashtag text into search links.
+
+For example:
+
+```text
+#poetry
+```
+
+is rendered as a clickable link that points to:
+
+```text
+/search/%23poetry
+```
+
+---
+
+## Hashtag Detection
+
+Hashtag detection is performed only on text content between HTML tags.
+
+This is important because post bodies are stored as rich-text HTML.
+
+The implementation avoids blindly replacing text throughout the complete HTML string, which could otherwise modify tag names or HTML attributes.
+
+Supported hashtag characters include:
+
+```text
+letters
+numbers
+underscore
+```
+
+Unicode letters are also supported.
+
+This allows hashtags such as:
+
+```text
+#poetry
+#poetry2026
+#my_poem
+#dzeja
+#mīlestība
+```
+
+---
+
+## Hashtag Rendering
+
+Hashtags are converted into HTML links with the class:
+
+```text
+hashtag
+```
+
+The generated link is conceptually:
+
+```html
+<a href="/search/%23poetry" class="hashtag">
+    #poetry
+</a>
+```
+
+Hashtag styling is defined in:
+
+```text
+resources/css/app.css
+```
+
+under:
+
+```text
+.rich-text-output a.hashtag
+```
+
+This gives hashtag links a visually distinct appearance while still using the normal post rich-text renderer.
+
+---
+
+## URL Encoding
+
+The `#` character has a special meaning in browser URLs.
+
+Without encoding, a URL such as:
+
+```text
+/search/#poetry
+```
+
+would treat:
+
+```text
+#poetry
+```
+
+as a browser fragment.
+
+Fragments are not sent to Laravel.
+
+That would cause the backend to receive the search route without a search term.
+
+To prevent this, Poet-Web uses:
+
+```text
+encodeURIComponent()
+```
+
+before placing search values inside the URL.
+
+For example:
+
+```text
+#poetry
+```
+
+becomes:
+
+```text
+%23poetry
+```
+
+and the complete path becomes:
+
+```text
+/search/%23poetry
+```
+
+Laravel then receives the decoded search value:
+
+```text
+#poetry
+```
+
+---
+
+## Navbar Hashtag Search
+
+The authenticated navigation search also uses URL encoding.
+
+This means both of the following workflows behave consistently:
+
+```text
+click #poetry inside a post
+```
+
+and:
+
+```text
+type #poetry into global search
+```
+
+Both navigate to:
+
+```text
+/search/%23poetry
+```
+
+and both ultimately search for:
+
+```text
+#poetry
+```
+
+---
+
+## Hashtag Search Results
+
+When a search value begins with:
+
+```text
+#
+```
+
+`Search.vue` hides the:
+
+```text
+Users
+Groups
+```
+
+sections.
+
+The page then focuses only on post results.
+
+Conceptually:
+
+```text
+normal search
+├── Users
+├── Groups
+└── Posts
+
+hashtag search
+└── Posts
+```
+
+This is implemented through:
+
+```text
+!search.startsWith('#')
+```
+
+around the Users and Groups result container.
+
+---
+
+## Backend Search Behavior
+
+Hashtag search does not use a separate hashtag database table.
+
+Hashtags remain part of:
+
+```text
+posts.body
+```
+
+and the existing search query searches for the hashtag as text.
+
+For example:
+
+```text
+search = #poetry
+```
+
+results in a post body search equivalent to:
+
+```text
+body LIKE %#poetry%
+```
+
+The query still starts from:
+
+```php
+Post::postsForTimeline($userId)
+```
+
+so existing post-visibility restrictions remain active.
+
+Therefore:
+
+```text
+visible post containing #poetry
+→ included
+
+private group post containing #poetry
++ approved member
+→ included
+
+private group post containing #poetry
++ non-member
+→ excluded
+```
+
+---
+
+## Complete Hashtag Flow
+
+```text
+Post contains #poetry
+        ↓
+PostItem.vue renders post
+        ↓
+hashtag detected
+        ↓
+convert to clickable link
+        ↓
+encode #
+        ↓
+/search/%23poetry
+        ↓
+Laravel receives #poetry
+        ↓
+SearchController
+        ↓
+postsForTimeline()
+        ↓
+body LIKE %#poetry%
+        ↓
+Search.vue
+        ↓
+Posts only
+```
+
 ## Result
 
 Poet-Web now provides one search interface for several important content types.
