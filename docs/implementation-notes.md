@@ -145,11 +145,25 @@ PostAttachments.vue
 The component:
 
 - renders image previews;
-- renders non-image files with an attachment icon and filename;
+- renders video previews with a play indicator;
+- renders other files with an attachment icon and filename;
 - provides download links;
 - emits the clicked attachment index;
 - displays a maximum of four previews in the feed;
 - displays `+X more` on the fourth preview when additional attachments exist.
+
+Video and image detection is handled by:
+
+```text
+isImage()
+isVideo()
+```
+
+in:
+
+```text
+resources/js/helpers.js
+```
 
 See: [Post attachments display flow](post-attachments-flow.md)
 
@@ -172,6 +186,18 @@ AttachmentPreviewModal.vue
 ```
 
 The modal receives the complete attachment array, so users can navigate to attachments that are not displayed in the four-item feed preview.
+
+The modal also supports playable video attachments.
+
+Videos are detected by MIME type and rendered with the native HTML video player using:
+
+```text
+controls
+autoplay
+playsinline
+```
+
+Images, videos, and generic files all reuse the same modal navigation flow.
 
 See: [Attachment preview flow](attachment-preview-flow.md)
 

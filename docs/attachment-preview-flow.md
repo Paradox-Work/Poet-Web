@@ -133,6 +133,109 @@ The updated layout reduces unused modal space, keeps controls close to the attac
 
 ---
 
+
+## Video Preview Support
+
+The attachment preview modal supports both images and videos.
+
+Attachment type detection is performed through:
+
+```text
+isImage()
+isVideo()
+```
+
+from:
+
+```text
+resources/js/helpers.js
+```
+
+The rendering logic is conceptually:
+
+```text
+current attachment
+        ↓
+image?
+├── yes → render image
+└── no
+        ↓
+video?
+├── yes → render video player
+└── no → generic file preview
+```
+
+### Video Player
+
+When the selected attachment is a video, the modal renders a native HTML video element.
+
+The player uses:
+
+```text
+controls
+autoplay
+playsinline
+```
+
+This gives the user normal browser playback controls while keeping playback inside the modal on supported mobile browsers.
+
+Unlike the feed preview, the modal video is not muted by default because the user has explicitly opened the attachment for playback.
+
+### Video Sizing
+
+Video previews use the same viewport-relative maximum dimensions as image previews.
+
+This keeps large videos within the visible browser area without forcing them to overflow the modal.
+
+Conceptually:
+
+```text
+large video
+↓
+limit to available viewport
+↓
+preserve aspect ratio
+↓
+display inside preview modal
+```
+
+### Navigation
+
+Video attachments participate in the same attachment navigation as other files.
+
+For example:
+
+```text
+image
+↓ next
+video
+↓ next
+PDF
+```
+
+Changing the attachment index updates the preview while keeping the modal open.
+
+This means mixed attachment collections can be browsed without leaving the viewer.
+
+### Complete Preview Flow
+
+```text
+click attachment in post
+        ↓
+AttachmentPreviewModal.vue
+        ↓
+inspect attachment MIME
+        ↓
+┌─────────────────┬─────────────────┬─────────────────┐
+│ image           │ video           │ other file      │
+│ image preview   │ video player    │ generic preview │
+└─────────────────┴─────────────────┴─────────────────┘
+        ↓
+previous / next navigation remains available
+```
+
+---
+
 ## Profile Photo Gallery Reuse
 
 The same attachment preview modal is also reused by the user-profile and group-profile photo galleries.

@@ -11,7 +11,8 @@ It was extracted into a separate component to reduce the responsibilities of `Po
 The component supports:
 
 - image previews;
-- non-image file previews;
+- video previews with a play indicator;
+- generic non-image file previews;
 - attachment downloads;
 - opening attachments in the existing attachment viewer;
 - displaying a maximum of four attachments in the post feed;
@@ -157,17 +158,41 @@ This creates a predictable feed layout even when many attachments exist.
 
 ---
 
-## Image Detection
+## Attachment Type Detection
 
-The component uses the existing:
+The component uses shared helper functions from:
+
+```text
+resources/js/helpers.js
+```
+
+The available attachment type checks are:
 
 ```text
 isImage()
+isVideo()
 ```
 
-helper.
+Both helpers inspect:
 
-If the attachment is an image, its URL is displayed as an image preview.
+```text
+attachment.mime
+```
+
+and fall back to:
+
+```text
+attachment.type
+```
+
+if necessary.
+
+The checks are based on MIME prefixes:
+
+```text
+image/*
+video/*
+```
 
 Conceptually:
 
@@ -175,29 +200,74 @@ Conceptually:
 attachment
     |
     +-- image?
+    |      |
+    |      +-- yes -> image preview
+    |
+    +-- video?
+    |      |
+    |      +-- yes -> video preview
+    |
+    +-- otherwise
            |
-           +-- yes -> render image preview
-           |
-           +-- no -> render generic file preview
+           +-- generic file preview
 ```
 
 ---
 
-## Non-Image Attachments
+## Image Attachments
 
-Files that are not images display:
+If `isImage(attachment)` returns true, the attachment URL is rendered using an image element.
 
-- a file/paperclip icon;
-- the original attachment name.
+The feed uses a fixed-height preview with `object-cover` so the attachment fits the post grid while maintaining a consistent layout.
 
-For example:
+---
+
+## Video Attachments
+
+If `isVideo(attachment)` returns true, the feed renders a video element using the attachment URL.
+
+The video preview uses:
 
 ```text
-📎
-qualification-document.pdf
+preload="metadata"
+muted
+playsinline
 ```
 
-This allows documents and other supported attachment types to remain visible even when they cannot be displayed directly as images.
+The feed preview itself is not used as a full video player.
+
+Instead, it acts as a visual thumbnail for the attached video.
+
+A semi-transparent dark overlay and play icon are displayed above the video so users can distinguish video attachments from images.
+
+Conceptually:
+
+```text
+video attachment
+        ↓
+video preview frame
+        ↓
+dark overlay
+        ↓
+play indicator
+        ↓
+click attachment
+        ↓
+open attachment preview modal
+```
+
+---
+
+## Non-Image and Non-Video Attachments
+
+Attachments that are neither images nor videos display:
+
+```text
+paperclip icon
+original filename
+```
+
+These files continue to use the generic attachment presentation and existing download behavior.
 
 ---
 
@@ -381,7 +451,7 @@ Passes attachment data to `PostAttachments.vue` and connects attachment selectio
 
 ### `resources/js/helpers.js`
 
-Provides the `isImage()` helper used to determine whether an attachment should be rendered as an image.
+Provides `isImage()` and `isVideo()` helpers used to determine how attachments should be rendered.
 
 ---
 
@@ -392,10 +462,11 @@ After this refactor:
 1. attachment rendering is separated from `PostItem.vue`;
 2. posts display at most four attachment previews;
 3. posts with additional files display a `+X more` indicator;
-4. images continue to display as previews;
-5. non-image files continue to display with file information;
-6. visible attachments can still be downloaded;
-7. attachment clicks continue to open the existing viewer;
-8. the complete attachment collection remains available even when only four files are shown in the feed.
+4. images display as feed previews;
+5. videos display as visual previews with a play indicator;
+6. non-image and non-video files display with file information;
+7. visible attachments can still be downloaded;
+8. attachment clicks continue to open the existing viewer;
+9. the complete attachment collection remains available even when only four files are shown in the feed.
 
 The result is a smaller `PostItem.vue` component and a more compact attachment layout for posts containing many files.
