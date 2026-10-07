@@ -4,7 +4,10 @@ import {
     PaperClipIcon
 } from '@heroicons/vue/24/solid';
 
-import { isImage } from '@/helpers.js';
+import {
+    isImage,
+    isVideo
+} from '@/helpers.js';
 
 defineProps({
     attachments: {
@@ -69,6 +72,52 @@ defineEmits([
                 alt="Attachment"
                 class="w-full h-48 object-cover rounded"
             />
+
+
+            <div
+                v-else-if="isVideo(attachment)"
+                class="relative flex h-full w-full items-center justify-center overflow-hidden rounded bg-black"
+            >
+
+                <video
+                    :src="attachment.url"
+                    preload="metadata"
+                    muted
+                    playsinline
+                    class="h-full w-full object-cover"
+                />
+
+                <div
+                    class="absolute inset-0 bg-black/30"
+                />
+
+                <div
+                    class="
+                        absolute
+                        z-10
+                        flex
+                        h-14
+                        w-14
+                        items-center
+                        justify-center
+                        rounded-full
+                        bg-black/60
+                        text-white
+                    "
+                >
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        class="h-8 w-8"
+                    >
+                        <path
+                            d="M8.25 5.25v13.5L18.75 12 8.25 5.25Z"
+                        />
+                    </svg>
+                </div>
+
+            </div>
 
 
             <template v-else>

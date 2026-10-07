@@ -15,7 +15,10 @@ import {
     DialogPanel
 } from '@headlessui/vue';
 
-import { isImage } from '@/helpers.js';
+import {
+    isImage,
+    isVideo
+} from '@/helpers.js';
 
 
 const props = defineProps({
@@ -156,6 +159,17 @@ function next() {
                                     :alt="attachment.name"
                                     class="block max-w-[calc(100vw-6rem)] max-h-[calc(100vh-6rem)] object-contain"
                                 />
+
+
+                                <video
+                                    v-else-if="isVideo(attachment)"
+                                    :src="attachment.url"
+                                    controls
+                                    autoplay
+                                    playsinline
+                                    class="block max-w-[calc(100vw-6rem)] max-h-[calc(100vh-6rem)] object-contain"
+                                />
+
 
                                 <div
                                     v-else
