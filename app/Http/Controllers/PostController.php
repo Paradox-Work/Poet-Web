@@ -7,7 +7,6 @@ use App\Notifications\CommentCreated;
 use App\Notifications\PostCreated;
 use App\Notifications\ReactionAddedOnComment;
 use App\Notifications\ReactionAddedOnPost;
-use Illuminate\Support\Facades\Notification;
 use App\Notifications\CommentDeleted;
 use App\Notifications\PostDeleted;
 use App\Models\Post;
@@ -15,6 +14,8 @@ use App\Models\PostAttachment;
 use Illuminate\Http\Request;
 use App\Http\Requests\StorePostRequest;
 use App\Http\Requests\UpdatePostRequest;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use App\Enums\ReactionEnum;
@@ -210,7 +211,17 @@ class PostController extends Controller
         try {
 
             $post->update([
-                'body' => $data['body'] ?? null,
+                'body' =>
+                    $data['body']
+                    ?? null,
+
+                'preview' =>
+                    $data['preview']
+                    ?? null,
+
+                'preview_url' =>
+                    $data['preview_url']
+                    ?? null,
             ]);
 
 
@@ -596,4 +607,123 @@ public function deleteComment(
             $post->comments()->count(),
     ]);
 }
+
+public function fetchUrlPreview(
+    Request $request
+) {
+    $data = $request->validate([
+        'url' => [
+            'required',
+            'url',
+            'max:2000'
+        ]
+    ]);
+
+    $url = $data['url'];
+
+    $host =
+        parse_url(
+            $url,
+            PHP_URL_HOST
+        );
+
+    if (!$host) {
+        abort(
+            422,
+            'Invalid URL.'
+        );
+    }
+
+    $ip =
+        gethostbyname(
+            $host
+        );
+
+    if (
+        filter_var(
+            $ip,
+            FILTER_VALIDATE_IP,
+            FILTER_FLAG_NO_PRIV_RANGE |
+            FILTER_FLAG_NO_RES_RANGE
+        ) === false
+    ) {
+        abort(
+            422,
+            'Private URLs are not allowed.'
+        );
+    }
+
+    $response =
+        Http::timeout(5)
+            ->withHeaders([
+                'User-Agent' =>
+                    'Poet-Web URL Preview'
+            ])
+            ->get($url);
+
+    if (!$response->successful()) {
+        abort(
+            422,
+            'Unable to load URL preview.'
+        );
+    }
+
+    $html =
+        $response->body();
+
+    $dom =
+        new \DOMDocument();
+
+    libxml_use_internal_errors(true);
+
+    $dom->loadHTML(
+        $html
+    );
+
+    libxml_clear_errors();
+
+    $preview = [];
+
+    foreach (
+        $dom->getElementsByTagName('meta')
+        as $tag
+    ) {
+        $property =
+            $tag->getAttribute(
+                'property'
+            );
+
+        if (
+            str_starts_with(
+                $property,
+                'og:'
+            )
+        ) {
+            $preview[
+                substr(
+                    $property,
+                    3
+                )
+            ] =
+                $tag->getAttribute(
+                    'content'
+                );
+        }
+    }
+
+    return response()->json([
+        'title' =>
+            $preview['title']
+            ?? null,
+
+        'description' =>
+            $preview['description']
+            ?? null,
+
+        'image' =>
+            $preview['image']
+            ?? null,
+    ]);
+}
+
 }

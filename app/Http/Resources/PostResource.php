@@ -74,6 +74,12 @@ class PostResource extends JsonResource
 
             'comments' =>
                 $commentTree,
+
+            'preview' =>
+                $this->preview,
+
+            'preview_url' =>
+                $this->preview_url,
         ];
     }
 

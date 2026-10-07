@@ -86,6 +86,11 @@
                                         v-model="form.body"
                                     />
 
+                                    <UrlPreview
+                                        :preview="form.preview"
+                                        :url="form.preview_url"
+                                    />
+
                                     <div
                                         v-if="showExtensionsText"
                                         class="border-l-4 border-amber-500 py-2 px-3 bg-amber-100 mt-3 text-gray-800"
@@ -241,7 +246,11 @@
 
 
 <script setup>
+import axios from 'axios';
 
+import UrlPreview
+    from '@/Components/app/UrlPreview.vue';
+    
 import {
     computed,
     ref,
@@ -336,6 +345,8 @@ const form = useForm({
     group_id: null,
     attachments: [],
     deleted_file_ids: [],
+    preview: null,
+    preview_url: null,
     _method: 'POST'
 });
 
@@ -352,6 +363,7 @@ const show = computed({
 
 
 watch(
+    
     [
         () => props.post,
         () => props.modelValue
@@ -376,9 +388,37 @@ watch(
 
         attachmentFiles.value = [];
         attachmentErrors.value = [];
+
+        form.preview =
+            post.preview ?? null;
+
+        form.preview_url =
+            post.preview_url ?? null;
+
     },
     {
         immediate: true
+    }
+);
+
+let previewTimer = null;
+
+
+watch(
+    () => form.body,
+    () => {
+
+        clearTimeout(
+            previewTimer
+        );
+
+        previewTimer =
+            setTimeout(
+                () => {
+                    updateUrlPreview();
+                },
+                500
+            );
     }
 );
 
@@ -488,6 +528,97 @@ function processErrors(errors) {
             attachmentErrors.value[index] =
                 errors[key];
         }
+    }
+}
+
+function findFirstUrl() {
+
+    const body =
+        form.body ?? '';
+
+    const hrefMatch =
+        body.match(
+            /href=["'](https?:\/\/[^"']+)["']/i
+        );
+
+    if (hrefMatch) {
+        return hrefMatch[1];
+    }
+
+
+    const textOnly =
+        body.replace(
+            /<[^>]*>/g,
+            ' '
+        );
+
+    const plainMatch =
+        textOnly.match(
+            /https?:\/\/[^\s]+/i
+        );
+
+    return plainMatch?.[0]
+        ?? null;
+}
+
+
+async function updateUrlPreview() {
+
+    const url =
+        findFirstUrl();
+
+    if (!url) {
+
+        form.preview =
+            null;
+
+        form.preview_url =
+            null;
+
+        return;
+    }
+
+
+    if (
+        url ===
+        form.preview_url
+    ) {
+        return;
+    }
+
+
+    form.preview_url =
+        url;
+
+    form.preview =
+        null;
+
+
+    try {
+
+        const { data } =
+            await axios.post(
+                route(
+                    'post.fetchUrlPreview'
+                ),
+                {
+                    url
+                }
+            );
+
+
+        form.preview =
+            data;
+
+    } catch (error) {
+
+        console.error(
+            'Failed to load URL preview:',
+            error
+        );
+
+        form.preview =
+            null;
     }
 }
 
