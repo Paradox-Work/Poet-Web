@@ -14,7 +14,7 @@ defineProps({
             'group.profile',
             group.slug
         )"
-        class="block mb-2 cursor-pointer hover:bg-gray-100 rounded"
+        class="block mb-2 cursor-pointer hover:bg-gray-100 rounded dark:hover:bg-gray-700"
     >
 
         <div
@@ -30,7 +30,7 @@ defineProps({
 
             <div
                 v-else
-                class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold shrink-0"
+                class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold shrink-0 dark:bg-indigo-900/50 dark:text-indigo-300"
             >
                 {{
                     group.name
@@ -52,7 +52,7 @@ defineProps({
 
                     <span
                         v-if="group.role === 'admin'"
-                        class="text-xs text-indigo-600"
+                        class="text-xs text-indigo-600 dark:text-indigo-400"
                     >
                         Admin
                     </span>
@@ -69,7 +69,7 @@ defineProps({
                 </div>
 
                 <div
-                    class="text-xs text-gray-500"
+                    class="text-xs text-gray-500 dark:text-gray-400"
                 >
                     {{ group.description }}
                 </div>

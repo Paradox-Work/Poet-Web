@@ -46,7 +46,7 @@ defineEmits([
 
 <template>
     <div
-        class="flex items-center gap-3 border-b border-gray-100 px-3 py-3 last:border-b-0"
+        class="flex items-center gap-3 border-b border-gray-100 px-3 py-3 last:border-b-0 dark:border-gray-700 dark:text-gray-100"
     >
         <Link
             :href="
@@ -68,13 +68,13 @@ defineEmits([
 
             <div class="min-w-0">
                 <div
-                    class="truncate font-medium text-gray-900"
+                    class="truncate font-medium text-gray-900 dark:text-gray-100"
                 >
                     {{ user.name }}
                 </div>
 
                 <div
-                    class="truncate text-sm text-gray-500"
+                    class="truncate text-sm text-gray-500 dark:text-gray-400"
                 >
                     @{{ user.username }}
                 </div>
@@ -126,7 +126,7 @@ defineEmits([
                         $event.target.value
                     )
                 "
-                class="rounded-md border-gray-300 py-1.5 text-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50"
+                class="rounded-md border-gray-300 py-1.5 text-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
             >
                 <option value="member">
                     Member

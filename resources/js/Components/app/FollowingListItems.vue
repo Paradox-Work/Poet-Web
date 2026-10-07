@@ -61,7 +61,7 @@ const filteredUsers =
 
 
     <div
-        class="mt-3 lg:min-h-full max-h-64 overflow-auto rounded border border-gray-100"
+        class="mt-3 lg:min-h-full max-h-64 overflow-auto rounded border border-gray-100 dark:border-gray-700"
     >
 
         <div

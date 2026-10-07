@@ -12,7 +12,7 @@
 </script>
 
 <template>
-   <div class="px-3 bg-white border rounded py-3 lg:h-full overflow-hidden flex flex-col">
+   <div class="px-3 bg-white border border-gray-200 rounded py-3 lg:h-full overflow-hidden flex flex-col dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100">
 
       <!-- MOBILE: collapsible -->
       <Disclosure v-slot="{ open }" as="div" class="flex flex-col lg:hidden">

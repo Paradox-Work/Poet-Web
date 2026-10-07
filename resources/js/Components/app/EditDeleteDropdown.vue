@@ -182,7 +182,7 @@ async function copyPostUrl() {
     >
         <MenuButton
             type="button"
-            class="w-8 h-8 rounded-full hover:bg-black/5 transition flex items-center justify-center"
+            class="w-8 h-8 rounded-full hover:bg-black/5 transition flex items-center justify-center dark:hover:bg-white/10"
             aria-label="More options"
         >
             <EllipsisVerticalIcon
@@ -199,7 +199,7 @@ async function copyPostUrl() {
             leave-to-class="transform scale-95 opacity-0"
         >
             <MenuItems
-                class="absolute right-0 mt-2 w-48 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none z-20"
+                class="absolute right-0 mt-2 w-48 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none z-20 dark:bg-gray-800 dark:ring-white/10"
             >
                 <div class="px-1 py-1">
 
@@ -217,7 +217,7 @@ async function copyPostUrl() {
                             :class="[
                                 active
                                     ? 'bg-indigo-500 text-white'
-                                    : 'text-gray-900',
+                                    : 'text-gray-900 dark:text-gray-100',
 
                                 'group flex w-full items-center rounded-md px-2 py-2 text-sm'
                             ]"
@@ -241,7 +241,7 @@ async function copyPostUrl() {
                             :class="[
                                 active
                                     ? 'bg-indigo-500 text-white'
-                                    : 'text-gray-900',
+                                    : 'text-gray-900 dark:text-gray-100',
 
                                 'group flex w-full items-center rounded-md px-2 py-2 text-sm'
                             ]"
@@ -264,7 +264,7 @@ async function copyPostUrl() {
                             :class="[
                                 active
                                     ? 'bg-indigo-500 text-white'
-                                    : 'text-gray-900',
+                                    : 'text-gray-900 dark:text-gray-100',
 
                                 'group flex w-full items-center rounded-md px-2 py-2 text-sm'
                             ]"
@@ -288,7 +288,7 @@ async function copyPostUrl() {
                             :class="[
                                 active
                                     ? 'bg-indigo-500 text-white'
-                                    : 'text-gray-900',
+                                    : 'text-gray-900 dark:text-gray-100',
 
                                 'group flex w-full items-center rounded-md px-2 py-2 text-sm'
                             ]"
@@ -311,7 +311,7 @@ async function copyPostUrl() {
                             :class="[
                                 active
                                     ? 'bg-indigo-500 text-white'
-                                    : 'text-gray-900',
+                                    : 'text-gray-900 dark:text-gray-100',
 
                                 'group flex w-full items-center rounded-md px-2 py-2 text-sm'
                             ]"
