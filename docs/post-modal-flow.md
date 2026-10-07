@@ -151,6 +151,46 @@ The post body is stored as HTML.
 
 ---
 
+## URL Preview State
+
+The modal also manages URL preview state:
+
+```text
+form.preview
+form.preview_url
+```
+
+When an existing post is opened for editing, both values are copied from the post resource together with the body and attachment state.
+
+The modal watches `form.body`. After a 500 ms debounce, it searches the Tiptap HTML for the first HTTP or HTTPS URL.
+
+Detection checks:
+
+```text
+1. href="https://..."
+2. plain-text https://...
+```
+
+If no URL remains in the body, both preview fields are cleared.
+
+If a different URL is found, `PostModal.vue` requests preview metadata from:
+
+```text
+POST /posts/url-preview
+```
+
+and renders the result through:
+
+```text
+UrlPreview.vue
+```
+
+The preview fields are submitted with the same create or update form as the post body and attachments.
+
+See: [URL preview flow](url-preview-flow.md)
+
+---
+
 ## Attachment State
 
 The modal supports:
