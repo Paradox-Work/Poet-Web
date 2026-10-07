@@ -43,11 +43,6 @@ Route::middleware('auth')->group(function () {
         [\App\Http\Controllers\PostController::class, 'view']
     )->name('post.view');
 
-    Route::post(
-        '/posts/url-preview',
-        [\App\Http\Controllers\PostController::class, 'fetchUrlPreview']
-    )->name('post.fetchUrlPreview');
-
     Route::get(
         '/posts/attachments/{attachment}/download',
         [\App\Http\Controllers\PostController::class, 'downloadAttachment']
@@ -151,7 +146,6 @@ Route::middleware('auth')->group(function () {
         '/search/{search?}',
         [SearchController::class, 'search']
     )->name('search');
-    
 });
 
 require __DIR__.'/auth.php';

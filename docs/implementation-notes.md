@@ -55,50 +55,6 @@ See: [Post creation and editing flow](post-modal-flow.md)
 
 ---
 
-## URL Preview Cards
-
-Posts support saved URL preview cards for the first detected HTTP or HTTPS link in the post body.
-
-`PostModal.vue` watches the Tiptap HTML body and waits 500 ms after changes before looking for the first URL. It checks linked `href` values first and then plain-text URLs.
-
-When a new URL is detected, the modal requests:
-
-```text
-POST /posts/url-preview
-```
-
-The backend validates the URL, rejects hosts resolving to private or reserved IP ranges, fetches the remote page with a five-second timeout, and extracts Open Graph metadata from `og:*` meta tags.
-
-The returned preview contains:
-
-```text
-title
-description
-image
-```
-
-Preview metadata and its source URL are stored on the post in:
-
-```text
-preview
-preview_url
-```
-
-`preview` is stored as JSON and cast to an array by the `Post` model.
-
-`UrlPreview.vue` is reused in both:
-
-```text
-PostModal.vue
-PostItem.vue
-```
-
-If Open Graph title data exists, the component displays a preview card. If metadata is unavailable but a URL exists, it falls back to displaying the URL as a link.
-
-See: [URL preview flow](url-preview-flow.md)
-
----
-
 ## Attachment Uploads
 
 Backend attachment upload is fully implemented.

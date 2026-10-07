@@ -1,7 +1,4 @@
 <script setup>
-import UrlPreview
-    from '@/Components/app/UrlPreview.vue';
-
 import CommentList
     from '@/Components/app/CommentList.vue';
 
@@ -217,11 +214,6 @@ async function sendReaction() {
                 v-else
                 class="rich-text-output"
                 v-html="postBody"
-            />
-
-            <UrlPreview
-                :preview="post.preview"
-                :url="post.preview_url"
             />
 
         </div>

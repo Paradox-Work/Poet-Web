@@ -19,12 +19,6 @@ class Post extends Model
         'user_id',
         'body',
         'group_id',
-        'preview',
-        'preview_url',
-    ];
-
-    protected $casts = [
-        'preview' => 'array',
     ];
 
     public function user(): BelongsTo
