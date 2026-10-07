@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\SearchController;
 
 
 Route::get('/', [HomeController::class, 'index'])
@@ -140,6 +141,11 @@ Route::middleware('auth')->group(function () {
         '/profile',
          [ProfileController::class, 'destroy']
     )->name('profile.destroy');
+
+    Route::get(
+        '/search/{search?}',
+        [SearchController::class, 'search']
+    )->name('search');
 });
 
 require __DIR__.'/auth.php';

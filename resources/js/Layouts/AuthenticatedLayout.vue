@@ -1,16 +1,60 @@
 <script setup>
-import { ref } from 'vue';
-import ApplicationLogo from '@/Components/ApplicationLogo.vue';
-import Dropdown from '@/Components/Dropdown.vue';
-import DropdownLink from '@/Components/DropdownLink.vue';
-import NavLink from '@/Components/NavLink.vue';
-import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
-import { Link, usePage } from '@inertiajs/vue3';
+import { ref } 
+    from 'vue';
+
+import ApplicationLogo 
+    from '@/Components/ApplicationLogo.vue';
+
+import Dropdown 
+    from '@/Components/Dropdown.vue';
+    
+import DropdownLink 
+    from '@/Components/DropdownLink.vue';
+
+import NavLink 
+    from '@/Components/NavLink.vue';
+
+import ResponsiveNavLink 
+    from '@/Components/ResponsiveNavLink.vue';
+
+import TextInput
+    from '@/Components/TextInput.vue';
+
+import {
+    Link,
+    router,
+    usePage
+} from '@inertiajs/vue3';
+
+
 
 
 const showingNavigationDropdown = ref(false);
 
 const authUser = usePage().props.auth.user;
+
+const keywords =
+    ref(
+        usePage().props.search ?? ''
+    );
+
+
+function search() {
+
+    const value =
+        keywords.value?.trim();
+
+    if (!value) {
+        return;
+    }
+
+    router.get(
+        route(
+            'search',
+            value
+        )
+    );
+}
 
 </script>
 
@@ -47,6 +91,18 @@ const authUser = usePage().props.auth.user;
                         </div>
 
                         <div class="hidden sm:ms-6 sm:flex sm:items-center">
+
+                            <div
+                                class="hidden sm:flex flex-1 max-w-md mx-4"
+                            >
+                                <TextInput
+                                    v-model="keywords"
+                                    placeholder="Search users, groups and posts"
+                                    class="w-full"
+                                    @keyup.enter="search"
+                                />
+                            </div>
+
                             <!-- Settings Dropdown -->
                             <div class="relative ms-3">
                                 <Dropdown v-if="authUser" align="right" width="48">

@@ -83,22 +83,20 @@ const editor = useEditor({
             editor
         );
     },
-
-    onSelectionUpdate: ({
-        editor
-    }) => {
-
-        clearTimeout(
-            suggestionTimer
-        );
-
-
-        editor.commands
-            .clearGhostText();
-    }
 });
 
+onSelectionUpdate: ({
+    editor
+}) => {
 
+    clearTimeout(
+        suggestionTimer
+    );
+
+
+    editor.commands
+        .clearGhostText();
+}
 
 watch(
     () => props.modelValue,
