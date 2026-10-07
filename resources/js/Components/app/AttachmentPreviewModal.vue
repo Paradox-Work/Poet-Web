@@ -93,10 +93,7 @@ function next() {
 
 
 <template>
-    <teleport
-        v-if="show"
-        to="body"
-    >
+    <teleport to="body">
 
         <TransitionRoot
             appear

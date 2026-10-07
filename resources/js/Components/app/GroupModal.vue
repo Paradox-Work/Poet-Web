@@ -111,10 +111,7 @@ async function submit() {
 </script>
 
 <template>
-    <Teleport
-        v-if="show"
-        to="body"
-    >
+    <Teleport to="body">
 
         <TransitionRoot
             appear

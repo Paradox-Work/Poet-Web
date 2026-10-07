@@ -1,9 +1,6 @@
 <template>
 
-    <teleport
-        v-if="show"
-        to="body"
-    >
+    <teleport to="body">
 
         <TransitionRoot
             appear
@@ -390,8 +387,6 @@ function closeModal() {
     show.value = false;
 
     form.reset();
-    form.clearErrors();
-
     attachmentFiles.value = [];
     attachmentErrors.value = [];
 }
