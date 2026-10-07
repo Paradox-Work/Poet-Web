@@ -22,6 +22,9 @@ class GroupResource extends JsonResource
 
             'role' => $this->role,
 
+            'pinned_post_id' =>
+                $this->pinned_post_id,
+
             'thumbnail_url' =>
                 $this->thumbnail_path
                     ? Storage::disk('public')

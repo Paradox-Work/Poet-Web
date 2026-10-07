@@ -25,6 +25,80 @@ use App\Http\Requests\UpdateCommentRequest;
 
 class PostController extends Controller
 {
+    public function pinUnpin(
+        Request $request,
+        Post $post
+    ) {
+        $user = $request->user();
+
+        $data = $request->validate([
+            'scope' => [
+                'required',
+                Rule::in([
+                    'profile',
+                    'group',
+                ]),
+            ],
+        ]);
+
+        $pinned = false;
+
+        if ($data['scope'] === 'group') {
+            $group = $post->group;
+
+            if (!$group) {
+                abort(
+                    422,
+                    'Only group posts can be pinned to a group.'
+                );
+            }
+
+            if (!$group->isAdmin($user->id)) {
+                abort(
+                    403,
+                    "You don't have permission to pin posts in this group."
+                );
+            }
+
+            $pinned =
+                $group->pinned_post_id !==
+                $post->id;
+
+            $group->pinned_post_id =
+                $pinned
+                    ? $post->id
+                    : null;
+
+            $group->save();
+        } else {
+            if ($post->user_id !== $user->id) {
+                abort(
+                    403,
+                    "You can only pin your own posts to your profile."
+                );
+            }
+
+            $pinned =
+                $user->pinned_post_id !==
+                $post->id;
+
+            $user->pinned_post_id =
+                $pinned
+                    ? $post->id
+                    : null;
+
+            $user->save();
+        }
+
+        return back()->with(
+            'success',
+            $pinned
+                ? 'Post pinned successfully.'
+                : 'Post unpinned successfully.'
+        );
+    }
+
+
     public function view(
         Request $request,
         Post $post

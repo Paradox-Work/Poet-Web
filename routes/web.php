@@ -59,6 +59,11 @@ Route::middleware('auth')->group(function () {
     )->name('post.reaction');
 
     Route::post(
+        '/posts/{post}/pin',
+        [\App\Http\Controllers\PostController::class, 'pinUnpin']
+    )->name('post.pin');
+
+    Route::post(
         '/posts/{post}/comments',
         [\App\Http\Controllers\PostController::class, 'createComment']
     )->name('post.comment.create');

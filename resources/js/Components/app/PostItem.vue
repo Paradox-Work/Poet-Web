@@ -15,6 +15,10 @@ import {
     HandThumbUpIcon
         } from '@heroicons/vue/20/solid';
 
+import {
+    MapPinIcon
+} from '@heroicons/vue/24/outline';
+
 import EditDeleteDropdown
     from '@/Components/app/EditDeleteDropdown.vue';
 
@@ -80,8 +84,70 @@ const postBody = computed(() => {
 const emit = defineEmits([
     'editClick',
     'attachmentClick',
-    'deleted'
+    'deleted',
+    'pinChanged'
 ]);
+
+const page = usePage();
+
+const authUser = computed(
+    () => page.props.auth.user
+);
+
+const pageGroup = computed(
+    () => page.props.group ?? null
+);
+
+const profileUser = computed(
+    () => page.props.user ?? null
+);
+
+const pinScope = computed(() => {
+
+    if (
+        pageGroup.value?.id &&
+        props.post.group?.id ===
+            pageGroup.value.id &&
+        pageGroup.value.role === 'admin'
+    ) {
+        return 'group';
+    }
+
+    if (
+        profileUser.value?.id &&
+        authUser.value?.id ===
+            profileUser.value.id &&
+        props.post.user?.id ===
+            authUser.value.id
+    ) {
+        return 'profile';
+    }
+
+    return null;
+});
+
+const isPinned = computed(() => {
+
+    if (pinScope.value === 'group') {
+        return (
+            pageGroup.value
+                ?.pinned_post_id ===
+            props.post.id
+        );
+    }
+
+    if (pinScope.value === 'profile') {
+        return (
+            profileUser.value
+                ?.pinned_post_id ===
+            props.post.id
+        );
+    }
+
+    return false;
+});
+
+const pinPending = ref(false);
 
 function openAttachment(index) {
     emit(
@@ -94,6 +160,75 @@ function openAttachment(index) {
 function openEditModal() {
     emit('editClick', props.post);
 }
+
+function pinUnpinPost() {
+
+    if (
+        !pinScope.value ||
+        pinPending.value
+    ) {
+        return;
+    }
+
+    const wasPinned =
+        isPinned.value;
+
+    pinPending.value = true;
+
+    router.post(
+        route(
+            'post.pin',
+            props.post.id
+        ),
+        {
+            scope: pinScope.value
+        },
+        {
+            preserveScroll: true,
+
+            onSuccess: () => {
+
+                if (
+                    pinScope.value ===
+                    'group'
+                ) {
+                    page.props.group
+                        .pinned_post_id =
+                        wasPinned
+                            ? null
+                            : props.post.id;
+                }
+
+                if (
+                    pinScope.value ===
+                    'profile'
+                ) {
+                    page.props.user
+                        .pinned_post_id =
+                        wasPinned
+                            ? null
+                            : props.post.id;
+                }
+
+                emit(
+                    'pinChanged',
+                    {
+                        postId:
+                            props.post.id,
+
+                        pinned:
+                            !wasPinned
+                    }
+                );
+            },
+
+            onFinish: () => {
+                pinPending.value = false;
+            }
+        }
+    );
+}
+
 
 function deletePost() {
 
@@ -171,12 +306,33 @@ async function sendReaction() {
 
             <PostUserHeader :post="post" />
 
-            <EditDeleteDropdown
-                :user="post.user"
-                :post="post"
-                @edit="openEditModal"
-                @delete="deletePost"
-            />
+            <div
+                class="flex items-center gap-2"
+            >
+                <div
+                    v-if="isPinned"
+                    class="flex items-center gap-1 text-xs text-gray-500"
+                >
+                    <MapPinIcon
+                        class="h-4 w-4"
+                    />
+
+                    Pinned
+                </div>
+
+                <EditDeleteDropdown
+                    :user="post.user"
+                    :post="post"
+                    :pin-allowed="
+                        Boolean(pinScope) &&
+                        !pinPending
+                    "
+                    :pinned="isPinned"
+                    @pin="pinUnpinPost"
+                    @edit="openEditModal"
+                    @delete="deletePost"
+                />
+            </div>
 
         </div>
         <div class="mb-3">

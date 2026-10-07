@@ -264,6 +264,45 @@ onBeforeUnmount(() => {
     observer?.disconnect();
 });
 
+function handlePinChanged({
+    postId,
+    pinned
+}) {
+
+    if (pinned) {
+        const pinnedPost =
+            feedState.posts.find(
+                post =>
+                    post.id === postId
+            );
+
+        if (!pinnedPost) {
+            return;
+        }
+
+        feedState.posts = [
+            pinnedPost,
+            ...feedState.posts.filter(
+                post =>
+                    post.id !== postId
+            )
+        ];
+
+        return;
+    }
+
+    feedState.posts = [
+        ...feedState.posts
+    ].sort(
+        (a, b) =>
+            String(b.created_at)
+                .localeCompare(
+                    String(a.created_at)
+                )
+    );
+}
+
+
 function removePost(
     postId
 ) {
@@ -296,6 +335,9 @@ function removePost(
             "
             @deleted="
                 removePost
+            "
+            @pinChanged="
+                handlePinChanged
             "
         />
 

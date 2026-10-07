@@ -55,15 +55,28 @@ class ProfileController extends Controller
 
         if ($currentUserId) {
 
+            $postsQuery =
+                Post::postsForTimeline(
+                    $currentUserId
+                )
+                    ->where(
+                        'posts.user_id',
+                        $user->id
+                    );
+
+            if ($user->pinned_post_id) {
+                $postsQuery
+                    ->reorder()
+                    ->orderByRaw(
+                        'CASE WHEN posts.id = ? THEN 0 ELSE 1 END',
+                        [$user->pinned_post_id]
+                    )
+                    ->orderByDesc('posts.created_at');
+            }
+
             $posts =
                 PostResource::collection(
-                    Post::postsForTimeline(
-                        $currentUserId
-                    )
-                        ->where(
-                            'user_id',
-                            $user->id
-                        )
+                    $postsQuery
                         ->paginate(10)
                         ->withQueryString()
                 );

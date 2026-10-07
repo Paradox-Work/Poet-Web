@@ -4,7 +4,8 @@ import {
 } from 'vue';
 
 import {
-    ClipboardIcon
+    ClipboardIcon,
+    MapPinIcon
 } from '@heroicons/vue/24/outline';
 
 import {
@@ -40,12 +41,23 @@ const props = defineProps({
     comment: {
         type: Object,
         default: null
+    },
+
+    pinAllowed: {
+        type: Boolean,
+        default: false
+    },
+
+    pinned: {
+        type: Boolean,
+        default: false
     }
 });
 
 defineEmits([
     'edit',
-    'delete'
+    'delete',
+    'pin'
 ]);
 
 const page =
@@ -241,6 +253,30 @@ async function copyPostUrl() {
                             Copy Post URL
                         </button>
                     </MenuItem>
+
+                    <MenuItem
+                        v-if="pinAllowed"
+                        v-slot="{ active }"
+                    >
+                        <button
+                            type="button"
+                            @click="$emit('pin')"
+                            :class="[
+                                active
+                                    ? 'bg-indigo-500 text-white'
+                                    : 'text-gray-900',
+
+                                'group flex w-full items-center rounded-md px-2 py-2 text-sm'
+                            ]"
+                        >
+                            <MapPinIcon
+                                class="mr-2 h-5 w-5"
+                            />
+
+                            {{ pinned ? 'Unpin' : 'Pin' }}
+                        </button>
+                    </MenuItem>
+
 
                     <MenuItem
                         v-if="editAllowed"

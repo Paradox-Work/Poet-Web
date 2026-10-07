@@ -121,14 +121,27 @@ class GroupController extends Controller
 $posts = null;
 
 if ($isApprovedMember) {
-    $posts =
+    $postsQuery =
         Post::postsForTimeline(
             $userId
         )
             ->where(
-                'group_id',
+                'posts.group_id',
                 $group->id
+            );
+
+    if ($group->pinned_post_id) {
+        $postsQuery
+            ->reorder()
+            ->orderByRaw(
+                'CASE WHEN posts.id = ? THEN 0 ELSE 1 END',
+                [$group->pinned_post_id]
             )
+            ->orderByDesc('posts.created_at');
+    }
+
+    $posts =
+        $postsQuery
             ->paginate(10)
             ->withQueryString();
 }
