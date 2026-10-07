@@ -18,9 +18,19 @@ class GroupResource extends JsonResource
 
             'slug' => $this->slug,
 
-            'status' => $this->status,
+            'status' =>
+                $this->relationLoaded(
+                    'currentUserGroup'
+                )
+                    ? $this->currentUserGroup?->status
+                    : $this->status,
 
-            'role' => $this->role,
+            'role' =>
+                $this->relationLoaded(
+                    'currentUserGroup'
+                )
+                    ? $this->currentUserGroup?->role
+                    : $this->role,
 
             'pinned_post_id' =>
                 $this->pinned_post_id,

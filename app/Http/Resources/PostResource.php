@@ -19,16 +19,25 @@ class PostResource extends JsonResource
         $userId =
             $request->user()?->id;
 
+        $groupMembership =
+            $this->group &&
+            $this->group->relationLoaded(
+                'currentUserGroup'
+            )
+                ? $this->group->currentUserGroup
+                : null;
+
         $canDelete =
             $userId &&
             (
                 $this->user_id === $userId
                 ||
                 (
-                    $this->group &&
-                    $this->group->isAdmin(
-                        $userId
-                    )
+                    $groupMembership &&
+                    $groupMembership->role ===
+                        \App\Enums\GroupUserRole::ADMIN->value &&
+                    $groupMembership->status ===
+                        \App\Enums\GroupUserStatus::APPROVED->value
                 )
             );
 

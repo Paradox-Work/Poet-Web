@@ -8,7 +8,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
 use Spatie\Sluggable\HasSlug;
 use Spatie\Sluggable\SlugOptions;
 
@@ -45,6 +47,16 @@ class Group extends Model
     public function groupUsers(): HasMany
     {
         return $this->hasMany(GroupUser::class);
+    }
+
+    public function currentUserGroup(): HasOne
+    {
+        return $this
+            ->hasOne(GroupUser::class)
+            ->where(
+                'user_id',
+                Auth::id()
+            );
     }
 
     public function isAdmin(int $userId): bool

@@ -91,6 +91,7 @@ class Post extends Model
             ->with([
                 'user',
                 'group',
+                'group.currentUserGroup',
                 'attachments',
             ])
 
