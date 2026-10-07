@@ -45,6 +45,39 @@ const plainBody = computed(() => {
         .trim();
 });
 
+const postBody = computed(() => {
+
+    const body =
+        props.post.body ?? '';
+
+    return body.replace(
+        /(^|>)([^<]*)(?=<|$)/g,
+        (fullMatch, prefix, text) => {
+
+            const linkedText =
+                text.replace(
+                    /(^|\s)(#[\p{L}\p{N}_]+)/gu,
+                    (
+                        match,
+                        spacing,
+                        hashtag
+                    ) => {
+
+                        const url =
+                            route(
+                                'search',
+                                hashtag
+                            );
+
+                        return `${spacing}<a href="${url}" class="hashtag">${hashtag}</a>`;
+                    }
+                );
+
+            return prefix + linkedText;
+        }
+    );
+});
+
 const emit = defineEmits([
     'editClick',
     'attachmentClick',
@@ -161,7 +194,7 @@ async function sendReaction() {
                 <DisclosurePanel>
                     <div
                         class="rich-text-output"
-                        v-html="post.body"
+                        v-html="postBody"
                     />
                 </DisclosurePanel>
 
@@ -181,7 +214,7 @@ async function sendReaction() {
             <div
                 v-else
                 class="rich-text-output"
-                v-html="post.body"
+                v-html="postBody"
             />
 
         </div>
