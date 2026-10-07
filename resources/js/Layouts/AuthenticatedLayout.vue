@@ -49,10 +49,9 @@ function search() {
     }
 
     router.get(
-        route(
-            'search',
+        `/search/${encodeURIComponent(
             value
-        )
+        )}`
     );
 }
 

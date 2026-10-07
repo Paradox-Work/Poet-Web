@@ -64,10 +64,9 @@ const postBody = computed(() => {
                     ) => {
 
                         const url =
-                            route(
-                                'search',
+                            `/search/${encodeURIComponent(
                                 hashtag
-                            );
+                            )}`;
 
                         return `${spacing}<a href="${url}" class="hashtag">${hashtag}</a>`;
                     }
