@@ -609,7 +609,7 @@ function joinToGroup() {
                             >
 
                                 <h1
-                                    class="text-2xl font-bold text-gray-900"
+                                    class="text-2xl font-bold text-gray-900 dark:text-gray-100"
                                 >
                                     {{ group.name }}
                                 </h1>
@@ -629,7 +629,7 @@ function joinToGroup() {
 
                             <p
                                 v-if="group.about"
-                                class="mt-2 text-gray-600"
+                                class="mt-2 text-gray-600 dark:text-gray-300"
                             >
                                 {{ group.about }}
                             </p>
@@ -660,7 +660,7 @@ function joinToGroup() {
 
             <!-- TABS -->
             <div
-                class="mt-4 rounded-xl bg-white shadow"
+                class="mt-4 rounded-xl bg-white shadow dark:bg-gray-800 dark:text-gray-100"
             >
 
                 <TabGroup>
@@ -780,7 +780,7 @@ function joinToGroup() {
                                 class="mb-6"
                             >
                                 <h3
-                                    class="mb-3 font-semibold text-gray-900"
+                                    class="mb-3 font-semibold text-gray-900 dark:text-gray-100"
                                 >
                                     Pending requests
                                 </h3>
@@ -815,7 +815,7 @@ function joinToGroup() {
 
                             <!-- Approved members -->
                             <h3
-                                class="mb-3 font-semibold text-gray-900"
+                                class="mb-3 font-semibold text-gray-900 dark:text-gray-100"
                             >
                                 Members
                             </h3>
@@ -878,7 +878,7 @@ function joinToGroup() {
                                 @submit.prevent="updateGroup"
                             >
                                 <h3
-                                    class="mb-5 text-lg font-semibold text-gray-900"
+                                    class="mb-5 text-lg font-semibold text-gray-900 dark:text-gray-100"
                                 >
                                     Group settings
                                 </h3>
@@ -1003,7 +1003,7 @@ function joinToGroup() {
                                 </h3>
 
                                 <p
-                                    class="mt-2 whitespace-pre-wrap text-gray-600"
+                                    class="mt-2 whitespace-pre-wrap text-gray-600 dark:text-gray-300"
                                 >
                                     {{
                                         group.about ||

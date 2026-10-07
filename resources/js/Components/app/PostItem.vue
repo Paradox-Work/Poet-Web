@@ -301,7 +301,7 @@ async function sendReaction() {
 </script>
 
 <template>
-    <div class="bg-white border rounded p-4 mb-3 shadow">
+    <div class="bg-white border border-gray-200 rounded p-4 mb-3 shadow dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100">
         <div class="flex items-center justify-between mb-3">
 
             <PostUserHeader :post="post" />
@@ -399,11 +399,11 @@ async function sendReaction() {
             type="button"
             @click="sendReaction"
             :disabled="reactionPending"
-            class="text-gray-800 flex gap-1 items-center justify-center rounded-lg py-2 px-4 flex-1 transition"
+            class="text-gray-800 dark:text-gray-100 flex gap-1 items-center justify-center rounded-lg py-2 px-4 flex-1 transition"
             :class="[
                 post.current_user_has_reaction
-                    ? 'bg-sky-100 hover:bg-sky-200'
-                    : 'bg-gray-100 hover:bg-gray-200',
+                    ? 'bg-sky-100 hover:bg-sky-200 dark:bg-sky-900/60 dark:hover:bg-sky-900'
+                    : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600',
 
                 reactionPending
                     ? 'opacity-60 cursor-wait'
@@ -428,7 +428,7 @@ async function sendReaction() {
 
         <!-- Comment -->
         <DisclosureButton
-            class="text-gray-800 flex gap-1 items-center justify-center bg-gray-100 rounded-lg hover:bg-gray-200 py-2 px-4 flex-1"
+            class="text-gray-800 dark:text-gray-100 flex gap-1 items-center justify-center bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 py-2 px-4 flex-1"
         >
             <span>
                 {{ post.num_of_comments ?? 0 }}

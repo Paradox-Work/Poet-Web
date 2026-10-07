@@ -1,6 +1,13 @@
 <script setup>
-import { ref } 
-    from 'vue';
+import {
+    onMounted,
+    ref
+} from 'vue';
+
+import {
+    MoonIcon,
+    SunIcon
+} from '@heroicons/vue/24/outline';
 
 import ApplicationLogo 
     from '@/Components/ApplicationLogo.vue';
@@ -31,7 +38,37 @@ import {
 
 const showingNavigationDropdown = ref(false);
 
+const isDark = ref(false);
+
 const authUser = usePage().props.auth.user;
+
+function applyTheme(value) {
+    isDark.value = value;
+
+    document.documentElement
+        .classList
+        .toggle('dark', value);
+
+    localStorage.setItem(
+        'theme',
+        value
+            ? 'dark'
+            : 'light'
+    );
+}
+
+function toggleTheme() {
+    applyTheme(
+        !isDark.value
+    );
+}
+
+onMounted(() => {
+    isDark.value =
+        document.documentElement
+            .classList
+            .contains('dark');
+});
 
 const keywords =
     ref(
@@ -101,6 +138,27 @@ function search() {
                                     @keyup.enter="search"
                                 />
                             </div>
+
+                            <button
+                                type="button"
+                                @click="toggleTheme"
+                                class="mr-2 inline-flex h-9 w-9 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white"
+                                :aria-label="
+                                    isDark
+                                        ? 'Switch to light mode'
+                                        : 'Switch to dark mode'
+                                "
+                            >
+                                <SunIcon
+                                    v-if="isDark"
+                                    class="h-5 w-5"
+                                />
+
+                                <MoonIcon
+                                    v-else
+                                    class="h-5 w-5"
+                                />
+                            </button>
 
                             <!-- Settings Dropdown -->
                             <div class="relative ms-3">
@@ -213,6 +271,28 @@ function search() {
                     class="sm:hidden"
                 >
                     <div class="space-y-1 pb-3 pt-2">
+                        <button
+                            type="button"
+                            @click="toggleTheme"
+                            class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"
+                        >
+                            <SunIcon
+                                v-if="isDark"
+                                class="h-5 w-5"
+                            />
+
+                            <MoonIcon
+                                v-else
+                                class="h-5 w-5"
+                            />
+
+                            {{
+                                isDark
+                                    ? 'Light mode'
+                                    : 'Dark mode'
+                            }}
+                        </button>
+
                         <ResponsiveNavLink
                             :href="route('dashboard')"
                             :active="route().current('dashboard')"

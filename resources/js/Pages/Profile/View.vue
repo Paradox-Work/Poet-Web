@@ -17,7 +17,7 @@
     </div>
 
 
-    <div class="group relative bg-white">
+    <div class="group relative bg-white dark:bg-gray-800 dark:text-gray-100">
             <img
                 :src="coverImageSrc || user.cover_url || '/img/default_cover.jpg'"
                 class="w-full h-[200px] object-cover"
@@ -128,7 +128,7 @@
         </div>
         <div class="border-t">
           <TabGroup>
-            <TabList class="flex bg-white pl-4 md:pl-[200px]">
+            <TabList class="flex bg-white pl-4 md:pl-[200px] dark:bg-gray-800">
               <Tab
                 as="template"
                 v-slot="{ selected }"
@@ -244,7 +244,7 @@
 
                 </TabPanel>
                 <TabPanel
-                    class="bg-white p-3"
+                    class="bg-white p-3 dark:bg-gray-800"
                 >
                     <TabPhotos
                         v-if="photos"

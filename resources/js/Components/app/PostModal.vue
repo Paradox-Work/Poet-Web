@@ -45,12 +45,12 @@
                         >
 
                             <DialogPanel
-                                class="w-full max-w-md transform overflow-hidden rounded bg-white text-left align-middle shadow-xl transition-all"
+                                class="w-full max-w-md transform overflow-hidden rounded bg-white text-left align-middle shadow-xl transition-all dark:bg-gray-800 dark:text-gray-100"
                             >
 
                                 <DialogTitle
                                     as="h3"
-                                    class="flex items-center justify-between py-3 px-4 font-medium bg-gray-100 text-gray-900"
+                                    class="flex items-center justify-between py-3 px-4 font-medium bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-gray-100"
                                 >
 
                                     {{ form.id ? 'Update Post' : 'Create Post' }}
@@ -120,7 +120,7 @@
                                             "
                                         >
                                             <div
-                                                class="group aspect-square bg-gray-100 rounded-md flex flex-col items-center justify-center text-gray-500 relative overflow-hidden border-2"
+                                                class="group aspect-square bg-gray-100 rounded-md flex flex-col items-center justify-center text-gray-500 relative overflow-hidden border-2 dark:bg-gray-700 dark:text-gray-300"
                                                 :class="
                                                     getAttachmentError(myFile)
                                                         ? 'border-red-500'
@@ -194,7 +194,7 @@
                                 <div class="flex gap-2 py-3 px-4">
 
                                     <label
-                                        class="cursor-pointer flex items-center justify-center rounded-md bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-200 flex-1"
+                                        class="cursor-pointer flex items-center justify-center rounded-md bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-200 flex-1 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"
                                     >
 
                                         <PaperClipIcon class="w-4 h-4 mr-2" />

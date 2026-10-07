@@ -354,3 +354,36 @@ function setLink() {
 }
 
 </style>
+
+<style>
+html.dark .tiptap-editor {
+    border-color: #4b5563;
+}
+
+html.dark .tiptap-toolbar {
+    border-bottom-color: #4b5563;
+    background: #374151;
+    color: #f3f4f6;
+}
+
+html.dark .tiptap-toolbar button:hover {
+    background: #4b5563;
+}
+
+html.dark .tiptap-editor .divider {
+    background: #6b7280;
+}
+
+html.dark .tiptap-editor .ProseMirror {
+    background: #1f2937;
+    color: #f3f4f6;
+}
+
+html.dark .tiptap-editor .ProseMirror blockquote {
+    border-left-color: #6b7280;
+}
+
+html.dark .tiptap-editor .ProseMirror a {
+    color: #60a5fa;
+}
+</style>

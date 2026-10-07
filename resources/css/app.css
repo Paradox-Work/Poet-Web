@@ -96,3 +96,24 @@
 .scrollbar-hidden::-webkit-scrollbar {
     display: none;
 }
+
+html.dark .rich-text-output blockquote {
+    border-left-color: #475569;
+}
+
+html.dark .rich-text-output a {
+    color: #60a5fa;
+}
+
+html.dark .rich-text-output a.hashtag {
+    background-color: #1e293b;
+    color: #93c5fd;
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+    background-color: #475569;
+}
+
+html.dark ::-webkit-scrollbar-track {
+    background-color: #0f172a;
+}

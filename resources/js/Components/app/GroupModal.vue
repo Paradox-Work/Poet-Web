@@ -146,11 +146,11 @@ async function submit() {
                     >
 
                         <DialogPanel
-                            class="w-full max-w-md rounded bg-white shadow-xl"
+                            class="w-full max-w-md rounded bg-white shadow-xl dark:bg-gray-800 dark:text-gray-100"
                         >
 
                             <DialogTitle
-                                class="flex items-center justify-between px-4 py-3 bg-gray-100 font-medium"
+                                class="flex items-center justify-between px-4 py-3 bg-gray-100 font-medium dark:bg-gray-700"
                             >
                                 Create new group
 
@@ -180,7 +180,7 @@ async function submit() {
                                         v-model="name"
                                         type="text"
                                         maxlength="255"
-                                        class="w-full rounded-md border-gray-300"
+                                        class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
                                     />
 
                                     <div
@@ -221,7 +221,7 @@ async function submit() {
                                         v-model="about"
                                         rows="4"
                                         maxlength="5000"
-                                        class="w-full rounded-md border-gray-300 resize-none"
+                                        class="w-full rounded-md border-gray-300 resize-none dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
                                     />
 
                                     <div
@@ -243,7 +243,7 @@ async function submit() {
                                 <button
                                     type="button"
                                     @click="closeModal"
-                                    class="bg-gray-100 hover:bg-gray-200 rounded-md py-2 px-4"
+                                    class="bg-gray-100 hover:bg-gray-200 rounded-md py-2 px-4 dark:bg-gray-700 dark:hover:bg-gray-600"
                                 >
                                     Cancel
                                 </button>

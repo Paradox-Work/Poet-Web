@@ -33,12 +33,12 @@ function showCreatePostModal() {
 
 <template>
 
-    <div class="bg-white border rounded p-4 mb-3">
+    <div class="bg-white border border-gray-200 rounded p-4 mb-3 dark:bg-gray-800 dark:border-gray-700">
 
         <button
             type="button"
             @click="showCreatePostModal"
-            class="py-2 px-3 border-2 border-gray-200 text-gray-500 rounded-md w-full text-left hover:bg-gray-50"
+            class="py-2 px-3 border-2 border-gray-200 text-gray-500 rounded-md w-full text-left hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
         >
             Click here to create a new post
         </button>
