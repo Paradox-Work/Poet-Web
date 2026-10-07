@@ -278,6 +278,63 @@ See: [User follow and unfollow flow](user-follow-flow.md)
 
 ---
 
+## Global Search
+
+Authenticated users can search across:
+
+```text
+users
+groups
+posts
+```
+
+The navigation bar contains a global search field that opens:
+
+```text
+GET /search/{search?}
+```
+
+User matches are based on:
+
+```text
+name
+username
+```
+
+Group matches are based on:
+
+```text
+name
+about
+```
+
+Post matches are based on:
+
+```text
+body
+```
+
+Post search starts from:
+
+```php
+Post::postsForTimeline($userId)
+```
+
+so private group posts remain hidden from users who are not approved members.
+
+Post results are paginated in groups of 20 and reuse `PostList.vue`, including its existing JSON-based infinite scrolling.
+
+User and group results reuse:
+
+```text
+UserListItem.vue
+GroupItem.vue
+```
+
+See: [Global search flow](global-search-flow.md)
+
+---
+
 ## Documentation Principle
 
 The current application code is the source of truth.
