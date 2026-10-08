@@ -33,11 +33,6 @@ const props = defineProps({
     mode: {
         type: String,
         default: 'list'
-    },
-
-    fillHeight: {
-        type: Boolean,
-        default: false
     }
 });
 
@@ -596,22 +591,12 @@ function removePost(postId) {
 <template>
     <div
         v-if="mode === 'deck'"
-        :class="[
-            'relative',
-            fillHeight
-                ? 'flex h-full min-h-0 flex-col'
-                : ''
-        ]"
+        class="relative"
     >
         <div
             v-if="feedState.posts.length"
             ref="deckTrack"
-:class="[
-                'scrollbar-hidden flex snap-x snap-mandatory gap-5 overflow-x-auto overscroll-x-contain px-[7%] py-3',
-                fillHeight
-                    ? 'min-h-0 flex-1 items-center'
-                    : ''
-            ]"
+            class="scrollbar-hidden flex snap-x snap-mandatory gap-5 overflow-x-auto overscroll-x-contain px-[7%] py-3"
             tabindex="0"
             @scroll.passive="syncDeckIndex"
             @wheel="onDeckWheel"
