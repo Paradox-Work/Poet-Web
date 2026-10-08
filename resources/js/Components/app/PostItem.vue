@@ -298,6 +298,28 @@ function returnFromPost() {
 }
 
 const reactionPending = ref(false);
+const showAllGenres = ref(false);
+
+const visibleGenres = computed(() => {
+    if (
+        showAllGenres.value ||
+        (props.post.poem_genres?.length ?? 0) <= 1
+    ) {
+        return props.post.poem_genres ?? [];
+    }
+
+    return [
+        props.post.poem_genres[0]
+    ];
+});
+
+const hiddenGenreCount = computed(() =>
+    Math.max(
+        0,
+        (props.post.poem_genres?.length ?? 0) -
+            visibleGenres.value.length
+    )
+);
 
 async function sendReaction() {
 
@@ -388,12 +410,36 @@ async function sendReaction() {
                     </span>
 
                     <span
-                        v-for="genre in post.poem_genres ?? []"
+                        v-for="genre in visibleGenres"
                         :key="genre"
                         class="rounded-full border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-300"
                     >
                         {{ genre }}
                     </span>
+
+                    <button
+                        v-if="
+                            hiddenGenreCount ||
+                            (
+                                showAllGenres &&
+                                (post.poem_genres?.length ?? 0) > 1
+                            )
+                        "
+                        type="button"
+                        @click="showAllGenres = !showAllGenres"
+                        class="rounded-full border border-gray-200 bg-gray-50 px-2 py-1 text-xs font-medium text-gray-500 transition hover:bg-gray-100 hover:text-gray-700 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-gray-100"
+                        :aria-label="
+                            showAllGenres
+                                ? 'Hide extra genres'
+                                : 'Show extra genres'
+                        "
+                    >
+                        {{
+                            showAllGenres
+                                ? '−'
+                                : `+${hiddenGenreCount}`
+                        }}
+                    </button>
                 </div>
 
                 <h2
