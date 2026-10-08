@@ -5,7 +5,10 @@ import {
 } from 'vue';
 
 import {
+    ChevronDownIcon,
+    DocumentTextIcon,
     MoonIcon,
+    PencilSquareIcon,
     SunIcon
 } from '@heroicons/vue/24/outline';
 
@@ -27,6 +30,9 @@ import ResponsiveNavLink
 import TextInput
     from '@/Components/TextInput.vue';
 
+import PostModal
+    from '@/Components/app/PostModal.vue';
+
 import {
     Link,
     router,
@@ -41,6 +47,21 @@ const showingNavigationDropdown = ref(false);
 const isDark = ref(false);
 
 const authUser = usePage().props.auth.user;
+
+const showCreatePostModal = ref(false);
+
+const newPost = {
+    id: null,
+    type: 'post',
+    body: '',
+    user: authUser,
+    group: null,
+    updated_at: null
+};
+
+function openCreatePost() {
+    showCreatePostModal.value = true;
+}
 
 function applyTheme(value) {
     isDark.value = value;
@@ -132,6 +153,70 @@ function search() {
                                 >
                                     Home
                                 </NavLink>
+
+                                <div class="flex items-stretch">
+                                    <Dropdown
+                                        v-if="authUser"
+                                        align="left"
+                                        width="48"
+                                        content-classes="py-1 bg-[var(--poet-surface)]"
+                                    >
+                                        <template #trigger>
+                                            <button
+                                                type="button"
+                                                class="inline-flex h-full items-center gap-1 border-b-2 border-transparent px-1 pt-1 text-sm font-medium leading-5 text-gray-500 transition duration-150 ease-in-out hover:border-gray-300 hover:text-gray-700 focus:outline-none dark:text-gray-400 dark:hover:border-gray-700 dark:hover:text-gray-300"
+                                            >
+                                                Create
+
+                                                <ChevronDownIcon
+                                                    class="h-4 w-4"
+                                                />
+                                            </button>
+                                        </template>
+
+                                        <template #content>
+                                            <button
+                                                type="button"
+                                                @click="openCreatePost"
+                                                class="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-[var(--poet-text)] transition hover:bg-[var(--poet-surface-soft)]"
+                                            >
+                                                <DocumentTextIcon
+                                                    class="h-5 w-5 text-[var(--poet-muted)]"
+                                                />
+
+                                                <div>
+                                                    <div class="font-medium">
+                                                        Post
+                                                    </div>
+
+                                                    <div class="text-xs text-[var(--poet-muted)]">
+                                                        Share a quick thought
+                                                    </div>
+                                                </div>
+                                            </button>
+
+                                            <DropdownLink
+                                                :href="route('poem.write')"
+                                            >
+                                                <span class="flex items-center gap-3">
+                                                    <PencilSquareIcon
+                                                        class="h-5 w-5 text-[var(--poet-accent)]"
+                                                    />
+
+                                                    <span>
+                                                        <span class="block font-medium text-[var(--poet-text)]">
+                                                            Poem
+                                                        </span>
+
+                                                        <span class="block text-xs text-[var(--poet-muted)]">
+                                                            Open the writing studio
+                                                        </span>
+                                                    </span>
+                                                </span>
+                                            </DropdownLink>
+                                        </template>
+                                    </Dropdown>
+                                </div>
 
                                 <NavLink
                                     :href="route('draft.index')"
@@ -323,6 +408,28 @@ function search() {
                             Home
                         </ResponsiveNavLink>
 
+                        <button
+                            v-if="authUser"
+                            type="button"
+                            @click="
+                                openCreatePost();
+                                showingNavigationDropdown = false;
+                            "
+                            class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"
+                        >
+                            <DocumentTextIcon
+                                class="h-5 w-5"
+                            />
+                            Create post
+                        </button>
+
+                        <ResponsiveNavLink
+                            v-if="authUser"
+                            :href="route('poem.write')"
+                        >
+                            Write poem
+                        </ResponsiveNavLink>
+
                         <ResponsiveNavLink
                             :href="route('draft.index')"
                             :active="route().current('draft.index')"
@@ -384,6 +491,13 @@ function search() {
             <main class="flex-1 min-h-0">
                 <slot />
             </main>
+
+            <PostModal
+                v-if="authUser"
+                :post="newPost"
+                :allow-poem-mode="false"
+                v-model="showCreatePostModal"
+            />
         </div>
     </div>
 </template>

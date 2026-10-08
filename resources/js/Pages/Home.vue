@@ -15,9 +15,6 @@ import {
 import AuthenticatedLayout
     from '@/Layouts/AuthenticatedLayout.vue';
 
-import CreatePost
-    from '@/Components/app/CreatePost.vue';
-
 import GroupModal
     from '@/Components/app/GroupModal.vue';
 
@@ -66,8 +63,6 @@ function onGroupCreated(group) {
                 <div
                     class="mx-auto max-w-4xl"
                 >
-                    <CreatePost />
-
                     <div
                         class="mt-4 flex items-center gap-3 overflow-x-auto rounded-2xl border border-[var(--poet-border)] bg-[var(--poet-surface)] px-4 py-3 scrollbar-hidden"
                     >
