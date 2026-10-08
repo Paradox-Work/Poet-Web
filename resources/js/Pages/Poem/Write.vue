@@ -25,6 +25,7 @@ import axios from 'axios';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import TiptapEditor from '@/Components/app/TiptapEditor.vue';
 import { getPoemForm, poemForms } from '@/data/poemForms.js';
+import { poemGenres } from '@/data/poemGenres.js';
 
 const props = defineProps({
     drafts: {
@@ -46,12 +47,14 @@ const saveState = ref('idle');
 const savedAt = ref(null);
 const draftMenuOpen = ref(false);
 const hashtagsInput = ref('');
+const customGenreInput = ref('');
 
 let saveTimer = null;
 
 const form = useForm({
     type: 'poem',
     poem_form: 'free_verse',
+    poem_genres: [],
     title: '',
     caption: '',
     hashtags: [],
@@ -145,6 +148,7 @@ function draftPayload() {
     return {
         type: 'poem',
         poem_form: form.poem_form,
+        poem_genres: form.poem_genres,
         title: form.title,
         caption: form.caption,
         hashtags: normalizeHashtags(
@@ -200,6 +204,8 @@ function openDraft(draft) {
     draftId.value = draft.id;
     form.poem_form =
         draft.poem_form ?? 'free_verse';
+    form.poem_genres =
+        draft.poem_genres ?? [];
     form.title = draft.title ?? '';
     form.caption = draft.caption ?? '';
     form.body = draft.body ?? '';
@@ -222,13 +228,58 @@ function newPoem() {
     saveState.value = 'idle';
     savedAt.value = null;
     hashtagsInput.value = '';
+    customGenreInput.value = '';
 
     form.reset();
     form.type = 'poem';
     form.poem_form = 'free_verse';
+    form.poem_genres = [];
     form.group_id = props.groupId;
 
     draftMenuOpen.value = false;
+}
+
+function toggleGenre(genre) {
+    if (form.poem_genres.includes(genre)) {
+        form.poem_genres =
+            form.poem_genres.filter(
+                item => item !== genre
+            );
+        return;
+    }
+
+    if (form.poem_genres.length >= 8) {
+        return;
+    }
+
+    form.poem_genres = [
+        ...form.poem_genres,
+        genre
+    ];
+}
+
+function addCustomGenre() {
+    const genre = customGenreInput.value.trim();
+
+    if (!genre || form.poem_genres.length >= 8) {
+        return;
+    }
+
+    const duplicate =
+        form.poem_genres.some(
+            item =>
+                item.toLocaleLowerCase() ===
+                genre.toLocaleLowerCase()
+        );
+
+    if (!duplicate) {
+        form.poem_genres = [
+            ...form.poem_genres,
+            genre.slice(0, 50)
+        ];
+    }
+
+    customGenreInput.value = '';
 }
 
 function publish() {
@@ -268,6 +319,7 @@ function publish() {
 watch(
     [
         () => form.poem_form,
+        () => form.poem_genres,
         () => form.title,
         () => form.caption,
         () => form.body,
@@ -465,6 +517,68 @@ if (props.openDraftId) {
                             </div>
                             <div class="mt-2 font-mono text-sm text-gray-700 dark:text-gray-200">
                                 {{ selectedForm.rhymeScheme }}
+                            </div>
+                        </section>
+
+                        <section>
+                            <div class="mb-2 flex items-center justify-between">
+                                <label class="block text-xs font-semibold uppercase tracking-[0.16em] text-gray-400">
+                                    Genres
+                                </label>
+                                <span class="text-xs text-gray-400">
+                                    {{ form.poem_genres.length }}/8
+                                </span>
+                            </div>
+
+                            <div class="max-h-44 overflow-y-auto rounded-lg border border-stone-200 bg-white p-2 dark:border-gray-700 dark:bg-gray-900/60">
+                                <button
+                                    v-for="genre in poemGenres"
+                                    :key="genre"
+                                    type="button"
+                                    @click="toggleGenre(genre)"
+                                    :class="[
+                                        'mb-1 mr-1 rounded-full px-2.5 py-1 text-xs transition',
+                                        form.poem_genres.includes(genre)
+                                            ? 'bg-indigo-600 text-white'
+                                            : 'bg-stone-100 text-gray-600 hover:bg-stone-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+                                    ]"
+                                >
+                                    {{ genre }}
+                                </button>
+                            </div>
+
+                            <div class="mt-2 flex gap-2">
+                                <input
+                                    v-model="customGenreInput"
+                                    type="text"
+                                    maxlength="50"
+                                    placeholder="Custom genre"
+                                    class="min-w-0 flex-1 rounded-lg border-gray-300 bg-white text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+                                    @keyup.enter.prevent="addCustomGenre"
+                                />
+                                <button
+                                    type="button"
+                                    @click="addCustomGenre"
+                                    class="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
+                                >
+                                    Add
+                                </button>
+                            </div>
+
+                            <div
+                                v-if="form.poem_genres.length"
+                                class="mt-2 flex flex-wrap gap-1.5"
+                            >
+                                <button
+                                    v-for="genre in form.poem_genres"
+                                    :key="genre"
+                                    type="button"
+                                    @click="toggleGenre(genre)"
+                                    class="rounded-full bg-indigo-50 px-2 py-1 text-xs text-indigo-700 hover:bg-red-50 hover:text-red-600 dark:bg-indigo-950/40 dark:text-indigo-300 dark:hover:bg-red-950/30 dark:hover:text-red-300"
+                                    title="Remove genre"
+                                >
+                                    {{ genre }} ×
+                                </button>
                             </div>
                         </section>
 

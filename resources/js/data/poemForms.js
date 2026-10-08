@@ -1,57 +1,28 @@
 export const poemForms = [
-    {
-        id: 'free_verse',
-        name: 'Free Verse',
-        summary: 'No fixed line count, rhyme scheme, or meter.',
-        structure: [
-            'No required line count.',
-            'No required rhyme scheme.',
-            'Use line and stanza breaks intentionally.'
-        ],
-        lineTarget: null,
-        rhymeScheme: null
-    },
-    {
-        id: 'haiku',
-        name: 'Haiku',
-        summary: 'A compact three-line form.',
-        structure: [
-            '3 lines.',
-            'English haiku are often taught with a 5–7–5 syllable pattern.',
-            'Traditional Japanese haiku count morae rather than English syllables.'
-        ],
-        lineTarget: 3,
-        rhymeScheme: null
-    },
-    {
-        id: 'shakespearean_sonnet',
-        name: 'Shakespearean Sonnet',
-        summary: 'Fourteen lines in three quatrains and a final couplet.',
-        structure: [
-            '14 lines total.',
-            'Stanzas: 4 / 4 / 4 / 2 lines.',
-            'Traditional rhyme scheme: ABAB CDCD EFEF GG.',
-            'Traditionally written in iambic pentameter.'
-        ],
-        lineTarget: 14,
-        rhymeScheme: 'ABAB CDCD EFEF GG'
-    },
-    {
-        id: 'limerick',
-        name: 'Limerick',
-        summary: 'A five-line form with a strong rhythmic shape.',
-        structure: [
-            '5 lines total.',
-            'Traditional rhyme scheme: AABBA.',
-            'Lines 1, 2 and 5 are usually longer than lines 3 and 4.'
-        ],
-        lineTarget: 5,
-        rhymeScheme: 'AABBA'
-    }
+    { id: 'free_verse', name: 'Free Verse', summary: 'No fixed line count, rhyme scheme, or meter.', structure: ['No required line count.', 'No required rhyme scheme.', 'Use line and stanza breaks intentionally.'], lineTarget: null, rhymeScheme: null },
+    { id: 'haiku', name: 'Haiku', summary: 'A compact three-line form.', structure: ['3 lines.', 'English haiku are often taught with a 5–7–5 syllable pattern.', 'Traditional Japanese haiku count morae rather than English syllables.'], lineTarget: 3, rhymeScheme: null },
+    { id: 'tanka', name: 'Tanka', summary: 'A five-line Japanese form often adapted as 5–7–5–7–7 in English.', structure: ['5 lines.', 'Often taught in English with a 5–7–5–7–7 syllable pattern.', 'Traditionally has no required rhyme scheme.'], lineTarget: 5, rhymeScheme: null },
+    { id: 'shakespearean_sonnet', name: 'Shakespearean Sonnet', summary: 'Fourteen lines in three quatrains and a final couplet.', structure: ['14 lines total.', 'Stanzas: 4 / 4 / 4 / 2 lines.', 'Traditional rhyme scheme: ABAB CDCD EFEF GG.', 'Traditionally written in iambic pentameter.'], lineTarget: 14, rhymeScheme: 'ABAB CDCD EFEF GG' },
+    { id: 'petrarchan_sonnet', name: 'Petrarchan Sonnet', summary: 'A fourteen-line sonnet divided into an octave and sestet.', structure: ['14 lines total.', 'Usually an 8-line octave followed by a 6-line sestet.', 'A common octave scheme is ABBAABBA.', 'The sestet rhyme scheme varies.'], lineTarget: 14, rhymeScheme: 'ABBAABBA + variable sestet' },
+    { id: 'limerick', name: 'Limerick', summary: 'A five-line form with a strong rhythmic shape.', structure: ['5 lines total.', 'Traditional rhyme scheme: AABBA.', 'Lines 1, 2 and 5 are usually longer than lines 3 and 4.'], lineTarget: 5, rhymeScheme: 'AABBA' },
+    { id: 'villanelle', name: 'Villanelle', summary: 'A nineteen-line form built around two repeating refrains.', structure: ['19 lines total.', 'Five tercets followed by one quatrain.', 'Two lines from the first tercet repeat as refrains.', 'Traditional pattern uses two rhyme sounds.'], lineTarget: 19, rhymeScheme: 'ABA / refrains' },
+    { id: 'sestina', name: 'Sestina', summary: 'A fixed form based on rotating six end-words.', structure: ['39 lines total.', 'Six 6-line stanzas followed by a 3-line envoi.', 'The same six end-words recur in a prescribed rotating order.', 'Traditional sestinas do not depend on end rhyme.'], lineTarget: 39, rhymeScheme: null },
+    { id: 'ballad', name: 'Ballad', summary: 'A narrative form commonly written in four-line stanzas.', structure: ['Often arranged in quatrains.', 'Common meter alternates four stresses and three stresses.', 'A common rhyme pattern is ABCB or ABAB.'], lineTarget: null, rhymeScheme: 'Often ABCB or ABAB' },
+    { id: 'ode', name: 'Ode', summary: 'A lyric poem addressing or praising a subject.', structure: ['No single modern line-count requirement.', 'Usually focused on one subject.', 'Often uses elevated or reflective language.'], lineTarget: null, rhymeScheme: null },
+    { id: 'elegy', name: 'Elegy', summary: 'A reflective poem traditionally associated with loss or mourning.', structure: ['No fixed modern line count.', 'Often moves through remembrance, grief, and reflection.', 'May end in consolation or acceptance, but this is not required.'], lineTarget: null, rhymeScheme: null },
+    { id: 'acrostic', name: 'Acrostic', summary: 'The first letters of lines spell a word or phrase.', structure: ['Choose a word or phrase.', 'Begin successive lines with its letters in order.', 'Line length and rhyme are otherwise flexible.'], lineTarget: null, rhymeScheme: null },
+    { id: 'cinquain', name: 'Cinquain', summary: 'A compact five-line form with several modern variants.', structure: ['5 lines.', 'Different cinquain traditions use different syllable or stress patterns.', 'A common modern classroom pattern is 2–4–6–8–2 syllables.'], lineTarget: 5, rhymeScheme: null },
+    { id: 'ghazal', name: 'Ghazal', summary: 'A sequence of autonomous couplets linked by refrain and rhyme.', structure: ['Built from couplets.', 'Traditional ghazals repeat a refrain at the end of the second line of each couplet.', 'A rhyme normally appears immediately before the refrain.'], lineTarget: null, rhymeScheme: 'Couplet rhyme + refrain' },
+    { id: 'pantoum', name: 'Pantoum', summary: 'A repeating-line form usually written in quatrains.', structure: ['Written in 4-line stanzas.', 'Lines 2 and 4 of one stanza become lines 1 and 3 of the next.', 'The ending often brings back lines from the opening stanza.'], lineTarget: null, rhymeScheme: 'Often ABAB' },
+    { id: 'rondeau', name: 'Rondeau', summary: 'A French fixed form using two rhymes and a repeated refrain.', structure: ['Commonly 15 lines.', 'Traditionally divided into three stanzas.', 'Uses two rhyme sounds plus a short refrain.'], lineTarget: 15, rhymeScheme: 'Two rhymes + refrain' },
+    { id: 'blank_verse', name: 'Blank Verse', summary: 'Unrhymed verse traditionally written in iambic pentameter.', structure: ['No required line count.', 'Traditionally uses iambic pentameter.', 'No end-rhyme scheme is required.'], lineTarget: null, rhymeScheme: null },
+    { id: 'prose_poem', name: 'Prose Poem', summary: 'Poetry presented in prose-like paragraphs rather than verse lines.', structure: ['Usually written as prose blocks or paragraphs.', 'No required rhyme scheme or meter.', 'Relies on poetic language, compression, imagery, rhythm, or association.'], lineTarget: null, rhymeScheme: null }
 ];
 
 export function getPoemForm(id) {
-    return poemForms.find(
-        form => form.id === id
-    ) ?? poemForms[0];
+    return poemForms.find(form => form.id === id) ?? poemForms[0];
+}
+
+export function getPoemFormName(id) {
+    return getPoemForm(id).name;
 }

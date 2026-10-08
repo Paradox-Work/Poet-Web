@@ -52,6 +52,8 @@ class PostController extends Controller
                     'poem_form' =>
                         $draft->poem_form
                             ?? 'free_verse',
+                    'poem_genres' =>
+                        $draft->poem_genres ?? [],
                     'title' => $draft->title,
                     'caption' => $draft->caption,
                     'hashtags' =>
@@ -115,6 +117,8 @@ class PostController extends Controller
                         'poem_form' =>
                             $draft->poem_form
                                 ?? 'free_verse',
+                    'poem_genres' =>
+                        $draft->poem_genres ?? [],
                         'title' =>
                             $draft->title,
                         'caption' =>
@@ -211,6 +215,8 @@ class PostController extends Controller
                         'poem_form' =>
                             $draft->poem_form
                                 ?? 'free_verse',
+                    'poem_genres' =>
+                        $draft->poem_genres ?? [],
                         'title' => $draft->title,
                         'caption' => $draft->caption,
                         'hashtags' =>
@@ -304,9 +310,32 @@ class PostController extends Controller
                 Rule::in([
                     'free_verse',
                     'haiku',
+                    'tanka',
                     'shakespearean_sonnet',
+                    'petrarchan_sonnet',
                     'limerick',
+                    'villanelle',
+                    'sestina',
+                    'ballad',
+                    'ode',
+                    'elegy',
+                    'acrostic',
+                    'cinquain',
+                    'ghazal',
+                    'pantoum',
+                    'rondeau',
+                    'blank_verse',
+                    'prose_poem',
                 ]),
+            ],
+            'poem_genres' => [
+                'nullable',
+                'array',
+                'max:8',
+            ],
+            'poem_genres.*' => [
+                'string',
+                'max:50',
             ],
             'title' => [
                 'nullable',
@@ -362,12 +391,27 @@ class PostController extends Controller
             $data['type'] !== 'poem'
         ) {
             $data['poem_form'] = null;
+            $data['poem_genres'] = [];
             $data['title'] = null;
             $data['caption'] = null;
         } else {
             $data['poem_form'] =
                 $data['poem_form']
                     ?? 'free_verse';
+
+            $data['poem_genres'] =
+                array_values(
+                    array_unique(
+                        array_filter(
+                            array_map(
+                                fn ($genre) =>
+                                    trim($genre),
+                                $data['poem_genres']
+                                    ?? []
+                            )
+                        )
+                    )
+                );
         }
 
         $data['hashtags'] =
@@ -671,6 +715,10 @@ class PostController extends Controller
                     $data['type'] === 'poem'
                         ? ($data['poem_form'] ?? 'free_verse')
                         : null,
+                'poem_genres' =>
+                    $data['type'] === 'poem'
+                        ? ($data['poem_genres'] ?? [])
+                        : [],
                 'title' =>
                     $data['type'] === 'poem'
                         ? ($data['title'] ?? null)

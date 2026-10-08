@@ -168,6 +168,19 @@ function savedLabel(value) {
                     </p>
 
                     <div
+                        v-if="draft.poem_genres?.length"
+                        class="mb-3 flex flex-wrap gap-1.5"
+                    >
+                        <span
+                            v-for="genre in draft.poem_genres"
+                            :key="genre"
+                            class="rounded-full bg-amber-50 px-2 py-1 text-xs text-amber-700 dark:bg-amber-950/30 dark:text-amber-300"
+                        >
+                            {{ genre }}
+                        </span>
+                    </div>
+
+                    <div
                         v-if="draft.hashtags?.length"
                         class="mb-4 flex flex-wrap gap-1.5"
                     >

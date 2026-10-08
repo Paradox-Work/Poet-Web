@@ -21,6 +21,7 @@ class Post extends Model
         'group_id',
         'type',
         'poem_form',
+        'poem_genres',
         'title',
         'caption',
         'hashtags',
@@ -33,6 +34,7 @@ class Post extends Model
     {
         return [
             'hashtags' => 'array',
+            'poem_genres' => 'array',
             'published_at' => 'datetime',
             'draft_saved_at' => 'datetime',
         ];

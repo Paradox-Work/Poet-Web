@@ -1,4 +1,5 @@
 <script setup>
+import { getPoemFormName } from '@/data/poemForms.js';
 import CommentList
     from '@/Components/app/CommentList.vue';
 
@@ -355,6 +356,13 @@ async function sendReaction() {
                 >
                     {{ post.title }}
                 </h2>
+
+                <div
+                    v-if="post.poem_form"
+                    class="mt-1 font-serif text-sm italic text-gray-500 dark:text-gray-400"
+                >
+                    {{ getPoemFormName(post.poem_form) }}
+                </div>
             </div>
 
             <Disclosure
@@ -400,6 +408,19 @@ async function sendReaction() {
             >
                 {{ post.caption }}
             </p>
+
+            <div
+                v-if="post.poem_genres?.length"
+                class="mt-3 flex flex-wrap gap-2"
+            >
+                <span
+                    v-for="genre in post.poem_genres"
+                    :key="genre"
+                    class="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-300"
+                >
+                    {{ genre }}
+                </span>
+            </div>
 
             <div
                 v-if="post.hashtags?.length"

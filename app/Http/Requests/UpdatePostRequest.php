@@ -37,7 +37,18 @@ class UpdatePostRequest extends FormRequest
             'poem_form' => [
                 'nullable',
                 'string',
-                'in:free_verse,haiku,shakespearean_sonnet,limerick',
+                'in:free_verse,haiku,tanka,shakespearean_sonnet,petrarchan_sonnet,limerick,villanelle,sestina,ballad,ode,elegy,acrostic,cinquain,ghazal,pantoum,rondeau,blank_verse,prose_poem',
+            ],
+
+            'poem_genres' => [
+                'nullable',
+                'array',
+                'max:8',
+            ],
+
+            'poem_genres.*' => [
+                'string',
+                'max:50',
             ],
 
             'title' => [
