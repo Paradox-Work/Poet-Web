@@ -10,11 +10,6 @@ import {
 
 import axios from 'axios';
 
-import {
-    ChevronLeftIcon,
-    ChevronRightIcon
-} from '@heroicons/vue/24/outline';
-
 import PostItem
     from '@/Components/app/PostItem.vue';
 
@@ -626,6 +621,25 @@ function removePost(postId) {
                 >
                     <PostItem
                         :post="post"
+                        :deck-navigation="
+                            index === activeIndex
+                        "
+                        :can-go-previous="
+                            activeIndex > 0
+                        "
+                        :can-go-next="
+                            activeIndex <
+                                feedState.posts.length - 1 ||
+                            Boolean(
+                                feedState.nextPageUrl
+                            )
+                        "
+                        @previous="
+                            previousPost
+                        "
+                        @next="
+                            nextPost
+                        "
                         @editClick="
                             openEditModal
                         "
@@ -653,34 +667,6 @@ function removePost(postId) {
         <template
             v-if="feedState.posts.length"
         >
-            <button
-                type="button"
-                @click="previousPost"
-                :disabled="activeIndex === 0"
-                class="absolute left-1 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--poet-border)] bg-[var(--poet-surface)] text-[var(--poet-text)] shadow-md transition hover:-translate-y-[54%] disabled:pointer-events-none disabled:opacity-25"
-                aria-label="Previous post"
-            >
-                <ChevronLeftIcon
-                    class="h-5 w-5"
-                />
-            </button>
-
-            <button
-                type="button"
-                @click="nextPost"
-                :disabled="
-                    activeIndex >=
-                    feedState.posts.length - 1 &&
-                    !feedState.nextPageUrl
-                "
-                class="absolute right-1 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--poet-border)] bg-[var(--poet-surface)] text-[var(--poet-text)] shadow-md transition hover:-translate-y-[54%] disabled:pointer-events-none disabled:opacity-25"
-                aria-label="Next post"
-            >
-                <ChevronRightIcon
-                    class="h-5 w-5"
-                />
-            </button>
-
             <div
                 class="mt-2 flex items-center justify-center gap-3 text-xs text-[var(--poet-muted)]"
             >
