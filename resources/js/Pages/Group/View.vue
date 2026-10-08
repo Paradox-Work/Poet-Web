@@ -352,7 +352,7 @@ function joinToGroup() {
 
             <!-- Group card -->
             <div
-                class="overflow-hidden rounded-xl bg-white shadow"
+                class="overflow-hidden rounded-xl bg-white shadow dark:bg-gray-800 dark:text-gray-100"
             >
 
                 <!-- COVER -->
@@ -458,14 +458,14 @@ function joinToGroup() {
                                 thumbnailPreview ||
                                 group.thumbnail_url
                             "
-                            class="w-full h-full rounded-full border-4 border-white object-cover bg-white"
+                            class="w-full h-full rounded-full border-4 border-white object-cover bg-white dark:border-gray-700 dark:bg-gray-700"
                             alt="Group thumbnail"
                         />
 
 
                         <div
                             v-else
-                            class="w-full h-full rounded-full border-4 border-white bg-indigo-100 text-indigo-700 flex items-center justify-center text-5xl font-bold"
+                            class="w-full h-full rounded-full border-4 border-white bg-indigo-100 text-indigo-700 flex items-center justify-center text-5xl font-bold dark:border-gray-700 dark:bg-indigo-900/50 dark:text-indigo-300"
                         >
                             {{
                                 group.name
@@ -666,7 +666,7 @@ function joinToGroup() {
                 <TabGroup>
 
                     <TabList
-                        class="flex border-b"
+                        class="flex border-b border-gray-200 dark:border-gray-700"
                     >
 
                         <Tab
@@ -761,7 +761,7 @@ function joinToGroup() {
 
                             <div
                                 v-else
-                                class="py-8 text-center text-gray-500"
+                                class="py-8 text-center text-gray-500 dark:text-gray-300"
                             >
                                 Only approved group members can view group posts.
                             </div>
@@ -786,7 +786,7 @@ function joinToGroup() {
                                 </h3>
 
                                 <div
-                                    class="overflow-hidden rounded-lg border"
+                                    class="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700"
                                 >
                                     <UserListItem
                                         v-for="user in requests"
@@ -847,7 +847,7 @@ function joinToGroup() {
 
                             <p
                                 v-else
-                                class="text-gray-500"
+                                class="text-gray-500 dark:text-gray-300"
                             >
                                 No members yet.
                             </p>
@@ -888,7 +888,7 @@ function joinToGroup() {
                                 <div class="mb-5">
                                     <label
                                         for="group-name"
-                                        class="block text-sm font-medium text-gray-700"
+                                        class="block text-sm font-medium text-gray-700 dark:text-gray-200"
                                     >
                                         Group name
                                     </label>
@@ -898,7 +898,7 @@ function joinToGroup() {
                                         v-model="groupSettingsForm.name"
                                         type="text"
                                         maxlength="255"
-                                        class="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        class="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
                                     />
 
                                     <p
@@ -924,14 +924,14 @@ function joinToGroup() {
                                         />
 
                                         <span
-                                            class="text-sm text-gray-700"
+                                            class="text-sm text-gray-700 dark:text-gray-200"
                                         >
                                             Automatically approve new members
                                         </span>
                                     </label>
 
                                     <p
-                                        class="mt-1 text-xs text-gray-500"
+                                        class="mt-1 text-xs text-gray-500 dark:text-gray-400"
                                     >
                                         When disabled, new members must be approved by a group administrator.
                                     </p>
@@ -1012,7 +1012,7 @@ function joinToGroup() {
                                 </p>
 
                                 <div
-                                    class="mt-4 text-sm text-gray-500"
+                                    class="mt-4 text-sm text-gray-500 dark:text-gray-400"
                                 >
                                     Auto approval:
 

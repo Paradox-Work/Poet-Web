@@ -98,7 +98,7 @@ function openPhoto(index) {
 
     <div
         v-else
-        class="py-8 text-center text-gray-500"
+        class="py-8 text-center text-gray-500 dark:text-gray-300"
     >
         No photos yet.
     </div>
