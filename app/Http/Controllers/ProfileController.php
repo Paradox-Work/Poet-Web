@@ -62,6 +62,9 @@ class ProfileController extends Controller
                     ->where(
                         'posts.user_id',
                         $user->id
+                    )
+                    ->whereNull(
+                        'posts.group_id'
                     );
 
             if ($user->pinned_post_id) {
@@ -115,6 +118,9 @@ class ProfileController extends Controller
                     ->where(
                         'posts.user_id',
                         $user->id
+                    )
+                    ->whereNull(
+                        'posts.group_id'
                     )
                     ->reorder()
                     ->select(
