@@ -1,5 +1,6 @@
 <script setup>
 import {
+    nextTick,
     onBeforeUnmount,
     onMounted,
     reactive,
@@ -8,6 +9,11 @@ import {
 } from 'vue';
 
 import axios from 'axios';
+
+import {
+    ChevronLeftIcon,
+    ChevronRightIcon
+} from '@heroicons/vue/24/outline';
 
 import PostItem
     from '@/Components/app/PostItem.vue';
@@ -18,72 +24,60 @@ import PostModal
 import AttachmentPreviewModal
     from '@/Components/app/AttachmentPreviewModal.vue';
 
-
 const props = defineProps({
-
     posts: {
         type: Object,
         required: true
     },
 
+    mode: {
+        type: String,
+        default: 'list'
+    }
 });
 
+const feedState = reactive({
+    posts: [
+        ...(props.posts.data ?? [])
+    ],
 
-const feedState =
-    reactive({
-        posts: [
-            ...(props.posts.data ?? [])
-        ],
+    nextPageUrl:
+        props.posts.links?.next
+        ?? null,
 
-        nextPageUrl:
-            props.posts.links?.next
-            ?? null,
+    loadedBeyondFirstPage: false
+});
 
-        loadedBeyondFirstPage: false
-    });
-
-const loadingMore =
-    ref(false);
-
-const loadMoreIntersect =
-    ref(null);
-
-const postListContainer =
-    ref(null);
-
+const loadingMore = ref(false);
+const loadMoreIntersect = ref(null);
+const postListContainer = ref(null);
+const deckTrack = ref(null);
+const activeIndex = ref(0);
 
 let observer = null;
+let wheelLocked = false;
+let pointerStartX = null;
+let pointerDeltaX = 0;
 
+const showEditModal = ref(false);
+const editPost = ref({});
 
-const showEditModal =
-    ref(false);
+const showAttachmentsModal = ref(false);
 
-const editPost =
-    ref({});
-
-const showAttachmentsModal =
-    ref(false);
-
-const previewAttachmentsPost =
-    ref({
-        post: null,
-        index: 0
-    });
-
+const previewAttachmentsPost = ref({
+    post: null,
+    index: 0
+});
 
 function openEditModal(post) {
-
     editPost.value = post;
-
     showEditModal.value = true;
 }
-
 
 function openAttachmentPreviewModal(
     post,
     index
 ) {
-
     previewAttachmentsPost.value = {
         post,
         index
@@ -92,9 +86,7 @@ function openAttachmentPreviewModal(
     showAttachmentsModal.value = true;
 }
 
-
 async function loadMore() {
-
     if (
         !feedState.nextPageUrl ||
         loadingMore.value
@@ -102,12 +94,9 @@ async function loadMore() {
         return;
     }
 
-
     loadingMore.value = true;
 
-
     try {
-
         const { data } =
             await axios.get(
                 feedState.nextPageUrl,
@@ -119,14 +108,12 @@ async function loadMore() {
                 }
             );
 
-
         const existingIds =
             new Set(
                 feedState.posts.map(
                     post => post.id
                 )
             );
-
 
         const newPosts =
             (data.data ?? [])
@@ -137,39 +124,32 @@ async function loadMore() {
                         )
                 );
 
-
         feedState.posts.push(
             ...newPosts
         );
-
 
         feedState.nextPageUrl =
             data.links?.next
             ?? null;
 
-
         feedState.loadedBeyondFirstPage =
             true;
 
     } catch (error) {
-
         console.error(
             'Failed to load more posts:',
             error
         );
 
     } finally {
-
         loadingMore.value = false;
     }
 }
-
 
 watch(
     () => props.posts,
 
     posts => {
-
         const incomingPosts =
             posts?.data ?? [];
 
@@ -211,6 +191,13 @@ watch(
             feedState.posts.unshift(
                 ...newPosts
             );
+
+            if (
+                props.mode === 'deck'
+            ) {
+                activeIndex.value +=
+                    newPosts.length;
+            }
         }
 
         if (
@@ -223,52 +210,315 @@ watch(
     }
 );
 
+function deckCards() {
+    return Array.from(
+        deckTrack.value
+            ?.querySelectorAll(
+                '[data-deck-card]'
+            )
+        ?? []
+    );
+}
 
-onMounted(() => {
+function scrollToDeckIndex(
+    index,
+    behavior = 'smooth'
+) {
+    const cards =
+        deckCards();
 
-    observer =
-        new IntersectionObserver(
-            entries => {
+    if (!cards.length) {
+        return;
+    }
 
-                if (
-                    entries.some(
-                        entry =>
-                            entry.isIntersecting
-                    )
-                ) {
-                    loadMore();
-                }
-
-            },
-            {
-                root:
-                    postListContainer.value,
-
-                rootMargin:
-                    '0px 0px 300px 0px'
-            }
+    const nextIndex =
+        Math.max(
+            0,
+            Math.min(
+                index,
+                cards.length - 1
+            )
         );
 
+    activeIndex.value =
+        nextIndex;
 
-    if (loadMoreIntersect.value) {
+    cards[nextIndex]
+        ?.scrollIntoView({
+            behavior,
+            block: 'nearest',
+            inline: 'center'
+        });
 
-        observer.observe(
+    if (
+        nextIndex >=
+            feedState.posts.length - 2
+    ) {
+        loadMore();
+    }
+}
+
+function nextPost() {
+    scrollToDeckIndex(
+        activeIndex.value + 1
+    );
+}
+
+function previousPost() {
+    scrollToDeckIndex(
+        activeIndex.value - 1
+    );
+}
+
+function syncDeckIndex() {
+    const track =
+        deckTrack.value;
+
+    const cards =
+        deckCards();
+
+    if (
+        !track ||
+        !cards.length
+    ) {
+        return;
+    }
+
+    const center =
+        track.scrollLeft +
+        track.clientWidth / 2;
+
+    let nearest = 0;
+    let nearestDistance =
+        Number.POSITIVE_INFINITY;
+
+    cards.forEach(
+        (card, index) => {
+            const cardCenter =
+                card.offsetLeft +
+                card.offsetWidth / 2;
+
+            const distance =
+                Math.abs(
+                    cardCenter -
+                    center
+                );
+
+            if (
+                distance <
+                nearestDistance
+            ) {
+                nearestDistance =
+                    distance;
+
+                nearest =
+                    index;
+            }
+        }
+    );
+
+    activeIndex.value =
+        nearest;
+
+    if (
+        nearest >=
+            feedState.posts.length - 2
+    ) {
+        loadMore();
+    }
+}
+
+function onDeckWheel(event) {
+    const target =
+        event.target;
+
+    if (
+        target?.closest(
+            'textarea, input, select, [contenteditable="true"], .comment-list'
+        )
+    ) {
+        return;
+    }
+
+    if (
+        Math.abs(event.deltaY) <
+            8 &&
+        Math.abs(event.deltaX) <
+            8
+    ) {
+        return;
+    }
+
+    event.preventDefault();
+
+    if (wheelLocked) {
+        return;
+    }
+
+    wheelLocked = true;
+
+    const direction =
+        Math.abs(event.deltaX) >
+        Math.abs(event.deltaY)
+            ? Math.sign(
+                event.deltaX
+            )
+            : Math.sign(
+                event.deltaY
+            );
+
+    if (direction > 0) {
+        nextPost();
+    } else {
+        previousPost();
+    }
+
+    window.setTimeout(
+        () => {
+            wheelLocked = false;
+        },
+        420
+    );
+}
+
+function onDeckKeydown(event) {
+    if (
+        props.mode !== 'deck'
+    ) {
+        return;
+    }
+
+    if (
+        event.key ===
+        'ArrowRight'
+    ) {
+        nextPost();
+    }
+
+    if (
+        event.key ===
+        'ArrowLeft'
+    ) {
+        previousPost();
+    }
+}
+
+function onPointerDown(event) {
+    if (
+        event.pointerType ===
+            'mouse' &&
+        event.button !== 0
+    ) {
+        return;
+    }
+
+    pointerStartX =
+        event.clientX;
+
+    pointerDeltaX = 0;
+}
+
+function onPointerMove(event) {
+    if (
+        pointerStartX === null
+    ) {
+        return;
+    }
+
+    pointerDeltaX =
+        event.clientX -
+        pointerStartX;
+}
+
+function onPointerUp() {
+    if (
+        pointerStartX === null
+    ) {
+        return;
+    }
+
+    if (
+        Math.abs(pointerDeltaX) >
+        70
+    ) {
+        if (
+            pointerDeltaX < 0
+        ) {
+            nextPost();
+        } else {
+            previousPost();
+        }
+    }
+
+    pointerStartX = null;
+    pointerDeltaX = 0;
+}
+
+onMounted(() => {
+    window.addEventListener(
+        'keydown',
+        onDeckKeydown
+    );
+
+    if (
+        props.mode === 'list'
+    ) {
+        observer =
+            new IntersectionObserver(
+                entries => {
+                    if (
+                        entries.some(
+                            entry =>
+                                entry.isIntersecting
+                        )
+                    ) {
+                        loadMore();
+                    }
+                },
+                {
+                    root:
+                        postListContainer.value,
+
+                    rootMargin:
+                        '0px 0px 300px 0px'
+                }
+            );
+
+        if (
             loadMoreIntersect.value
+        ) {
+            observer.observe(
+                loadMoreIntersect.value
+            );
+        }
+    }
+
+    if (
+        props.mode === 'deck'
+    ) {
+        nextTick(
+            () =>
+                scrollToDeckIndex(
+                    0,
+                    'auto'
+                )
         );
     }
 });
 
-
 onBeforeUnmount(() => {
-
     observer?.disconnect();
+
+    window.removeEventListener(
+        'keydown',
+        onDeckKeydown
+    );
 });
 
 function handlePinChanged({
     postId,
     pinned
 }) {
-
     if (pinned) {
         const pinnedPost =
             feedState.posts.find(
@@ -302,27 +552,185 @@ function handlePinChanged({
     );
 }
 
-
-function removePost(
-    postId
-) {
+function removePost(postId) {
+    const removedIndex =
+        feedState.posts.findIndex(
+            post =>
+                post.id === postId
+        );
 
     feedState.posts =
         feedState.posts.filter(
             post =>
                 post.id !== postId
         );
+
+    if (
+        props.mode === 'deck'
+    ) {
+        activeIndex.value =
+            Math.max(
+                0,
+                Math.min(
+                    activeIndex.value,
+                    feedState.posts.length - 1
+                )
+            );
+
+        nextTick(
+            () =>
+                scrollToDeckIndex(
+                    activeIndex.value,
+                    'auto'
+                )
+        );
+    }
 }
 </script>
 
 <template>
+    <div
+        v-if="mode === 'deck'"
+        class="relative"
+    >
+        <div
+            v-if="feedState.posts.length"
+            ref="deckTrack"
+            class="scrollbar-hidden flex snap-x snap-mandatory gap-5 overflow-x-auto overscroll-x-contain px-[7%] py-3"
+            tabindex="0"
+            @scroll.passive="syncDeckIndex"
+            @wheel="onDeckWheel"
+            @pointerdown="onPointerDown"
+            @pointermove="onPointerMove"
+            @pointerup="onPointerUp"
+            @pointercancel="onPointerUp"
+        >
+            <div
+                v-for="(post, index) in feedState.posts"
+                :key="post.id"
+                data-deck-card
+                class="w-[86%] shrink-0 snap-center sm:w-[78%] lg:w-[72%]"
+                :class="
+                    index === activeIndex
+                        ? 'opacity-100'
+                        : 'opacity-60'
+                "
+            >
+                <div
+                    class="transition duration-300"
+                    :class="
+                        index === activeIndex
+                            ? 'scale-100'
+                            : 'scale-[0.965]'
+                    "
+                >
+                    <PostItem
+                        :post="post"
+                        @editClick="
+                            openEditModal
+                        "
+                        @attachmentClick="
+                            openAttachmentPreviewModal
+                        "
+                        @deleted="
+                            removePost
+                        "
+                        @pinChanged="
+                            handlePinChanged
+                        "
+                    />
+                </div>
+            </div>
+        </div>
+
+        <div
+            v-else
+            class="rounded-2xl border border-dashed border-[var(--poet-border)] bg-[var(--poet-surface)] px-6 py-16 text-center text-sm text-[var(--poet-muted)]"
+        >
+            Nothing in your feed yet.
+        </div>
+
+        <template
+            v-if="feedState.posts.length"
+        >
+            <button
+                type="button"
+                @click="previousPost"
+                :disabled="activeIndex === 0"
+                class="absolute left-1 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--poet-border)] bg-[var(--poet-surface)] text-[var(--poet-text)] shadow-md transition hover:-translate-y-[54%] disabled:pointer-events-none disabled:opacity-25"
+                aria-label="Previous post"
+            >
+                <ChevronLeftIcon
+                    class="h-5 w-5"
+                />
+            </button>
+
+            <button
+                type="button"
+                @click="nextPost"
+                :disabled="
+                    activeIndex >=
+                    feedState.posts.length - 1 &&
+                    !feedState.nextPageUrl
+                "
+                class="absolute right-1 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--poet-border)] bg-[var(--poet-surface)] text-[var(--poet-text)] shadow-md transition hover:-translate-y-[54%] disabled:pointer-events-none disabled:opacity-25"
+                aria-label="Next post"
+            >
+                <ChevronRightIcon
+                    class="h-5 w-5"
+                />
+            </button>
+
+            <div
+                class="mt-2 flex items-center justify-center gap-3 text-xs text-[var(--poet-muted)]"
+            >
+                <span>
+                    {{ activeIndex + 1 }}
+                    /
+                    {{ feedState.posts.length }}
+                </span>
+
+                <span
+                    class="hidden sm:inline"
+                >
+                    swipe · wheel · arrow keys
+                </span>
+
+                <span
+                    v-if="loadingMore"
+                >
+                    loading more…
+                </span>
+            </div>
+        </template>
+
+        <PostModal
+            :post="editPost"
+            v-model="showEditModal"
+        />
+
+        <AttachmentPreviewModal
+            :attachments="
+                previewAttachmentsPost
+                    .post
+                    ?.attachments
+                ?? []
+            "
+            v-model:index="
+                previewAttachmentsPost.index
+            "
+            v-model="
+                showAttachmentsModal
+            "
+        />
+    </div>
 
     <div
+        v-else
         ref="postListContainer"
-        class="scrollbar-hidden overflow-auto flex-1"
+        class="scrollbar-hidden flex-1 overflow-auto"
         scroll-region
     >
-
         <PostItem
             v-for="post of feedState.posts"
             :key="post.id"
@@ -341,27 +749,23 @@ function removePost(
             "
         />
 
-
         <div
             ref="loadMoreIntersect"
             class="h-px"
             aria-hidden="true"
         />
 
-
         <div
             v-if="loadingMore"
-            class="text-center text-sm text-gray-400 py-3"
+            class="py-3 text-center text-sm text-gray-400"
         >
             Loading more posts...
         </div>
-
 
         <PostModal
             :post="editPost"
             v-model="showEditModal"
         />
-
 
         <AttachmentPreviewModal
             :attachments="
@@ -377,11 +781,5 @@ function removePost(
                 showAttachmentsModal
             "
         />
-
     </div>
-
 </template>
-
-<style scoped>
-
-</style>
