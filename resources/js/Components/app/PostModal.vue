@@ -121,21 +121,35 @@
                                             form.type === 'poem' &&
                                             !form.id
                                         "
-                                        class="mb-3 flex items-center justify-between text-xs text-gray-400"
+                                        class="mb-3 flex items-center justify-between gap-3 text-xs text-gray-400"
                                     >
-                                        <span>
-                                            {{
-                                                draftState === 'saving'
-                                                    ? 'Saving draft...'
-                                                    : draftState === 'saved'
-                                                        ? 'Draft saved'
-                                                        : draftState === 'restored'
-                                                            ? 'Draft restored'
-                                                            : draftState === 'error'
-                                                                ? 'Draft save failed'
-                                                                : 'Draft autosave on'
-                                            }}
-                                        </span>
+                                        <div class="flex items-center gap-3">
+                                            <span>
+                                                {{
+                                                    draftState === 'saving'
+                                                        ? 'Saving draft...'
+                                                        : draftState === 'saved'
+                                                            ? 'Draft saved'
+                                                            : draftState === 'restored'
+                                                                ? 'Draft restored'
+                                                                : draftState === 'error'
+                                                                    ? 'Draft save failed'
+                                                                    : 'Draft autosave on'
+                                                }}
+                                            </span>
+
+                                            <button
+                                                v-if="
+                                                    !draftId &&
+                                                    latestDraft
+                                                "
+                                                type="button"
+                                                @click="resumeLatestDraft"
+                                                class="font-medium text-indigo-500 hover:text-indigo-400 hover:underline"
+                                            >
+                                                Resume latest draft
+                                            </button>
+                                        </div>
 
                                         <span
                                             v-if="draftSavedAt"
@@ -460,6 +474,7 @@ const draftId = ref(null);
 const draftState = ref('idle');
 const draftSavedAt = ref(null);
 const draftLoadAttempted = ref(false);
+const latestDraft = ref(null);
 
 let draftSaveTimer = null;
 
@@ -546,6 +561,8 @@ watch(
                 ? post.id
                 : null;
 
+        latestDraft.value = null;
+
         draftState.value =
             isDraft
                 ? 'restored'
@@ -582,6 +599,14 @@ watch(
 
         attachmentFiles.value = [];
         attachmentErrors.value = [];
+
+        if (
+            !isDraft &&
+            !post.id &&
+            form.type === 'poem'
+        ) {
+            checkLatestDraft();
+        }
     },
     {
         immediate: true
@@ -606,6 +631,7 @@ function closeModal() {
     draftState.value = 'idle';
     draftSavedAt.value = null;
     draftLoadAttempted.value = false;
+    latestDraft.value = null;
     hashtagsInput.value = '';
     attachmentFiles.value = [];
     attachmentErrors.value = [];
@@ -749,12 +775,12 @@ function draftPayload() {
     };
 }
 
-async function loadLatestDraft() {
+async function checkLatestDraft() {
     if (
         form.id ||
         draftLoadAttempted.value ||
         form.type !== 'poem' ||
-        hasDraftContent()
+        draftId.value
     ) {
         return;
     }
@@ -777,45 +803,56 @@ async function loadLatestDraft() {
                 }
             );
 
-        if (!data.draft) {
-            return;
-        }
-
-        draftId.value =
-            data.draft.id;
-
-        form.title =
-            data.draft.title ?? '';
-
-        form.caption =
-            data.draft.caption ?? '';
-
-        form.body =
-            data.draft.body ?? '';
-
-        form.group_id =
-            data.draft.group_id ?? null;
-
-        form.hashtags =
-            data.draft.hashtags ?? [];
-
-        hashtagsInput.value =
-            form.hashtags
-                .map(tag => `#${tag}`)
-                .join(' ');
-
-        draftSavedAt.value =
-            data.draft.draft_saved_at;
-
-        draftState.value =
-            'restored';
+        latestDraft.value =
+            data.draft ?? null;
 
     } catch (error) {
         console.error(
-            'Failed to restore draft:',
+            'Failed to check latest draft:',
             error
         );
     }
+}
+
+function resumeLatestDraft() {
+    const draft =
+        latestDraft.value;
+
+    if (!draft) {
+        return;
+    }
+
+    draftId.value =
+        draft.id;
+
+    form.title =
+        draft.title ?? '';
+
+    form.caption =
+        draft.caption ?? '';
+
+    form.body =
+        draft.body ?? '';
+
+    form.group_id =
+        draft.group_id ?? null;
+
+    form.hashtags =
+        draft.hashtags ?? [];
+
+    hashtagsInput.value =
+        form.hashtags
+            .map(tag => `#${tag}`)
+            .join(' ');
+
+    draftSavedAt.value =
+        draft.draft_saved_at;
+
+    draftState.value =
+        'restored';
+
+    latestDraft.value =
+        null;
 }
 
 async function saveDraft() {
@@ -903,7 +940,7 @@ async function chooseType(type) {
     if (
         type === 'poem'
     ) {
-        await loadLatestDraft();
+        await checkLatestDraft();
     }
 }
 
