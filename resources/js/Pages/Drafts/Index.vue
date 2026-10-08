@@ -1,7 +1,8 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 import {
     Head,
+    Link,
     router,
     usePage
 } from '@inertiajs/vue3';
@@ -14,8 +15,6 @@ import {
 import AuthenticatedLayout
     from '@/Layouts/AuthenticatedLayout.vue';
 
-import PostModal
-    from '@/Components/app/PostModal.vue';
 
 const props = defineProps({
     drafts: {
@@ -26,24 +25,9 @@ const props = defineProps({
 
 const page = usePage();
 
-const selectedDraft = ref(null);
-const showEditor = ref(false);
-
 const authUser = computed(
     () => page.props.auth.user
 );
-
-function continueDraft(draft) {
-    selectedDraft.value = {
-        ...draft,
-        user: authUser.value,
-        attachments: [],
-        updated_at:
-            draft.draft_saved_at
-    };
-
-    showEditor.value = true;
-}
 
 function deleteDraft(draft) {
     if (
@@ -212,9 +196,8 @@ function savedLabel(value) {
                     </div>
 
                     <div class="flex gap-2">
-                        <button
-                            type="button"
-                            @click="continueDraft(draft)"
+                        <Link
+                            :href="route('poem.write', { draft: draft.id })"
                             class="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-500"
                         >
                             <PencilSquareIcon
@@ -222,7 +205,7 @@ function savedLabel(value) {
                             />
 
                             Continue writing
-                        </button>
+                        </Link>
 
                         <button
                             type="button"
@@ -259,12 +242,5 @@ function savedLabel(value) {
                 </p>
             </div>
         </div>
-
-        <PostModal
-            v-if="selectedDraft"
-            v-model="showEditor"
-            :post="selectedDraft"
-            :group="selectedDraft.group"
-        />
     </AuthenticatedLayout>
 </template>

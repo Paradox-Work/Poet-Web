@@ -29,6 +29,11 @@ Route::middleware('auth')->group(function () {
     )->name('post.create');
 
     Route::get(
+        '/write/poem',
+        [\App\Http\Controllers\PostController::class, 'writePoem']
+    )->name('poem.write');
+
+    Route::get(
         '/drafts',
         [\App\Http\Controllers\PostController::class, 'drafts']
     )->name('draft.index');

@@ -34,6 +34,12 @@ class UpdatePostRequest extends FormRequest
                 'in:post,poem',
             ],
 
+            'poem_form' => [
+                'nullable',
+                'string',
+                'in:free_verse,haiku,shakespearean_sonnet,limerick',
+            ],
+
             'title' => [
                 'nullable',
                 'string',

@@ -88,7 +88,10 @@
                                         {{ form.errors.group_id }}
                                     </div>
 
-                                    <div class="mb-4 flex rounded-lg bg-gray-100 p-1 dark:bg-gray-700">
+                                    <div
+                                        v-if="allowPoemMode"
+                                        class="mb-4 flex rounded-lg bg-gray-100 p-1 dark:bg-gray-700"
+                                    >
                                         <button
                                             type="button"
                                             @click="chooseType('post')"
@@ -455,7 +458,12 @@ const props = defineProps({
         default: null
     },
 
-    modelValue: Boolean
+    modelValue: Boolean,
+
+    allowPoemMode: {
+        type: Boolean,
+        default: true
+    }
 
 });
 

@@ -26,6 +26,59 @@ use App\Http\Requests\UpdateCommentRequest;
 
 class PostController extends Controller
 {
+    public function writePoem(
+        Request $request
+    ) {
+        $drafts = Post::query()
+            ->where(
+                'user_id',
+                $request->user()->id
+            )
+            ->where(
+                'status',
+                'draft'
+            )
+            ->where(
+                'type',
+                'poem'
+            )
+            ->latest('draft_saved_at')
+            ->get()
+            ->map(
+                fn (Post $draft) => [
+                    'id' => $draft->id,
+                    'status' => 'draft',
+                    'type' => 'poem',
+                    'poem_form' =>
+                        $draft->poem_form
+                            ?? 'free_verse',
+                    'title' => $draft->title,
+                    'caption' => $draft->caption,
+                    'hashtags' =>
+                        $draft->hashtags ?? [],
+                    'body' => $draft->body,
+                    'group_id' =>
+                        $draft->group_id,
+                    'draft_saved_at' =>
+                        $draft->draft_saved_at
+                            ?->toISOString(),
+                ]
+            );
+
+        return inertia(
+            'Poem/Write',
+            [
+                'drafts' => $drafts,
+                'openDraftId' =>
+                    $request->integer('draft')
+                        ?: null,
+                'groupId' =>
+                    $request->integer('group')
+                        ?: null,
+            ]
+        );
+    }
+
     public function drafts(
         Request $request
     ) {
@@ -59,6 +112,9 @@ class PostController extends Controller
                         'status' => 'draft',
                         'type' =>
                             $draft->type ?? 'poem',
+                        'poem_form' =>
+                            $draft->poem_form
+                                ?? 'free_verse',
                         'title' =>
                             $draft->title,
                         'caption' =>
@@ -152,6 +208,9 @@ class PostController extends Controller
                     ? [
                         'id' => $draft->id,
                         'type' => $draft->type,
+                        'poem_form' =>
+                            $draft->poem_form
+                                ?? 'free_verse',
                         'title' => $draft->title,
                         'caption' => $draft->caption,
                         'hashtags' =>
@@ -239,6 +298,16 @@ class PostController extends Controller
                     'poem',
                 ]),
             ],
+            'poem_form' => [
+                'nullable',
+                'string',
+                Rule::in([
+                    'free_verse',
+                    'haiku',
+                    'shakespearean_sonnet',
+                    'limerick',
+                ]),
+            ],
             'title' => [
                 'nullable',
                 'string',
@@ -292,8 +361,13 @@ class PostController extends Controller
         if (
             $data['type'] !== 'poem'
         ) {
+            $data['poem_form'] = null;
             $data['title'] = null;
             $data['caption'] = null;
+        } else {
+            $data['poem_form'] =
+                $data['poem_form']
+                    ?? 'free_verse';
         }
 
         $data['hashtags'] =
@@ -593,6 +667,10 @@ class PostController extends Controller
 
             $post->update([
                 'type' => $data['type'],
+                'poem_form' =>
+                    $data['type'] === 'poem'
+                        ? ($data['poem_form'] ?? 'free_verse')
+                        : null,
                 'title' =>
                     $data['type'] === 'poem'
                         ? ($data['title'] ?? null)

@@ -20,6 +20,7 @@ class Post extends Model
         'body',
         'group_id',
         'type',
+        'poem_form',
         'title',
         'caption',
         'hashtags',
