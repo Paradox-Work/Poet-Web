@@ -25,7 +25,7 @@ defineEmits([
         @wheel.stop
     >
         <section
-            class="flex h-[min(82vh,720px)] w-full max-w-xl flex-col overflow-hidden rounded-2xl border border-[var(--poet-border)] bg-[var(--poet-surface)] shadow-2xl lg:h-[min(52vh,520px)] lg:max-w-none lg:shadow-[0_10px_35px_rgba(15,23,42,0.08)]"
+            class="flex h-[min(82vh,720px)] w-full max-w-xl min-w-0 flex-col overflow-hidden rounded-2xl border border-[var(--poet-border)] bg-[var(--poet-surface)] shadow-2xl lg:h-[min(52vh,520px)] lg:max-w-none lg:shadow-[0_10px_35px_rgba(15,23,42,0.08)]"
         >
             <header
                 class="flex shrink-0 items-center justify-between border-b border-[var(--poet-border)] px-4 py-3"
@@ -62,7 +62,7 @@ defineEmits([
             </header>
 
             <div
-                class="min-h-0 flex-1 p-4"
+                class="min-h-0 min-w-0 flex-1 overflow-hidden p-4"
             >
                 <CommentList
                     :post="post"

@@ -442,33 +442,37 @@ function onCommentDelete(
 
 <template>
 <div
-    :class="
-        panelMode
-            ? 'flex h-full min-h-0 flex-col'
+    :class="[
+        'min-w-0',
+        panelMode || parentComment
+            ? 'flex min-h-0 flex-col'
             : ''
-    "
+    ]"
 >
-
     <!-- New comment / reply -->
     <div
         :class="[
-            'flex gap-2',
-            panelMode
-                ? 'order-2 mt-3 border-t border-[var(--poet-border)] pt-3'
-                : 'mb-4'
+            'flex min-w-0 gap-2',
+            parentComment
+                ? 'order-2 mt-3'
+                : panelMode
+                    ? 'order-2 mt-3 border-t border-[var(--poet-border)] pt-3'
+                    : 'mb-4'
         ]"
     >
-
         <img
             v-if="authUser.avatar_url"
             :src="authUser.avatar_url"
-            class="w-10 h-10 rounded-full object-cover"
+            :class="[
+                'shrink-0 rounded-full object-cover',
+                parentComment
+                    ? 'h-8 w-8'
+                    : 'h-10 w-10'
+            ]"
             alt="Your avatar"
         />
 
-
-        <div class="flex flex-1 gap-2">
-
+        <div class="flex min-w-0 flex-1 items-end gap-2">
             <textarea
                 v-model="newCommentText"
                 :placeholder="
@@ -476,11 +480,19 @@ function onCommentDelete(
                         ? 'Write a reply...'
                         : 'Write a comment...'
                 "
-                rows="2"
+                :rows="
+                    parentComment
+                        ? 1
+                        : 2
+                "
                 maxlength="2000"
-                class="flex-1 resize-none rounded-md border-gray-300 bg-white text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500"
+                :class="[
+                    'min-w-0 flex-1 resize-none rounded-md border-gray-300 bg-white text-gray-900 placeholder:text-gray-400 focus:border-[var(--poet-accent)] focus:ring-[var(--poet-accent)] dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500',
+                    parentComment
+                        ? 'min-h-9 py-2 text-sm'
+                        : ''
+                ]"
             />
-
 
             <button
                 type="button"
@@ -489,7 +501,12 @@ function onCommentDelete(
                     commentPending ||
                     !newCommentText.trim()
                 "
-                class="flex h-10 w-10 shrink-0 items-center justify-center self-end rounded-full bg-[var(--poet-accent)] text-white transition hover:-translate-y-0.5 hover:shadow-md disabled:pointer-events-none disabled:opacity-40"
+                :class="[
+                    'flex shrink-0 items-center justify-center rounded-full bg-[var(--poet-accent)] text-white transition hover:-translate-y-0.5 hover:shadow-md disabled:pointer-events-none disabled:opacity-40',
+                    parentComment
+                        ? 'h-9 w-9'
+                        : 'h-10 w-10'
+                ]"
                 :aria-label="
                     commentPending
                         ? 'Posting comment'
@@ -497,151 +514,139 @@ function onCommentDelete(
                 "
             >
                 <PaperAirplaneIcon
-                    class="h-5 w-5"
+                    :class="
+                        parentComment
+                            ? 'h-4 w-4'
+                            : 'h-5 w-5'
+                    "
                 />
             </button>
-
         </div>
-
     </div>
-
 
     <!-- Comments -->
     <div
         v-if="comments.length"
         :class="[
-            'space-y-4',
+            'min-w-0 space-y-4',
             panelMode
-                ? 'comment-list order-1 min-h-0 flex-1 overflow-y-auto pr-1'
-                : ''
+                ? 'comment-list order-1 min-h-0 flex-1 overflow-x-hidden overflow-y-auto pr-1'
+                : parentComment
+                    ? 'order-1'
+                    : ''
         ]"
     >
-
-        <div
+        <Disclosure
             v-for="comment in comments"
             :key="comment.id"
+            as="div"
+            class="min-w-0"
         >
+            <div class="flex min-w-0 gap-2">
+                <img
+                    v-if="comment.user.avatar_url"
+                    :src="comment.user.avatar_url"
+                    :class="[
+                        'shrink-0 rounded-full object-cover',
+                        parentComment
+                            ? 'h-8 w-8'
+                            : 'h-10 w-10'
+                    ]"
+                    alt="User avatar"
+                />
 
-            <div class="flex justify-between gap-2">
-
-                <div class="flex gap-2 flex-1">
-
-                    <img
-                        v-if="comment.user.avatar_url"
-                        :src="comment.user.avatar_url"
-                        class="w-10 h-10 rounded-full object-cover"
-                        alt="User avatar"
-                    />
-
-
-                    <div class="flex-1">
-
-                        <div class="flex items-center gap-2">
-
-                            <strong>
+                <div class="min-w-0 flex-1">
+                    <div class="flex min-w-0 items-start justify-between gap-2">
+                        <div class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
+                            <strong class="break-words">
                                 {{ comment.user.name }}
                             </strong>
 
                             <small class="text-gray-400">
                                 {{ comment.updated_at }}
                             </small>
-
                         </div>
 
+                        <EditDeleteDropdown
+                            class="shrink-0"
+                            :user="comment.user"
+                            :post="post"
+                            :comment="comment"
+                            @edit="
+                                startCommentEdit(comment)
+                            "
+                            @delete="
+                                deleteComment(comment)
+                            "
+                        />
                     </div>
 
-                </div>
-
-
-                <EditDeleteDropdown
-                    :user="comment.user"
-                    :post="post"
-                    :comment="comment"  
-                    @edit="
-                        startCommentEdit(comment)
-                    "
-                    @delete="
-                        deleteComment(comment)
-                    "
-                />
-
-            </div>
-
-
-            <!-- Editing -->
-            <div
-                v-if="
-                    editingComment &&
-                    editingComment.id ===
-                        comment.id
-                "
-                class="ml-12 mt-2"
-            >
-
-                <textarea
-                    v-model="
-                        editingComment.comment
-                    "
-                    rows="2"
-                    maxlength="2000"
-                    class="w-full resize-none rounded-md border-gray-300 bg-white text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500"
-                />
-
-
-                <div
-                    class="flex justify-end gap-3 mt-2"
-                >
-
-                    <button
-                        type="button"
-                        @click="
-                            editingComment = null
-                        "
-                        class="text-gray-600 hover:underline dark:text-gray-300"
+                    <div
+                        v-if="parentComment"
+                        class="mt-0.5 text-[11px] text-[var(--poet-muted)]"
                     >
-                        Cancel
-                    </button>
+                        Replying to
+                        <span class="font-medium text-[var(--poet-accent)]">
+                            @{{ parentComment.user?.username || parentComment.user?.name }}
+                        </span>
+                    </div>
 
-
-                    <button
-                        type="button"
-                        @click="updateComment"
-                        :disabled="
-                            commentUpdatePending ||
-                            !editingComment
-                                .comment
-                                .trim()
+                    <div
+                        v-if="
+                            editingComment &&
+                            editingComment.id ===
+                                comment.id
                         "
-                        class="rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-500 disabled:opacity-50"
+                        class="mt-2 min-w-0"
                     >
-                        {{
-                            commentUpdatePending
-                                ? 'Updating...'
-                                : 'Update'
-                        }}
-                    </button>
+                        <textarea
+                            v-model="
+                                editingComment.comment
+                            "
+                            rows="2"
+                            maxlength="2000"
+                            class="w-full min-w-0 resize-none rounded-md border-gray-300 bg-white text-gray-900 placeholder:text-gray-400 focus:border-[var(--poet-accent)] focus:ring-[var(--poet-accent)] dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500"
+                        />
 
-                </div>
+                        <div class="mt-2 flex flex-wrap justify-end gap-3">
+                            <button
+                                type="button"
+                                @click="
+                                    editingComment = null
+                                "
+                                class="text-gray-600 hover:underline dark:text-gray-300"
+                            >
+                                Cancel
+                            </button>
 
-            </div>
+                            <button
+                                type="button"
+                                @click="updateComment"
+                                :disabled="
+                                    commentUpdatePending ||
+                                    !editingComment
+                                        .comment
+                                        .trim()
+                                "
+                                class="rounded-md bg-[var(--poet-accent)] px-3 py-1.5 text-sm text-white disabled:opacity-50"
+                            >
+                                {{
+                                    commentUpdatePending
+                                        ? 'Updating...'
+                                        : 'Update'
+                                }}
+                            </button>
+                        </div>
+                    </div>
 
+                    <p
+                        v-else
+                        class="mt-1 whitespace-pre-wrap break-words text-sm"
+                    >
+                        {{ comment.comment }}
+                    </p>
 
-            <!-- Normal text -->
-            <p
-                v-else
-                class="text-sm whitespace-pre-wrap ml-12"
-            >
-                {{ comment.comment }}
-            </p>
-
-
-            <div class="ml-12 mt-1">
-
-                <Disclosure>
-
-                    <div class="flex gap-2">
-
-                        <!-- Reaction -->
+                    <div class="mt-1 flex flex-wrap gap-1.5">
                         <button
                             type="button"
                             @click="
@@ -661,20 +666,14 @@ function onCommentDelete(
 
                                 reactingCommentId ===
                                     comment.id
-                                    ? 'opacity-50 cursor-wait'
+                                    ? 'cursor-wait opacity-50'
                                     : ''
                             ]"
                         >
-
-                            <HandThumbUpIcon
-                                class="w-3 h-3"
-                            />
+                            <HandThumbUpIcon class="h-3 w-3" />
 
                             <span>
-                                {{
-                                    comment.num_of_reactions
-                                    ?? 0
-                                }}
+                                {{ comment.num_of_reactions ?? 0 }}
                             </span>
 
                             {{
@@ -682,63 +681,44 @@ function onCommentDelete(
                                     ? 'Unlike'
                                     : 'Like'
                             }}
-
                         </button>
 
-
-                        <!-- Replies -->
                         <DisclosureButton
                             class="flex items-center gap-1 rounded px-2 py-1 text-xs text-indigo-600 hover:bg-indigo-50 dark:text-indigo-300 dark:hover:bg-indigo-950/40"
                         >
-
-                            <ChatBubbleLeftEllipsisIcon
-                                class="w-3 h-3"
-                            />
+                            <ChatBubbleLeftEllipsisIcon class="h-3 w-3" />
 
                             <span>
-                                {{
-                                    comment.num_of_comments
-                                    ?? 0
-                                }}
+                                {{ comment.num_of_comments ?? 0 }}
                             </span>
 
                             Replies
-
                         </DisclosureButton>
-
                     </div>
-
-
-                    <DisclosurePanel
-                        class="mt-3 ml-6"
-                    >
-
-                        <CommentList
-                            :post="post"
-                            :comments="
-                                comment.comments ?? []
-                            "
-                            :parent-comment="
-                                comment
-                            "
-                            @comment-create="
-                                onCommentCreate
-                            "
-                            @comment-delete="
-                                onCommentDelete
-                            "
-                        />
-
-                    </DisclosurePanel>
-
-                </Disclosure>
-
+                </div>
             </div>
 
-        </div>
-
+            <DisclosurePanel
+                class="mt-2 min-w-0"
+            >
+                <CommentList
+                    :post="post"
+                    :comments="
+                        comment.comments ?? []
+                    "
+                    :parent-comment="
+                        comment
+                    "
+                    @comment-create="
+                        onCommentCreate
+                    "
+                    @comment-delete="
+                        onCommentDelete
+                    "
+                />
+            </DisclosurePanel>
+        </Disclosure>
     </div>
-
 
     <div
         v-else-if="!parentComment"
@@ -751,6 +731,5 @@ function onCommentDelete(
     >
         No comments yet.
     </div>
-
 </div>
 </template>
