@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Notification;
 use App\Notifications\CommentDeleted;
 use App\Notifications\PostDeleted;
 use App\Models\Post;
+use App\Models\Group;
 use App\Models\PostAttachment;
 use Illuminate\Http\Request;
 use App\Http\Requests\StorePostRequest;
@@ -25,10 +26,271 @@ use App\Http\Requests\UpdateCommentRequest;
 
 class PostController extends Controller
 {
+    public function latestDraft(
+        Request $request
+    ) {
+        $data = $request->validate([
+            'type' => [
+                'required',
+                Rule::in([
+                    'post',
+                    'poem',
+                ]),
+            ],
+            'group_id' => [
+                'nullable',
+                'integer',
+                'exists:groups,id',
+            ],
+        ]);
+
+        $draft = Post::query()
+            ->where(
+                'user_id',
+                $request->user()->id
+            )
+            ->where(
+                'status',
+                'draft'
+            )
+            ->where(
+                'type',
+                $data['type']
+            )
+            ->when(
+                $data['group_id'] ?? null,
+                fn ($query, $groupId) =>
+                    $query->where(
+                        'group_id',
+                        $groupId
+                    ),
+                fn ($query) =>
+                    $query->whereNull(
+                        'group_id'
+                    )
+            )
+            ->latest('draft_saved_at')
+            ->first();
+
+        return response()->json([
+            'draft' =>
+                $draft
+                    ? [
+                        'id' => $draft->id,
+                        'type' => $draft->type,
+                        'title' => $draft->title,
+                        'caption' => $draft->caption,
+                        'hashtags' =>
+                            $draft->hashtags ?? [],
+                        'body' => $draft->body,
+                        'group_id' =>
+                            $draft->group_id,
+                        'draft_saved_at' =>
+                            $draft->draft_saved_at
+                                ?->toISOString(),
+                    ]
+                    : null,
+        ]);
+    }
+
+    public function storeDraft(
+        Request $request
+    ) {
+        $data =
+            $this->validateDraft(
+                $request
+            );
+
+        $draft = Post::create([
+            ...$data,
+            'user_id' =>
+                $request->user()->id,
+            'status' => 'draft',
+            'draft_saved_at' => now(),
+        ]);
+
+        return response()->json([
+            'draft' => [
+                'id' => $draft->id,
+                'draft_saved_at' =>
+                    $draft->draft_saved_at
+                        ?->toISOString(),
+            ],
+        ], 201);
+    }
+
+    public function updateDraft(
+        Request $request,
+        Post $post
+    ) {
+        if (
+            $post->user_id !==
+                $request->user()->id ||
+            $post->status !== 'draft'
+        ) {
+            abort(
+                403,
+                "You don't have permission to edit this draft."
+            );
+        }
+
+        $data =
+            $this->validateDraft(
+                $request
+            );
+
+        $post->update([
+            ...$data,
+            'draft_saved_at' => now(),
+        ]);
+
+        return response()->json([
+            'draft' => [
+                'id' => $post->id,
+                'draft_saved_at' =>
+                    $post->draft_saved_at
+                        ?->toISOString(),
+            ],
+        ]);
+    }
+
+    private function validateDraft(
+        Request $request
+    ): array {
+        $data = $request->validate([
+            'type' => [
+                'required',
+                Rule::in([
+                    'post',
+                    'poem',
+                ]),
+            ],
+            'title' => [
+                'nullable',
+                'string',
+                'max:160',
+            ],
+            'caption' => [
+                'nullable',
+                'string',
+                'max:500',
+            ],
+            'hashtags' => [
+                'nullable',
+                'array',
+                'max:10',
+            ],
+            'hashtags.*' => [
+                'string',
+                'max:50',
+                'regex:/^[\\pL\\pN_]+$/u',
+            ],
+            'body' => [
+                'nullable',
+                'string',
+            ],
+            'group_id' => [
+                'nullable',
+                'integer',
+                'exists:groups,id',
+            ],
+        ]);
+
+        if ($groupId =
+            $data['group_id'] ?? null) {
+            $group =
+                Group::findOrFail(
+                    $groupId
+                );
+
+            if (
+                !$group->hasApprovedUser(
+                    $request->user()->id
+                )
+            ) {
+                abort(
+                    403,
+                    "You don't have permission to create drafts in this group."
+                );
+            }
+        }
+
+        if (
+            $data['type'] !== 'poem'
+        ) {
+            $data['title'] = null;
+            $data['caption'] = null;
+        }
+
+        $data['hashtags'] =
+            $data['hashtags'] ?? [];
+
+        return $data;
+    }
+
+    private function notifyPostPublished(
+        Post $post,
+        $user
+    ): void {
+        $group =
+            $post->group;
+
+        if ($group) {
+            $users =
+                $group
+                    ->approvedUsers()
+                    ->where(
+                        'users.id',
+                        '!=',
+                        $user->id
+                    )
+                    ->get();
+
+            Notification::send(
+                $users,
+                new PostCreated(
+                    $post,
+                    $user,
+                    $group
+                )
+            );
+
+            return;
+        }
+
+        $followers =
+            $user
+                ->followers()
+                ->get();
+
+        Notification::send(
+            $followers,
+            new PostCreated(
+                $post,
+                $user
+            )
+        );
+    }
+
+    private function ensurePublished(
+        Post $post
+    ): void {
+        if (
+            $post->status !==
+                'published'
+        ) {
+            abort(404);
+        }
+    }
+
     public function pinUnpin(
         Request $request,
         Post $post
     ) {
+        $this->ensurePublished(
+            $post
+        );
+
         $user = $request->user();
 
         $data = $request->validate([
@@ -144,6 +406,10 @@ class PostController extends Controller
 
         unset($data['attachments']);
 
+        $data['status'] = 'published';
+        $data['published_at'] = now();
+        $data['draft_saved_at'] = null;
+
 
         DB::beginTransaction();
 
@@ -210,45 +476,10 @@ class PostController extends Controller
             throw $exception;
         }
 
-        $group =
-            $post->group;
-
-        if ($group) {
-
-            $users =
-                $group
-                    ->approvedUsers()
-                    ->where(
-                        'users.id',
-                        '!=',
-                        $user->id
-                    )
-                    ->get();
-
-            Notification::send(
-                $users,
-                new PostCreated(
-                    $post,
-                    $user,
-                    $group
-                )
-            );
-
-        } else {
-
-            $followers =
-                $user
-                    ->followers()
-                    ->get();
-
-            Notification::send(
-                $followers,
-                new PostCreated(
-                    $post,
-                    $user
-                )
-            );
-        }
+        $this->notifyPostPublished(
+            $post,
+            $user
+        );
 
         return back();
     }
@@ -261,6 +492,9 @@ class PostController extends Controller
         $data = $request->validated();
 
         $user = $request->user();
+
+        $wasDraft =
+            $post->status === 'draft';
 
         $files = $data['attachments'] ?? [];
 
@@ -296,6 +530,12 @@ class PostController extends Controller
                 'hashtags' =>
                     $data['hashtags'] ?? [],
                 'body' => $data['body'] ?? null,
+                'status' => 'published',
+                'published_at' =>
+                    $wasDraft
+                        ? now()
+                        : $post->published_at,
+                'draft_saved_at' => null,
             ]);
 
 
@@ -362,6 +602,13 @@ class PostController extends Controller
             throw $exception;
         }
 
+        if ($wasDraft) {
+            $this->notifyPostPublished(
+                $post,
+                $user
+            );
+        }
+
         return back();
     }
 
@@ -373,6 +620,13 @@ class PostController extends Controller
         Post $post
     ) {
         $userId = $request->user()->id;
+
+        if (
+            $post->status === 'draft' &&
+            $post->user_id !== $userId
+        ) {
+            abort(404);
+        }
 
         $isOwner =
             $post->user_id === $userId;
@@ -426,6 +680,10 @@ class PostController extends Controller
         Request $request,
         Post $post
     ) {
+        $this->ensurePublished(
+            $post
+        );
+
         $data = $request->validate([
             'reaction' => [
                 'required',
@@ -557,6 +815,10 @@ class PostController extends Controller
         Request $request,
         Post $post
     ) {
+        $this->ensurePublished(
+            $post
+        );
+
         $data = $request->validate([
             'comment' => [
                 'required',

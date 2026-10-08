@@ -28,6 +28,21 @@ Route::middleware('auth')->group(function () {
         [\App\Http\Controllers\PostController::class, 'store']
     )->name('post.create');
 
+    Route::get(
+        '/drafts/latest',
+        [\App\Http\Controllers\PostController::class, 'latestDraft']
+    )->name('draft.latest');
+
+    Route::post(
+        '/drafts',
+        [\App\Http\Controllers\PostController::class, 'storeDraft']
+    )->name('draft.store');
+
+    Route::put(
+        '/drafts/{post}',
+        [\App\Http\Controllers\PostController::class, 'updateDraft']
+    )->name('draft.update');
+
     Route::put(
         '/posts/{post}',
         [\App\Http\Controllers\PostController::class, 'update']

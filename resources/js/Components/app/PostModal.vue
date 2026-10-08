@@ -53,7 +53,13 @@
                                     class="flex items-center justify-between py-3 px-4 font-medium bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-gray-100"
                                 >
 
-                                    {{ form.id ? 'Update Post' : 'Create Post' }}
+                                    {{
+                                        form.id
+                                            ? 'Update Post'
+                                            : form.type === 'poem'
+                                                ? 'Write Poem'
+                                                : 'Create Post'
+                                    }}
 
                                     <button
                                         @click="closeModal"
@@ -85,7 +91,7 @@
                                     <div class="mb-4 flex rounded-lg bg-gray-100 p-1 dark:bg-gray-700">
                                         <button
                                             type="button"
-                                            @click="form.type = 'post'"
+                                            @click="chooseType('post')"
                                             :class="[
                                                 'flex-1 rounded-md px-3 py-2 text-sm font-medium transition',
                                                 form.type === 'post'
@@ -98,7 +104,7 @@
 
                                         <button
                                             type="button"
-                                            @click="form.type = 'poem'"
+                                            @click="chooseType('poem')"
                                             :class="[
                                                 'flex-1 rounded-md px-3 py-2 text-sm font-medium transition',
                                                 form.type === 'poem'
@@ -108,6 +114,44 @@
                                         >
                                             Poem
                                         </button>
+                                    </div>
+
+                                    <div
+                                        v-if="
+                                            form.type === 'poem' &&
+                                            !form.id
+                                        "
+                                        class="mb-3 flex items-center justify-between text-xs text-gray-400"
+                                    >
+                                        <span>
+                                            {{
+                                                draftState === 'saving'
+                                                    ? 'Saving draft...'
+                                                    : draftState === 'saved'
+                                                        ? 'Draft saved'
+                                                        : draftState === 'restored'
+                                                            ? 'Draft restored'
+                                                            : draftState === 'error'
+                                                                ? 'Draft save failed'
+                                                                : 'Draft autosave on'
+                                            }}
+                                        </span>
+
+                                        <span
+                                            v-if="draftSavedAt"
+                                        >
+                                            {{
+                                                new Date(
+                                                    draftSavedAt
+                                                ).toLocaleTimeString(
+                                                    [],
+                                                    {
+                                                        hour: '2-digit',
+                                                        minute: '2-digit'
+                                                    }
+                                                )
+                                            }}
+                                        </span>
                                     </div>
 
                                     <div
@@ -355,6 +399,7 @@
 
 import {
     computed,
+    onBeforeUnmount,
     ref,
     watch
 } from 'vue';
@@ -382,6 +427,7 @@ import {
 import TiptapEditor from '@/Components/app/TiptapEditor.vue';
 import PostUserHeader from '@/Components/app/PostUserHeader.vue';
 import { isImage } from '@/helpers.js';
+import axios from 'axios';
 
 const props = defineProps({
 
@@ -409,6 +455,13 @@ const emit = defineEmits([
 const attachmentFiles = ref([]);
 const attachmentErrors = ref([]);
 const hashtagsInput = ref('');
+
+const draftId = ref(null);
+const draftState = ref('idle');
+const draftSavedAt = ref(null);
+const draftLoadAttempted = ref(false);
+
+let draftSaveTimer = null;
 
 const showExtensionsText = computed(() => {
 
@@ -480,6 +533,11 @@ watch(
 
         form.id = post.id ?? null;
         form.type = post.type ?? 'post';
+
+        draftId.value = null;
+        draftState.value = 'idle';
+        draftSavedAt.value = null;
+        draftLoadAttempted.value = false;
         form.title = post.title ?? '';
         form.caption = post.caption ?? '';
         form.hashtags = post.hashtags ?? [];
@@ -511,8 +569,20 @@ watch(
 function closeModal() {
     show.value = false;
 
+    if (draftSaveTimer) {
+        clearTimeout(
+            draftSaveTimer
+        );
+
+        draftSaveTimer = null;
+    }
+
     form.reset();
     form.type = 'post';
+    draftId.value = null;
+    draftState.value = 'idle';
+    draftSavedAt.value = null;
+    draftLoadAttempted.value = false;
     hashtagsInput.value = '';
     attachmentFiles.value = [];
     attachmentErrors.value = [];
@@ -618,6 +688,223 @@ function processErrors(errors) {
     }
 }
 
+function hasDraftContent() {
+    const bodyText =
+        (form.body ?? '')
+            .replace(/<[^>]*>/g, '')
+            .replace(/&nbsp;/g, ' ')
+            .trim();
+
+    return Boolean(
+        form.title?.trim() ||
+        form.caption?.trim() ||
+        bodyText ||
+        hashtagsInput.value.trim()
+    );
+}
+
+function draftPayload() {
+    return {
+        type: form.type,
+        title:
+            form.type === 'poem'
+                ? form.title
+                : null,
+        caption:
+            form.type === 'poem'
+                ? form.caption
+                : null,
+        hashtags:
+            normalizeHashtags(
+                hashtagsInput.value
+            ),
+        body: form.body,
+        group_id:
+            props.group?.id
+            ?? form.group_id
+            ?? null
+    };
+}
+
+async function loadLatestDraft() {
+    if (
+        form.id ||
+        draftLoadAttempted.value ||
+        form.type !== 'poem' ||
+        hasDraftContent()
+    ) {
+        return;
+    }
+
+    draftLoadAttempted.value = true;
+
+    try {
+        const { data } =
+            await axios.get(
+                route(
+                    'draft.latest'
+                ),
+                {
+                    params: {
+                        type: 'poem',
+                        group_id:
+                            props.group?.id
+                            ?? null
+                    }
+                }
+            );
+
+        if (!data.draft) {
+            return;
+        }
+
+        draftId.value =
+            data.draft.id;
+
+        form.title =
+            data.draft.title ?? '';
+
+        form.caption =
+            data.draft.caption ?? '';
+
+        form.body =
+            data.draft.body ?? '';
+
+        form.group_id =
+            data.draft.group_id ?? null;
+
+        form.hashtags =
+            data.draft.hashtags ?? [];
+
+        hashtagsInput.value =
+            form.hashtags
+                .map(tag => `#${tag}`)
+                .join(' ');
+
+        draftSavedAt.value =
+            data.draft.draft_saved_at;
+
+        draftState.value =
+            'restored';
+
+    } catch (error) {
+        console.error(
+            'Failed to restore draft:',
+            error
+        );
+    }
+}
+
+async function saveDraft() {
+    if (
+        form.id ||
+        form.type !== 'poem' ||
+        !show.value ||
+        !hasDraftContent()
+    ) {
+        return;
+    }
+
+    draftState.value =
+        'saving';
+
+    const payload =
+        draftPayload();
+
+    try {
+        const request =
+            draftId.value
+                ? axios.put(
+                    route(
+                        'draft.update',
+                        draftId.value
+                    ),
+                    payload
+                )
+                : axios.post(
+                    route(
+                        'draft.store'
+                    ),
+                    payload
+                );
+
+        const { data } =
+            await request;
+
+        draftId.value =
+            data.draft.id;
+
+        draftSavedAt.value =
+            data.draft
+                .draft_saved_at;
+
+        draftState.value =
+            'saved';
+
+    } catch (error) {
+        draftState.value =
+            'error';
+
+        console.error(
+            'Failed to autosave draft:',
+            error
+        );
+    }
+}
+
+function scheduleDraftSave() {
+    if (
+        form.id ||
+        form.type !== 'poem' ||
+        !show.value
+    ) {
+        return;
+    }
+
+    if (draftSaveTimer) {
+        clearTimeout(
+            draftSaveTimer
+        );
+    }
+
+    draftSaveTimer =
+        setTimeout(
+            saveDraft,
+            1200
+        );
+}
+
+async function chooseType(type) {
+    form.type = type;
+
+    if (
+        type === 'poem'
+    ) {
+        await loadLatestDraft();
+    }
+}
+
+watch(
+    [
+        () => form.type,
+        () => form.title,
+        () => form.caption,
+        () => form.body,
+        hashtagsInput
+    ],
+    () => {
+        scheduleDraftSave();
+    }
+);
+
+onBeforeUnmount(() => {
+    if (draftSaveTimer) {
+        clearTimeout(
+            draftSaveTimer
+        );
+    }
+});
+
 function normalizeHashtags(value) {
     const seen = new Set();
 
@@ -671,6 +958,7 @@ function submit() {
         forceFormData: true,
 
         onSuccess: () => {
+            draftId.value = null;
             closeModal();
         },
 
@@ -680,12 +968,19 @@ function submit() {
     };
 
 
-    if (form.id) {
+    if (
+        form.id ||
+        draftId.value
+    ) {
 
         form._method = 'PUT';
 
         form.post(
-            route('post.update', form.id),
+            route(
+                'post.update',
+                form.id ??
+                    draftId.value
+            ),
             options
         );
 

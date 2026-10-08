@@ -23,12 +23,17 @@ class Post extends Model
         'title',
         'caption',
         'hashtags',
+        'status',
+        'published_at',
+        'draft_saved_at',
     ];
 
     protected function casts(): array
     {
         return [
             'hashtags' => 'array',
+            'published_at' => 'datetime',
+            'draft_saved_at' => 'datetime',
         ];
     }
 
@@ -65,6 +70,10 @@ class Post extends Model
         int $userId
     ): Builder {
         return static::query()
+            ->where(
+                'posts.status',
+                'published'
+            )
 
             /*
             * Normal posts are visible.
