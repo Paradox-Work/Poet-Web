@@ -51,6 +51,24 @@ const sourceOptions = [
     }
 ];
 
+const activeSourceIndex =
+    computed(() =>
+        Math.max(
+            0,
+            sourceOptions.findIndex(
+                source =>
+                    source.value ===
+                    props.feedFilters.source
+            )
+        )
+    );
+
+const sourceIndicatorStyle =
+    computed(() => ({
+        left:
+            `calc(${activeSourceIndex.value * 25}% + 12.5% - 1.25rem)`
+    }));
+
 const publicationWord =
     computed(() => {
         if (
@@ -165,7 +183,7 @@ function changeSource(source) {
             class="h-full overflow-hidden bg-[var(--poet-bg)]"
         >
             <section
-                class="mx-auto flex h-full max-w-[1560px] flex-col px-4 pb-3 pt-3 sm:px-6 lg:px-8"
+                class="mx-auto flex h-full max-w-[1560px] flex-col px-4 pb-3 pt-6 sm:px-6 lg:px-8"
             >
                 <div
                     class="flex shrink-0 items-end justify-between gap-6 px-[2%] lg:px-[7%]"
@@ -200,7 +218,7 @@ function changeSource(source) {
                             id="feed-type"
                             :value="feedFilters.feed"
                             @change="changeFeed"
-                            class="rounded-full border border-[var(--poet-border)] bg-[var(--poet-surface)] py-2 pl-3 pr-9 text-sm font-medium text-[var(--poet-text)] shadow-sm transition hover:border-[var(--poet-border-strong)] focus:border-[var(--poet-accent)] focus:ring-[var(--poet-accent)]"
+                            class="w-32 rounded-full border border-[var(--poet-border)] bg-[var(--poet-surface)] py-2 pl-3 pr-9 text-sm font-medium text-[var(--poet-text)] shadow-sm transition hover:border-[var(--poet-border-strong)] focus:border-[var(--poet-accent)] focus:ring-[var(--poet-accent)]"
                         >
                             <option value="poems">
                                 Poems
@@ -233,7 +251,7 @@ function changeSource(source) {
                                 'posts'
                             "
                             @change="changeGenre"
-                            class="max-w-[220px] rounded-full border border-[var(--poet-border)] bg-[var(--poet-surface)] py-2 pl-3 pr-9 text-sm text-[var(--poet-text)] shadow-sm transition hover:border-[var(--poet-border-strong)] focus:border-[var(--poet-accent)] focus:ring-[var(--poet-accent)] disabled:cursor-not-allowed disabled:opacity-40"
+                            class="w-44 rounded-full border border-[var(--poet-border)] bg-[var(--poet-surface)] py-2 pl-3 pr-9 text-sm text-[var(--poet-text)] shadow-sm transition hover:border-[var(--poet-border-strong)] focus:border-[var(--poet-accent)] focus:ring-[var(--poet-accent)] disabled:cursor-not-allowed disabled:opacity-40"
                         >
                             <option value="">
                                 All genres
@@ -257,7 +275,7 @@ function changeSource(source) {
                     aria-label="Feed source"
                 >
                     <div
-                        class="flex items-center gap-7 sm:gap-10"
+                        class="relative grid w-full max-w-sm grid-cols-4"
                     >
                         <button
                             v-for="source in sourceOptions"
@@ -269,22 +287,20 @@ function changeSource(source) {
                                 )
                             "
                             :class="[
-                                'relative pb-2 text-sm font-medium transition',
+                                'pb-2 text-sm font-medium transition-colors duration-200',
                                 feedFilters.source === source.value
                                     ? 'text-[var(--poet-text)]'
                                     : 'text-[var(--poet-muted)] hover:text-[var(--poet-text)]'
                             ]"
                         >
                             {{ source.label }}
-
-                            <span
-                                v-if="
-                                    feedFilters.source ===
-                                    source.value
-                                "
-                                class="absolute inset-x-1 -bottom-px h-0.5 rounded-full bg-[var(--poet-accent)]"
-                            />
                         </button>
+
+                        <span
+                            class="pointer-events-none absolute bottom-0 h-0.5 w-10 rounded-full bg-[var(--poet-accent)] transition-[left] duration-300 ease-out"
+                            :style="sourceIndicatorStyle"
+                            aria-hidden="true"
+                        />
                     </div>
                 </nav>
 

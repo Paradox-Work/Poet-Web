@@ -592,7 +592,8 @@ function removePost(postId) {
                         <div
                             v-else
                             key="empty-previous"
-                            class="mx-auto h-[min(46vh,430px)] w-full rounded-2xl border border-dashed border-[var(--poet-border)] opacity-20"
+                            class="h-[min(46vh,430px)] w-full"
+                            aria-hidden="true"
                         />
                     </Transition>
                 </div>
@@ -662,7 +663,8 @@ function removePost(postId) {
                         <div
                             v-else
                             key="empty-next"
-                            class="mx-auto h-[min(46vh,430px)] w-full rounded-2xl border border-dashed border-[var(--poet-border)] opacity-20"
+                            class="h-[min(46vh,430px)] w-full"
+                            aria-hidden="true"
                         />
                     </Transition>
                 </div>
