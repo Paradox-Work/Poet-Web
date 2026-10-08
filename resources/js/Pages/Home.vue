@@ -22,10 +22,10 @@ defineProps({
             class="h-full overflow-hidden bg-[var(--poet-bg)]"
         >
             <section
-                class="mx-auto flex h-full max-w-5xl flex-col px-4 pb-4 pt-4 sm:px-6 lg:px-8"
+                class="mx-auto flex h-full max-w-[1560px] flex-col px-4 pb-3 pt-3 sm:px-6 lg:px-8"
             >
                 <div
-                    class="mb-2 flex shrink-0 items-end justify-between px-[7%]"
+                    class="flex shrink-0 items-end justify-between px-[2%] lg:px-[7%]"
                 >
                     <div>
                         <div

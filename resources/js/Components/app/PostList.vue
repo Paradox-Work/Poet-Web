@@ -1,6 +1,6 @@
 <script setup>
 import {
-    nextTick,
+    computed,
     onBeforeUnmount,
     onMounted,
     reactive,
@@ -46,8 +46,8 @@ const feedState = reactive({
 const loadingMore = ref(false);
 const loadMoreIntersect = ref(null);
 const postListContainer = ref(null);
-const deckTrack = ref(null);
 const activeIndex = ref(0);
+const deckTransitionName = ref('deck-next');
 
 let observer = null;
 let wheelLocked = false;
@@ -63,6 +63,42 @@ const previewAttachmentsPost = ref({
     post: null,
     index: 0
 });
+
+const activePost = computed(() =>
+    feedState.posts[
+        activeIndex.value
+    ] ?? null
+);
+
+const previousPreview = computed(() =>
+    activeIndex.value > 0
+        ? feedState.posts[
+            activeIndex.value - 1
+        ]
+        : null
+);
+
+const nextPreview = computed(() =>
+    activeIndex.value <
+        feedState.posts.length - 1
+        ? feedState.posts[
+            activeIndex.value + 1
+        ]
+        : null
+);
+
+const canGoPrevious = computed(
+    () => activeIndex.value > 0
+);
+
+const canGoNext = computed(
+    () =>
+        activeIndex.value <
+            feedState.posts.length - 1 ||
+        Boolean(
+            feedState.nextPageUrl
+        )
+);
 
 function openEditModal(post) {
     editPost.value = post;
@@ -86,7 +122,7 @@ async function loadMore() {
         !feedState.nextPageUrl ||
         loadingMore.value
     ) {
-        return;
+        return false;
     }
 
     loadingMore.value = true;
@@ -130,11 +166,15 @@ async function loadMore() {
         feedState.loadedBeyondFirstPage =
             true;
 
+        return newPosts.length > 0;
+
     } catch (error) {
         console.error(
             'Failed to load more posts:',
             error
         );
+
+        return false;
 
     } finally {
         loadingMore.value = false;
@@ -205,122 +245,73 @@ watch(
     }
 );
 
-function deckCards() {
-    return Array.from(
-        deckTrack.value
-            ?.querySelectorAll(
-                '[data-deck-card]'
-            )
-        ?? []
-    );
-}
-
-function scrollToDeckIndex(
+function goToIndex(
     index,
-    behavior = 'smooth'
+    direction
 ) {
-    const cards =
-        deckCards();
-
-    if (!cards.length) {
+    if (
+        index < 0 ||
+        index >= feedState.posts.length
+    ) {
         return;
     }
 
-    const nextIndex =
-        Math.max(
-            0,
-            Math.min(
-                index,
-                cards.length - 1
-            )
-        );
+    deckTransitionName.value =
+        direction === 'previous'
+            ? 'deck-previous'
+            : 'deck-next';
 
     activeIndex.value =
-        nextIndex;
-
-    cards[nextIndex]
-        ?.scrollIntoView({
-            behavior,
-            block: 'nearest',
-            inline: 'center'
-        });
+        index;
 
     if (
-        nextIndex >=
+        index >=
             feedState.posts.length - 2
     ) {
         loadMore();
     }
 }
 
-function nextPost() {
-    scrollToDeckIndex(
-        activeIndex.value + 1
-    );
+async function nextPost() {
+    const nextIndex =
+        activeIndex.value + 1;
+
+    if (
+        nextIndex <
+        feedState.posts.length
+    ) {
+        goToIndex(
+            nextIndex,
+            'next'
+        );
+
+        return;
+    }
+
+    if (
+        feedState.nextPageUrl
+    ) {
+        const loaded =
+            await loadMore();
+
+        if (
+            loaded &&
+            activeIndex.value + 1 <
+                feedState.posts.length
+        ) {
+            goToIndex(
+                activeIndex.value + 1,
+                'next'
+            );
+        }
+    }
 }
 
 function previousPost() {
-    scrollToDeckIndex(
-        activeIndex.value - 1
+    goToIndex(
+        activeIndex.value - 1,
+        'previous'
     );
-}
-
-function syncDeckIndex() {
-    const track =
-        deckTrack.value;
-
-    const cards =
-        deckCards();
-
-    if (
-        !track ||
-        !cards.length
-    ) {
-        return;
-    }
-
-    const center =
-        track.scrollLeft +
-        track.clientWidth / 2;
-
-    let nearest = 0;
-    let nearestDistance =
-        Number.POSITIVE_INFINITY;
-
-    cards.forEach(
-        (card, index) => {
-            const cardCenter =
-                card.offsetLeft +
-                card.offsetWidth / 2;
-
-            const distance =
-                Math.abs(
-                    cardCenter -
-                    center
-                );
-
-            if (
-                distance <
-                nearestDistance
-            ) {
-                nearestDistance =
-                    distance;
-
-                nearest =
-                    index;
-            }
-        }
-    );
-
-    activeIndex.value =
-        nearest;
-
-    if (
-        nearest >=
-            feedState.posts.length - 2
-    ) {
-        loadMore();
-    }
 }
 
 function onDeckWheel(event) {
@@ -336,10 +327,8 @@ function onDeckWheel(event) {
     }
 
     if (
-        Math.abs(event.deltaY) <
-            8 &&
-        Math.abs(event.deltaX) <
-            8
+        Math.abs(event.deltaY) < 8 &&
+        Math.abs(event.deltaX) < 8
     ) {
         return;
     }
@@ -372,7 +361,7 @@ function onDeckWheel(event) {
         () => {
             wheelLocked = false;
         },
-        420
+        380
     );
 }
 
@@ -487,18 +476,6 @@ onMounted(() => {
             );
         }
     }
-
-    if (
-        props.mode === 'deck'
-    ) {
-        nextTick(
-            () =>
-                scrollToDeckIndex(
-                    0,
-                    'auto'
-                )
-        );
-    }
 });
 
 onBeforeUnmount(() => {
@@ -533,6 +510,8 @@ function handlePinChanged({
             )
         ];
 
+        activeIndex.value = 0;
+
         return;
     }
 
@@ -545,55 +524,44 @@ function handlePinChanged({
                     String(a.created_at)
                 )
     );
+
+    activeIndex.value =
+        Math.min(
+            activeIndex.value,
+            Math.max(
+                0,
+                feedState.posts.length - 1
+            )
+        );
 }
 
 function removePost(postId) {
-    const removedIndex =
-        feedState.posts.findIndex(
-            post =>
-                post.id === postId
-        );
-
     feedState.posts =
         feedState.posts.filter(
             post =>
                 post.id !== postId
         );
 
-    if (
-        props.mode === 'deck'
-    ) {
-        activeIndex.value =
-            Math.max(
-                0,
-                Math.min(
-                    activeIndex.value,
-                    feedState.posts.length - 1
-                )
-            );
-
-        nextTick(
-            () =>
-                scrollToDeckIndex(
-                    activeIndex.value,
-                    'auto'
-                )
+    activeIndex.value =
+        Math.max(
+            0,
+            Math.min(
+                activeIndex.value,
+                feedState.posts.length - 1
+            )
         );
-    }
 }
 </script>
 
 <template>
     <div
         v-if="mode === 'deck'"
-        class="relative"
+        class="flex h-full min-h-0 flex-col"
     >
         <div
             v-if="feedState.posts.length"
-            ref="deckTrack"
-            class="scrollbar-hidden flex snap-x snap-mandatory gap-5 overflow-x-auto overscroll-x-contain px-[7%] py-3"
+            class="flex min-h-0 flex-1 items-center"
             tabindex="0"
-            @scroll.passive="syncDeckIndex"
             @wheel="onDeckWheel"
             @pointerdown="onPointerDown"
             @pointermove="onPointerMove"
@@ -601,100 +569,136 @@ function removePost(postId) {
             @pointercancel="onPointerUp"
         >
             <div
-                v-for="(post, index) in feedState.posts"
-                :key="post.id"
-                data-deck-card
-                class="w-[86%] shrink-0 snap-center sm:w-[78%] lg:w-[72%]"
-                :class="
-                    index === activeIndex
-                        ? 'opacity-100'
-                        : 'opacity-60'
-                "
+                class="mx-auto grid w-full max-w-[1480px] items-center gap-5 px-2 lg:grid-cols-[minmax(190px,0.72fr)_minmax(480px,1.45fr)_minmax(190px,0.72fr)] xl:gap-8"
             >
                 <div
-                    class="transition duration-300"
-                    :class="[
-                        index === activeIndex
-                            ? 'scale-100'
-                            : 'scale-[0.965]',
-                        index === activeIndex
-                            ? ''
-                            : 'pointer-events-none'
-                    ]"
+                    class="hidden min-w-0 lg:block"
                 >
-                    <PostItem
-                        :post="post"
-                        :deck-navigation="
-                            index === activeIndex
-                        "
-                        :deck-preview="
-                            index !== activeIndex
-                        "
-                        :can-go-previous="
-                            activeIndex > 0
-                        "
-                        :can-go-next="
-                            activeIndex <
-                                feedState.posts.length - 1 ||
-                            Boolean(
-                                feedState.nextPageUrl
-                            )
-                        "
-                        @previous="
-                            previousPost
-                        "
-                        @next="
-                            nextPost
-                        "
-                        @editClick="
-                            openEditModal
-                        "
-                        @attachmentClick="
-                            openAttachmentPreviewModal
-                        "
-                        @deleted="
-                            removePost
-                        "
-                        @pinChanged="
-                            handlePinChanged
-                        "
-                    />
+                    <Transition
+                        name="preview-fade"
+                        mode="out-in"
+                    >
+                        <div
+                            v-if="previousPreview"
+                            :key="previousPreview.id"
+                            class="pointer-events-none opacity-55"
+                        >
+                            <PostItem
+                                :post="previousPreview"
+                                deck-preview
+                            />
+                        </div>
+
+                        <div
+                            v-else
+                            key="empty-previous"
+                            class="mx-auto h-[min(46vh,430px)] w-full rounded-2xl border border-dashed border-[var(--poet-border)] opacity-20"
+                        />
+                    </Transition>
+                </div>
+
+                <div
+                    class="min-w-0"
+                >
+                    <Transition
+                        :name="deckTransitionName"
+                        mode="out-in"
+                    >
+                        <div
+                            v-if="activePost"
+                            :key="activePost.id"
+                            class="mx-auto max-h-[calc(100vh-185px)] w-full overflow-y-auto rounded-2xl scrollbar-hidden"
+                        >
+                            <PostItem
+                                :post="activePost"
+                                deck-navigation
+                                :can-go-previous="
+                                    canGoPrevious
+                                "
+                                :can-go-next="
+                                    canGoNext
+                                "
+                                @previous="
+                                    previousPost
+                                "
+                                @next="
+                                    nextPost
+                                "
+                                @editClick="
+                                    openEditModal
+                                "
+                                @attachmentClick="
+                                    openAttachmentPreviewModal
+                                "
+                                @deleted="
+                                    removePost
+                                "
+                                @pinChanged="
+                                    handlePinChanged
+                                "
+                            />
+                        </div>
+                    </Transition>
+                </div>
+
+                <div
+                    class="hidden min-w-0 lg:block"
+                >
+                    <Transition
+                        name="preview-fade"
+                        mode="out-in"
+                    >
+                        <div
+                            v-if="nextPreview"
+                            :key="nextPreview.id"
+                            class="pointer-events-none opacity-55"
+                        >
+                            <PostItem
+                                :post="nextPreview"
+                                deck-preview
+                            />
+                        </div>
+
+                        <div
+                            v-else
+                            key="empty-next"
+                            class="mx-auto h-[min(46vh,430px)] w-full rounded-2xl border border-dashed border-[var(--poet-border)] opacity-20"
+                        />
+                    </Transition>
                 </div>
             </div>
         </div>
 
         <div
             v-else
-            class="rounded-2xl border border-dashed border-[var(--poet-border)] bg-[var(--poet-surface)] px-6 py-16 text-center text-sm text-[var(--poet-muted)]"
+            class="m-auto rounded-2xl border border-dashed border-[var(--poet-border)] bg-[var(--poet-surface)] px-6 py-16 text-center text-sm text-[var(--poet-muted)]"
         >
             Nothing in your feed yet.
         </div>
 
-        <template
+        <div
             v-if="feedState.posts.length"
+            class="shrink-0 pb-1 pt-2 text-center text-xs text-[var(--poet-muted)]"
         >
-            <div
-                class="mt-2 flex items-center justify-center gap-3 text-xs text-[var(--poet-muted)]"
+            <span>
+                {{ activeIndex + 1 }}
+                /
+                {{ feedState.posts.length }}
+            </span>
+
+            <span
+                class="ml-3 hidden sm:inline"
             >
-                <span>
-                    {{ activeIndex + 1 }}
-                    /
-                    {{ feedState.posts.length }}
-                </span>
+                swipe · wheel · arrow keys
+            </span>
 
-                <span
-                    class="hidden sm:inline"
-                >
-                    swipe · wheel · arrow keys
-                </span>
-
-                <span
-                    v-if="loadingMore"
-                >
-                    loading more…
-                </span>
-            </div>
-        </template>
+            <span
+                v-if="loadingMore"
+                class="ml-3"
+            >
+                loading more…
+            </span>
+        </div>
 
         <PostModal
             :post="editPost"
@@ -775,3 +779,50 @@ function removePost(postId) {
         />
     </div>
 </template>
+
+<style scoped>
+.deck-next-enter-active,
+.deck-next-leave-active,
+.deck-previous-enter-active,
+.deck-previous-leave-active,
+.preview-fade-enter-active,
+.preview-fade-leave-active {
+    transition:
+        opacity 280ms ease,
+        transform 320ms ease;
+}
+
+.deck-next-enter-from {
+    opacity: 0;
+    transform:
+        translateX(70px)
+        scale(0.975);
+}
+
+.deck-next-leave-to {
+    opacity: 0;
+    transform:
+        translateX(-70px)
+        scale(0.975);
+}
+
+.deck-previous-enter-from {
+    opacity: 0;
+    transform:
+        translateX(-70px)
+        scale(0.975);
+}
+
+.deck-previous-leave-to {
+    opacity: 0;
+    transform:
+        translateX(70px)
+        scale(0.975);
+}
+
+.preview-fade-enter-from,
+.preview-fade-leave-to {
+    opacity: 0;
+    transform: scale(0.96);
+}
+</style>
