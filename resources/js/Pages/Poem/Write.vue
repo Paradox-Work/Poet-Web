@@ -39,10 +39,18 @@ const props = defineProps({
     groupId: {
         type: Number,
         default: null
+    },
+
+    editPoem: {
+        type: Object,
+        default: null
     }
 });
 
 const draftId = ref(null);
+const editingPostId = ref(
+    props.editPoem?.id ?? null
+);
 const saveState = ref('idle');
 const savedAt = ref(null);
 const draftMenuOpen = ref(false);
@@ -162,7 +170,12 @@ function draftPayload() {
 }
 
 async function saveDraft() {
-    if (!hasContent()) return;
+    if (
+        editingPostId.value ||
+        !hasContent()
+    ) {
+        return;
+    }
 
     saveState.value = 'saving';
 
@@ -226,6 +239,7 @@ function openDraft(draft) {
 }
 
 function newPoem() {
+    editingPostId.value = null;
     draftId.value = null;
     saveState.value = 'idle';
     savedAt.value = null;
@@ -299,12 +313,16 @@ function publish() {
         }
     };
 
-    if (draftId.value) {
+    if (
+        editingPostId.value ||
+        draftId.value
+    ) {
         form._method = 'PUT';
         form.post(
             route(
                 'post.update',
-                draftId.value
+                editingPostId.value
+                    ?? draftId.value
             ),
             options
         );
@@ -336,7 +354,39 @@ onBeforeUnmount(() => {
     }
 });
 
-if (props.openDraftId) {
+if (props.editPoem) {
+    const poem = props.editPoem;
+
+    editingPostId.value =
+        poem.id;
+
+    form.poem_form =
+        poem.poem_form
+            ?? 'free_verse';
+
+    form.poem_genres =
+        poem.poem_genres ?? [];
+
+    form.title =
+        poem.title ?? '';
+
+    form.caption =
+        poem.caption ?? '';
+
+    form.body =
+        poem.body ?? '';
+
+    form.group_id =
+        poem.group_id ?? null;
+
+    form.hashtags =
+        poem.hashtags ?? [];
+
+    hashtagsInput.value =
+        form.hashtags
+            .map(tag => `#${tag}`)
+            .join(' ');
+} else if (props.openDraftId) {
     const draft = props.drafts.find(
         item =>
             item.id === props.openDraftId
@@ -369,13 +419,15 @@ if (props.openDraftId) {
                             </h1>
                             <div class="text-xs text-gray-400">
                                 {{
-                                    saveState === 'saving'
-                                        ? 'Saving...'
-                                        : saveState === 'saved'
-                                            ? 'Saved'
-                                            : saveState === 'error'
-                                                ? 'Save failed'
-                                                : 'Autosave ready'
+                                    editingPostId
+                                        ? 'Editing published poem'
+                                        : saveState === 'saving'
+                                            ? 'Saving...'
+                                            : saveState === 'saved'
+                                                ? 'Saved'
+                                                : saveState === 'error'
+                                                    ? 'Save failed'
+                                                    : 'Autosave ready'
                                 }}
                                 <template v-if="savedAt">
                                     · {{ new Date(savedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}
@@ -448,7 +500,19 @@ if (props.openDraftId) {
                             :disabled="form.processing"
                             class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-50"
                         >
-                            {{ form.processing ? 'Publishing...' : 'Publish' }}
+                            {{
+                                form.processing
+                                    ? (
+                                        editingPostId
+                                            ? 'Saving...'
+                                            : 'Publishing...'
+                                    )
+                                    : (
+                                        editingPostId
+                                            ? 'Save changes'
+                                            : 'Publish'
+                                    )
+                            }}
                         </button>
                     </div>
                 </div>

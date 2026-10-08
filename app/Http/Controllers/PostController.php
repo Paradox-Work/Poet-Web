@@ -67,6 +67,44 @@ class PostController extends Controller
                 ]
             );
 
+        $editPoem = null;
+
+        if ($editId = $request->integer('edit')) {
+            $post = Post::query()
+                ->whereKey($editId)
+                ->where(
+                    'user_id',
+                    $request->user()->id
+                )
+                ->where(
+                    'status',
+                    'published'
+                )
+                ->where(
+                    'type',
+                    'poem'
+                )
+                ->firstOrFail();
+
+            $editPoem = [
+                'id' => $post->id,
+                'status' => 'published',
+                'type' => 'poem',
+                'poem_form' =>
+                    $post->poem_form
+                        ?? 'free_verse',
+                'poem_genres' =>
+                    $post->poem_genres ?? [],
+                'title' => $post->title,
+                'caption' => $post->caption,
+                'hashtags' =>
+                    $post->hashtags ?? [],
+                'body' => $post->body,
+                'group_id' =>
+                    $post->group_id,
+            ];
+        }
+
         return inertia(
             'Poem/Write',
             [
@@ -77,6 +115,7 @@ class PostController extends Controller
                 'groupId' =>
                     $request->integer('group')
                         ?: null,
+                'editPoem' => $editPoem,
             ]
         );
     }

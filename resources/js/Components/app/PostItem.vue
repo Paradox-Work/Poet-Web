@@ -38,6 +38,11 @@ import axios from 'axios';
 
 const props = defineProps({
     post: Object,
+
+    showHashtags: {
+        type: Boolean,
+        default: false
+    }
 });
 
 const plainBody = computed(() => {
@@ -159,6 +164,17 @@ function openAttachment(index) {
 }
 
 function openEditModal() {
+    if (props.post.type === 'poem') {
+        router.visit(
+            route(
+                'poem.write',
+                { edit: props.post.id }
+            )
+        );
+
+        return;
+    }
+
     emit('editClick', props.post);
 }
 
@@ -342,11 +358,19 @@ async function sendReaction() {
                 v-if="post.type === 'poem'"
                 class="mb-4"
             >
-                <div class="mb-2 flex items-center gap-2">
+                <div class="mb-2 flex flex-wrap items-center gap-1.5">
                     <span
                         class="rounded-full bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-300"
                     >
                         Poem
+                    </span>
+
+                    <span
+                        v-for="genre in post.poem_genres ?? []"
+                        :key="genre"
+                        class="rounded-full border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-300"
+                    >
+                        {{ genre }}
                     </span>
                 </div>
 
@@ -410,20 +434,7 @@ async function sendReaction() {
             </p>
 
             <div
-                v-if="post.poem_genres?.length"
-                class="mt-3 flex flex-wrap gap-2"
-            >
-                <span
-                    v-for="genre in post.poem_genres"
-                    :key="genre"
-                    class="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-300"
-                >
-                    {{ genre }}
-                </span>
-            </div>
-
-            <div
-                v-if="post.hashtags?.length"
+                v-if="showHashtags && post.hashtags?.length"
                 class="mt-3 flex flex-wrap gap-2"
             >
                 <a
