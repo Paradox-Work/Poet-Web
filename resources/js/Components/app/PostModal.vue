@@ -45,7 +45,7 @@
                         >
 
                             <DialogPanel
-                                class="w-full max-w-md transform overflow-hidden rounded bg-white text-left align-middle shadow-xl transition-all dark:bg-gray-800 dark:text-gray-100"
+                                class="w-full max-w-2xl transform overflow-hidden rounded-xl bg-white text-left align-middle shadow-xl transition-all dark:bg-gray-800 dark:text-gray-100"
                             >
 
                                 <DialogTitle
@@ -82,9 +82,120 @@
                                         {{ form.errors.group_id }}
                                     </div>
 
+                                    <div class="mb-4 flex rounded-lg bg-gray-100 p-1 dark:bg-gray-700">
+                                        <button
+                                            type="button"
+                                            @click="form.type = 'post'"
+                                            :class="[
+                                                'flex-1 rounded-md px-3 py-2 text-sm font-medium transition',
+                                                form.type === 'post'
+                                                    ? 'bg-white text-gray-900 shadow dark:bg-gray-900 dark:text-gray-100'
+                                                    : 'text-gray-500 dark:text-gray-300'
+                                            ]"
+                                        >
+                                            Post
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            @click="form.type = 'poem'"
+                                            :class="[
+                                                'flex-1 rounded-md px-3 py-2 text-sm font-medium transition',
+                                                form.type === 'poem'
+                                                    ? 'bg-white text-gray-900 shadow dark:bg-gray-900 dark:text-gray-100'
+                                                    : 'text-gray-500 dark:text-gray-300'
+                                            ]"
+                                        >
+                                            Poem
+                                        </button>
+                                    </div>
+
+                                    <div
+                                        v-if="form.type === 'poem'"
+                                        class="mb-4 space-y-3"
+                                    >
+                                        <div>
+                                            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
+                                                Poem title
+                                            </label>
+
+                                            <input
+                                                v-model="form.title"
+                                                type="text"
+                                                maxlength="160"
+                                                placeholder="Give your poem a title..."
+                                                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+                                            />
+
+                                            <p
+                                                v-if="form.errors.title"
+                                                class="mt-1 text-sm text-red-500"
+                                            >
+                                                {{ form.errors.title }}
+                                            </p>
+                                        </div>
+
+                                        <div>
+                                            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
+                                                Caption
+                                                <span class="font-normal text-gray-400">
+                                                    optional
+                                                </span>
+                                            </label>
+
+                                            <textarea
+                                                v-model="form.caption"
+                                                rows="2"
+                                                maxlength="500"
+                                                placeholder="A short note, context, dedication, or thought about the piece..."
+                                                class="block w-full resize-none rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+                                            />
+
+                                            <div class="mt-1 flex justify-between text-xs text-gray-400">
+                                                <span>Shown separately from the poem.</span>
+                                                <span>{{ (form.caption ?? '').length }}/500</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div
+                                        v-if="form.type === 'poem'"
+                                        class="mb-2 text-xs text-gray-500 dark:text-gray-400"
+                                    >
+                                        Poetry mode keeps each Enter close to the previous line. Use an empty line between stanzas.
+                                    </div>
+
                                     <TiptapEditor
                                         v-model="form.body"
+                                        :poem-mode="form.type === 'poem'"
                                     />
+
+                                    <div class="mt-4">
+                                        <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
+                                            Hashtags
+                                            <span class="font-normal text-gray-400">
+                                                optional
+                                            </span>
+                                        </label>
+
+                                        <input
+                                            v-model="hashtagsInput"
+                                            type="text"
+                                            placeholder="poetry, night, memories"
+                                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+                                        />
+
+                                        <p class="mt-1 text-xs text-gray-400">
+                                            Separate tags with spaces or commas. You can type them with or without #.
+                                        </p>
+
+                                        <p
+                                            v-if="form.errors.hashtags"
+                                            class="mt-1 text-sm text-red-500"
+                                        >
+                                            {{ form.errors.hashtags }}
+                                        </p>
+                                    </div>
 
                                     <div
                                         v-if="showExtensionsText"
@@ -297,6 +408,7 @@ const emit = defineEmits([
 
 const attachmentFiles = ref([]);
 const attachmentErrors = ref([]);
+const hashtagsInput = ref('');
 
 const showExtensionsText = computed(() => {
 
@@ -332,6 +444,10 @@ const computedAttachments = computed(() => {
 
 const form = useForm({
     id: null,
+    type: 'post',
+    title: '',
+    caption: '',
+    hashtags: [],
     body: '',
     group_id: null,
     attachments: [],
@@ -363,7 +479,16 @@ watch(
         }
 
         form.id = post.id ?? null;
+        form.type = post.type ?? 'post';
+        form.title = post.title ?? '';
+        form.caption = post.caption ?? '';
+        form.hashtags = post.hashtags ?? [];
         form.body = post.body ?? '';
+
+        hashtagsInput.value =
+            (post.hashtags ?? [])
+                .map(tag => `#${tag}`)
+                .join(' ');
 
         form.group_id =
             props.group?.id
@@ -387,6 +512,8 @@ function closeModal() {
     show.value = false;
 
     form.reset();
+    form.type = 'post';
+    hashtagsInput.value = '';
     attachmentFiles.value = [];
     attachmentErrors.value = [];
 }
@@ -491,9 +618,43 @@ function processErrors(errors) {
     }
 }
 
+function normalizeHashtags(value) {
+    const seen = new Set();
+
+    return value
+        .split(/[\\s,]+/)
+        .map(tag =>
+            tag
+                .trim()
+                .replace(/^#+/, '')
+        )
+        .filter(Boolean)
+        .filter(tag => {
+            const key = tag.toLocaleLowerCase();
+
+            if (seen.has(key)) {
+                return false;
+            }
+
+            seen.add(key);
+            return true;
+        })
+        .slice(0, 10);
+}
+
 function submit() {
 
     attachmentErrors.value = [];
+
+    form.hashtags =
+        normalizeHashtags(
+            hashtagsInput.value
+        );
+
+    if (form.type !== 'poem') {
+        form.title = '';
+        form.caption = '';
+    }
 
     if (!form.id) {
         form.group_id =

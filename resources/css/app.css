@@ -117,3 +117,15 @@ html.dark ::-webkit-scrollbar-thumb {
 html.dark ::-webkit-scrollbar-track {
     background-color: #0f172a;
 }
+
+
+.rich-text-output.poem-output {
+    font-family: Georgia, Cambria, "Times New Roman", serif;
+    font-size: 1.05rem;
+    line-height: 1.75;
+}
+
+.rich-text-output.poem-output p {
+    min-height: 1.75em;
+    margin: 0;
+}

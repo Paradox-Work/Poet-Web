@@ -19,7 +19,18 @@ class Post extends Model
         'user_id',
         'body',
         'group_id',
+        'type',
+        'title',
+        'caption',
+        'hashtags',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'hashtags' => 'array',
+        ];
+    }
 
     public function user(): BelongsTo
     {

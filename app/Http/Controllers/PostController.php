@@ -284,6 +284,17 @@ class PostController extends Controller
         try {
 
             $post->update([
+                'type' => $data['type'],
+                'title' =>
+                    $data['type'] === 'poem'
+                        ? ($data['title'] ?? null)
+                        : null,
+                'caption' =>
+                    $data['type'] === 'poem'
+                        ? ($data['caption'] ?? null)
+                        : null,
+                'hashtags' =>
+                    $data['hashtags'] ?? [],
                 'body' => $data['body'] ?? null,
             ]);
 

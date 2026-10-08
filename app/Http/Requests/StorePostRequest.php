@@ -40,6 +40,36 @@ class StorePostRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'type' => [
+                'required',
+                'string',
+                'in:post,poem',
+            ],
+
+            'title' => [
+                'nullable',
+                'string',
+                'max:160',
+            ],
+
+            'caption' => [
+                'nullable',
+                'string',
+                'max:500',
+            ],
+
+            'hashtags' => [
+                'nullable',
+                'array',
+                'max:10',
+            ],
+
+            'hashtags.*' => [
+                'string',
+                'max:50',
+                'regex:/^[\\pL\\pN_]+$/u',
+            ],
+
             'body' => [
                 'nullable',
                 'string'

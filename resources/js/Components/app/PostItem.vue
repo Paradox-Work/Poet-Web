@@ -337,6 +337,26 @@ async function sendReaction() {
         </div>
         <div class="mb-3">
 
+            <div
+                v-if="post.type === 'poem'"
+                class="mb-4"
+            >
+                <div class="mb-2 flex items-center gap-2">
+                    <span
+                        class="rounded-full bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-300"
+                    >
+                        Poem
+                    </span>
+                </div>
+
+                <h2
+                    v-if="post.title"
+                    class="font-serif text-2xl font-semibold leading-tight text-gray-900 dark:text-gray-100"
+                >
+                    {{ post.title }}
+                </h2>
+            </div>
+
             <Disclosure
                 v-if="plainBody.length > 200"
                 v-slot="{ open }"
@@ -349,6 +369,7 @@ async function sendReaction() {
                 <DisclosurePanel>
                     <div
                         class="rich-text-output"
+                        :class="{ 'poem-output': post.type === 'poem' }"
                         v-html="postBody"
                     />
                 </DisclosurePanel>
@@ -369,8 +390,30 @@ async function sendReaction() {
             <div
                 v-else
                 class="rich-text-output"
+                :class="{ 'poem-output': post.type === 'poem' }"
                 v-html="postBody"
             />
+
+            <p
+                v-if="post.caption"
+                class="mt-4 border-l-2 border-gray-200 pl-3 text-sm italic text-gray-500 dark:border-gray-600 dark:text-gray-400"
+            >
+                {{ post.caption }}
+            </p>
+
+            <div
+                v-if="post.hashtags?.length"
+                class="mt-3 flex flex-wrap gap-2"
+            >
+                <a
+                    v-for="tag in post.hashtags"
+                    :key="tag"
+                    :href="`/search/${encodeURIComponent('#' + tag)}`"
+                    class="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-indigo-600 hover:bg-indigo-50 dark:bg-gray-700 dark:text-indigo-300 dark:hover:bg-gray-600"
+                >
+                    #{{ tag }}
+                </a>
+            </div>
 
         </div>
         <div

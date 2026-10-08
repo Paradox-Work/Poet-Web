@@ -8,6 +8,11 @@ const props = defineProps({
     modelValue: {
         type: String,
         default: ''
+    },
+
+    poemMode: {
+        type: Boolean,
+        default: false
     }
 });
 
@@ -106,7 +111,10 @@ function setLink() {
 
     <div
         v-if="editor"
-        class="tiptap-editor"
+        :class="[
+            'tiptap-editor',
+            { 'poem-mode': poemMode }
+        ]"
     >
 
         <div class="tiptap-toolbar">
@@ -302,6 +310,16 @@ function setLink() {
 
 :deep(.ProseMirror p) {
     margin: 0.5rem 0;
+}
+
+.poem-mode :deep(.ProseMirror) {
+    min-height: 260px;
+    line-height: 1.7;
+}
+
+.poem-mode :deep(.ProseMirror p) {
+    min-height: 1.7em;
+    margin: 0;
 }
 
 :deep(.ProseMirror h1) {
