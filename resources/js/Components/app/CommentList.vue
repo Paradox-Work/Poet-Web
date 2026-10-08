@@ -1,6 +1,7 @@
 <script setup>
 import {
-    ChatBubbleLeftEllipsisIcon
+    ChatBubbleLeftEllipsisIcon,
+    PaperAirplaneIcon
 } from '@heroicons/vue/24/outline';
 
 import {
@@ -42,6 +43,11 @@ const props = defineProps({
     parentComment: {
         type: Object,
         default: null
+    },
+
+    panelMode: {
+        type: Boolean,
+        default: false
     }
 
 });
@@ -435,9 +441,23 @@ function onCommentDelete(
 
 
 <template>
+<div
+    :class="
+        panelMode
+            ? 'flex h-full min-h-0 flex-col'
+            : ''
+    "
+>
 
     <!-- New comment / reply -->
-    <div class="flex gap-2 mb-4">
+    <div
+        :class="[
+            'flex gap-2',
+            panelMode
+                ? 'order-2 mt-3 border-t border-[var(--poet-border)] pt-3'
+                : 'mb-4'
+        ]"
+    >
 
         <img
             v-if="authUser.avatar_url"
@@ -469,13 +489,16 @@ function onCommentDelete(
                     commentPending ||
                     !newCommentText.trim()
                 "
-                class="rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-500 disabled:opacity-50"
-            >
-                {{
+                class="flex h-10 w-10 shrink-0 items-center justify-center self-end rounded-full bg-[var(--poet-accent)] text-white transition hover:-translate-y-0.5 hover:shadow-md disabled:pointer-events-none disabled:opacity-40"
+                :aria-label="
                     commentPending
-                        ? 'Posting...'
-                        : 'Submit'
-                }}
+                        ? 'Posting comment'
+                        : 'Post comment'
+                "
+            >
+                <PaperAirplaneIcon
+                    class="h-5 w-5"
+                />
             </button>
 
         </div>
@@ -486,7 +509,12 @@ function onCommentDelete(
     <!-- Comments -->
     <div
         v-if="comments.length"
-        class="space-y-4"
+        :class="[
+            'space-y-4',
+            panelMode
+                ? 'comment-list order-1 min-h-0 flex-1 overflow-y-auto pr-1'
+                : ''
+        ]"
     >
 
         <div
@@ -714,9 +742,15 @@ function onCommentDelete(
 
     <div
         v-else-if="!parentComment"
-        class="text-sm text-gray-500"
+        :class="[
+            'text-sm text-gray-500',
+            panelMode
+                ? 'order-1 flex min-h-0 flex-1 items-center justify-center'
+                : ''
+        ]"
     >
         No comments yet.
     </div>
 
+</div>
 </template>

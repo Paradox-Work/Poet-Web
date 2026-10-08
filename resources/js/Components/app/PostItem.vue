@@ -124,7 +124,8 @@ const emit = defineEmits([
     'deleted',
     'pinChanged',
     'previous',
-    'next'
+    'next',
+    'comments'
 ]);
 
 const page = usePage();
@@ -680,7 +681,28 @@ async function sendReaction() {
                 </span>
             </Link>
 
+            <button
+                v-if="deckNavigation"
+                type="button"
+                @click="emit('comments')"
+                class="group flex flex-col items-center gap-1 text-xs text-gray-500 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--poet-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--poet-surface)] dark:text-gray-400"
+                aria-label="Open comments"
+            >
+                <span
+                    class="flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 transition group-hover:-translate-y-0.5 group-hover:shadow-md dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                >
+                    <ChatBubbleOvalLeftIcon
+                        class="h-5 w-5"
+                    />
+                </span>
+
+                <span class="font-medium">
+                    {{ post.num_of_comments ?? 0 }}
+                </span>
+            </button>
+
             <DisclosureButton
+                v-else
                 class="group flex flex-col items-center gap-1 text-xs text-gray-500 transition dark:text-gray-400"
                 aria-label="Show comments"
             >
@@ -714,7 +736,10 @@ async function sendReaction() {
 
 
     <!-- Everything below appears when Comment is clicked -->
-    <DisclosurePanel class="comment-list mt-4 max-h-[400px] overflow-y-auto pr-2">
+    <DisclosurePanel
+        v-if="!deckNavigation"
+        class="comment-list mt-4 max-h-[400px] overflow-y-auto pr-2"
+    >
 
         <CommentList
             :post="post"

@@ -19,6 +19,9 @@ import PostModal
 import AttachmentPreviewModal
     from '@/Components/app/AttachmentPreviewModal.vue';
 
+import PostCommentsPanel
+    from '@/Components/app/PostCommentsPanel.vue';
+
 const props = defineProps({
     posts: {
         type: Object,
@@ -48,6 +51,7 @@ const loadMoreIntersect = ref(null);
 const postListContainer = ref(null);
 const activeIndex = ref(0);
 const deckTransitionName = ref('deck-next');
+const commentsOpen = ref(false);
 
 let observer = null;
 let wheelLocked = false;
@@ -245,6 +249,14 @@ watch(
     }
 );
 
+function openComments() {
+    commentsOpen.value = true;
+}
+
+function closeComments() {
+    commentsOpen.value = false;
+}
+
 function goToIndex(
     index,
     direction
@@ -260,6 +272,8 @@ function goToIndex(
         direction === 'previous'
             ? 'deck-previous'
             : 'deck-next';
+
+    commentsOpen.value = false;
 
     activeIndex.value =
         index;
@@ -510,6 +524,7 @@ function handlePinChanged({
             )
         ];
 
+        commentsOpen.value = false;
         activeIndex.value = 0;
 
         return;
@@ -541,6 +556,8 @@ function removePost(postId) {
             post =>
                 post.id !== postId
         );
+
+    commentsOpen.value = false;
 
     activeIndex.value =
         Math.max(
@@ -637,35 +654,59 @@ function removePost(postId) {
                                 @pinChanged="
                                     handlePinChanged
                                 "
+                                @comments="
+                                    openComments
+                                "
                             />
                         </div>
                     </Transition>
                 </div>
 
                 <div
-                    class="hidden min-w-0 lg:block"
+                    class="min-w-0"
                 >
                     <Transition
-                        name="preview-fade"
+                        name="comments-panel"
                         mode="out-in"
                     >
-                        <div
-                            v-if="nextPreview"
-                            :key="nextPreview.id"
-                            class="pointer-events-none opacity-55"
-                        >
-                            <PostItem
-                                :post="nextPreview"
-                                deck-preview
-                            />
-                        </div>
+                        <PostCommentsPanel
+                            v-if="
+                                commentsOpen &&
+                                activePost
+                            "
+                            :key="`comments-${activePost.id}`"
+                            :post="activePost"
+                            @close="closeComments"
+                        />
 
                         <div
                             v-else
-                            key="empty-next"
-                            class="h-[min(46vh,430px)] w-full"
-                            aria-hidden="true"
-                        />
+                            key="next-preview"
+                            class="hidden lg:block"
+                        >
+                            <Transition
+                                name="preview-fade"
+                                mode="out-in"
+                            >
+                                <div
+                                    v-if="nextPreview"
+                                    :key="nextPreview.id"
+                                    class="pointer-events-none opacity-55"
+                                >
+                                    <PostItem
+                                        :post="nextPreview"
+                                        deck-preview
+                                    />
+                                </div>
+
+                                <div
+                                    v-else
+                                    key="empty-next"
+                                    class="h-[min(46vh,430px)] w-full"
+                                    aria-hidden="true"
+                                />
+                            </Transition>
+                        </div>
                     </Transition>
                 </div>
             </div>
@@ -826,5 +867,18 @@ function removePost(postId) {
 .preview-fade-leave-to {
     opacity: 0;
     transform: scale(0.96);
+}
+
+.comments-panel-enter-active,
+.comments-panel-leave-active {
+    transition:
+        opacity 220ms ease,
+        transform 260ms ease;
+}
+
+.comments-panel-enter-from,
+.comments-panel-leave-to {
+    opacity: 0;
+    transform: translateX(24px) scale(0.985);
 }
 </style>
