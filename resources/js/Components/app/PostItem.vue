@@ -14,9 +14,11 @@ import {
         
 import {
     HandThumbUpIcon
-        } from '@heroicons/vue/20/solid';
+} from '@heroicons/vue/20/solid';
 
 import {
+    ChatBubbleOvalLeftIcon,
+    EyeIcon,
     MapPinIcon
 } from '@heroicons/vue/24/outline';
 
@@ -29,6 +31,7 @@ import {
 } from 'vue';
 
 import {
+    Link,
     router,
     usePage
 } from '@inertiajs/vue3';
@@ -466,52 +469,71 @@ async function sendReaction() {
         </div>
         <Disclosure v-slot="{ open }">
 
-    <!-- Like + Comment buttons -->
-    <div class="flex gap-2 mt-3">
-
-        <!-- Like -->
+    <div class="mt-4 flex items-end justify-center gap-8">
         <button
             type="button"
             @click="sendReaction"
             :disabled="reactionPending"
-            class="text-gray-800 dark:text-gray-100 flex gap-1 items-center justify-center rounded-lg py-2 px-4 flex-1 transition"
-            :class="[
-                post.current_user_has_reaction
-                    ? 'bg-sky-100 hover:bg-sky-200 dark:bg-sky-900/60 dark:hover:bg-sky-900'
-                    : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600',
-
+            class="group flex flex-col items-center gap-1 text-xs text-gray-500 transition dark:text-gray-400"
+            :class="
                 reactionPending
-                    ? 'opacity-60 cursor-wait'
+                    ? 'cursor-wait opacity-60'
                     : ''
-            ]"
+            "
+            aria-label="Like post"
         >
-            <HandThumbUpIcon
-                class="w-5 h-5"
-            />
+            <span
+                :class="[
+                    'flex h-11 w-11 items-center justify-center rounded-full border transition',
+                    post.current_user_has_reaction
+                        ? 'border-sky-300 bg-sky-100 text-sky-700 dark:border-sky-800 dark:bg-sky-900/60 dark:text-sky-300'
+                        : 'border-gray-200 bg-white text-gray-700 hover:-translate-y-0.5 hover:shadow-md dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100'
+                ]"
+            >
+                <HandThumbUpIcon
+                    class="h-5 w-5"
+                />
+            </span>
 
-            <span class="mr-1">
+            <span class="font-medium">
                 {{ post.num_of_reactions ?? 0 }}
             </span>
-
-            {{
-                post.current_user_has_reaction
-                    ? 'Unlike'
-                    : 'Like'
-            }}
         </button>
 
-
-        <!-- Comment -->
-        <DisclosureButton
-            class="text-gray-800 dark:text-gray-100 flex gap-1 items-center justify-center bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 py-2 px-4 flex-1"
+        <Link
+            :href="route('post.view', post.id)"
+            class="group flex flex-col items-center gap-1 text-xs font-medium text-indigo-600 dark:text-indigo-300"
+            aria-label="View post"
         >
-            <span>
-                {{ post.num_of_comments ?? 0 }}
+            <span
+                class="flex h-14 w-14 items-center justify-center rounded-full bg-indigo-600 text-white shadow-md transition group-hover:-translate-y-0.5 group-hover:bg-indigo-500 group-hover:shadow-lg"
+            >
+                <EyeIcon
+                    class="h-6 w-6"
+                />
             </span>
 
-            Comment
-        </DisclosureButton>
+            <span>
+                View
+            </span>
+        </Link>
 
+        <DisclosureButton
+            class="group flex flex-col items-center gap-1 text-xs text-gray-500 transition dark:text-gray-400"
+            aria-label="Show comments"
+        >
+            <span
+                class="flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 transition group-hover:-translate-y-0.5 group-hover:shadow-md dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+            >
+                <ChatBubbleOvalLeftIcon
+                    class="h-5 w-5"
+                />
+            </span>
+
+            <span class="font-medium">
+                {{ post.num_of_comments ?? 0 }}
+            </span>
+        </DisclosureButton>
     </div>
 
 

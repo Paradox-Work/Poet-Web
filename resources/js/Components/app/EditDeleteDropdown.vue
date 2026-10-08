@@ -11,8 +11,7 @@ import {
 import {
     EllipsisVerticalIcon,
     PencilIcon,
-    TrashIcon,
-    EyeIcon
+    TrashIcon
 } from '@heroicons/vue/20/solid';
 
 import {
@@ -207,34 +206,6 @@ async function copyPostUrl() {
                         v-if="post && !comment"
                         v-slot="{ active }"
                     >
-                        <Link
-                            :href="
-                                route(
-                                    'post.view',
-                                    post.id
-                                )
-                            "
-                            :class="[
-                                active
-                                    ? 'bg-indigo-500 text-white'
-                                    : 'text-gray-900 dark:text-gray-100',
-
-                                'group flex w-full items-center rounded-md px-2 py-2 text-sm'
-                            ]"
-                        >
-                            <EyeIcon
-                                class="mr-2 h-5 w-5"
-                            />
-
-                            Open Post
-                        </Link>
-                    </MenuItem>
-
-
-                    <MenuItem
-                        v-if="post && !comment"
-                        v-slot="{ active }"
-                    >
                         <button
                             type="button"
                             @click="copyPostUrl"
@@ -250,7 +221,7 @@ async function copyPostUrl() {
                                 class="mr-2 h-5 w-5"
                             />
 
-                            Copy Post URL
+                            Copy link
                         </button>
                     </MenuItem>
 
