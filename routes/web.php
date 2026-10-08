@@ -22,6 +22,63 @@ Route::get(
 )->name('group.profile');
 
 Route::middleware('auth')->group(function () {
+
+    Route::get(
+        '/social',
+        function () {
+            $user = request()->user();
+
+            $followings =
+                $user
+                    ->followings()
+                    ->orderBy('users.name')
+                    ->get();
+
+            $followers =
+                $user
+                    ->followers()
+                    ->orderBy('users.name')
+                    ->get();
+
+            $groups =
+                \App\Models\Group::query()
+                    ->select([
+                        'groups.*',
+                        'group_users.status',
+                        'group_users.role',
+                    ])
+                    ->join(
+                        'group_users',
+                        'group_users.group_id',
+                        '=',
+                        'groups.id'
+                    )
+                    ->where(
+                        'group_users.user_id',
+                        $user->id
+                    )
+                    ->orderBy('groups.name')
+                    ->get();
+
+            return Inertia::render(
+                'Social/Index',
+                [
+                    'followings' =>
+                        \App\Http\Resources\UserResource::collection(
+                            $followings
+                        ),
+                    'followers' =>
+                        \App\Http\Resources\UserResource::collection(
+                            $followers
+                        ),
+                    'groups' =>
+                        \App\Http\Resources\GroupResource::collection(
+                            $groups
+                        ),
+                ]
+            );
+        }
+    )->name('social.index');
     
     Route::post(
         '/posts', 

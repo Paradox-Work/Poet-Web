@@ -139,6 +139,13 @@ function search() {
                                 >
                                     Drafts
                                 </NavLink>
+
+                                <NavLink
+                                    :href="route('social.index')"
+                                    :active="route().current('social.index')"
+                                >
+                                    Social
+                                </NavLink>
                             </div>
                         </div>
 
@@ -321,6 +328,13 @@ function search() {
                             :active="route().current('draft.index')"
                         >
                             Drafts
+                        </ResponsiveNavLink>
+
+                        <ResponsiveNavLink
+                            :href="route('social.index')"
+                            :active="route().current('social.index')"
+                        >
+                            Social
                         </ResponsiveNavLink>
                     </div>
 
