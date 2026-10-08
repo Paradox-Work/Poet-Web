@@ -498,6 +498,17 @@ async function sendReaction() {
                 </div>
             </div>
 
+            <div
+                v-else
+                class="mb-3"
+            >
+                <span
+                    class="inline-flex rounded-full border border-sky-200 bg-sky-50 px-2 py-1 text-xs font-medium text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-300"
+                >
+                    Post
+                </span>
+            </div>
+
             <Disclosure
                 v-if="plainBody.length > 200"
                 v-slot="{ open }"
