@@ -2,6 +2,35 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+    --poet-bg: #f5f1ea;
+    --poet-nav: #fbf8f2;
+    --poet-surface: #fffdf8;
+    --poet-surface-soft: #f1ebe1;
+    --poet-border: #ddd5c8;
+    --poet-border-strong: #c9bdaa;
+    --poet-text: #211d1a;
+    --poet-muted: #756d65;
+    --poet-accent: #7a334d;
+    --poet-accent-strong: #5f243b;
+    --poet-accent-soft: #f2e4e9;
+}
+
+html.dark {
+    --poet-bg: #11151f;
+    --poet-nav: #181d29;
+    --poet-surface: #1c2230;
+    --poet-surface-soft: #232a3a;
+    --poet-border: #323a4a;
+    --poet-border-strong: #475165;
+    --poet-text: #eee7dc;
+    --poet-muted: #9e9a94;
+    --poet-accent: #d08aa5;
+    --poet-accent-strong: #e6adc0;
+    --poet-accent-soft: #352432;
+}
+
+
 #app {
     @apply h-full;
 }

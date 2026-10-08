@@ -1,21 +1,24 @@
 <script setup>
 import { ref } from 'vue';
+
 import {
     Link,
     usePage
 } from '@inertiajs/vue3';
 
 import {
-    DocumentTextIcon,
+    ChatBubbleBottomCenterTextIcon,
     PencilSquareIcon
 } from '@heroicons/vue/24/outline';
 
-import PostModal from '@/Components/app/PostModal.vue';
+import PostModal
+    from '@/Components/app/PostModal.vue';
 
 const authUser =
     usePage().props.auth.user;
 
-const showModal = ref(false);
+const showModal =
+    ref(false);
 
 const props = defineProps({
     group: {
@@ -40,21 +43,34 @@ function showCreatePostModal() {
 
 <template>
     <div
-        class="mb-3 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
+        class="rounded-2xl border border-[var(--poet-border)] bg-[var(--poet-surface)] p-3 shadow-sm"
     >
-        <div class="grid gap-2 sm:grid-cols-2">
+        <div
+            class="grid gap-2 sm:grid-cols-2"
+        >
             <button
                 type="button"
                 @click="showCreatePostModal"
-                class="flex items-center gap-3 rounded-lg border border-gray-200 px-4 py-3 text-left text-gray-600 transition hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                class="group flex items-center gap-3 rounded-xl px-4 py-3 text-left transition hover:bg-[var(--poet-surface-soft)]"
             >
-                <DocumentTextIcon class="h-5 w-5" />
+                <span
+                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--poet-border)] text-[var(--poet-muted)] transition group-hover:text-[var(--poet-text)]"
+                >
+                    <ChatBubbleBottomCenterTextIcon
+                        class="h-5 w-5"
+                    />
+                </span>
 
                 <div>
-                    <div class="text-sm font-medium">
+                    <div
+                        class="text-sm font-semibold text-[var(--poet-text)]"
+                    >
                         Quick post
                     </div>
-                    <div class="text-xs text-gray-400">
+
+                    <div
+                        class="mt-0.5 text-xs text-[var(--poet-muted)]"
+                    >
                         Share a thought or discussion
                     </div>
                 </div>
@@ -69,15 +85,26 @@ function showCreatePostModal() {
                             : {}
                     )
                 "
-                class="flex items-center gap-3 rounded-lg border border-indigo-200 bg-indigo-50/60 px-4 py-3 text-left text-indigo-700 transition hover:bg-indigo-50 dark:border-indigo-900/70 dark:bg-indigo-950/20 dark:text-indigo-300 dark:hover:bg-indigo-950/40"
+                class="group flex items-center gap-3 rounded-xl bg-[var(--poet-accent-soft)] px-4 py-3 text-left transition hover:-translate-y-0.5"
             >
-                <PencilSquareIcon class="h-5 w-5" />
+                <span
+                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--poet-accent)] text-white shadow-sm"
+                >
+                    <PencilSquareIcon
+                        class="h-5 w-5"
+                    />
+                </span>
 
                 <div>
-                    <div class="text-sm font-medium">
+                    <div
+                        class="text-sm font-semibold text-[var(--poet-accent-strong)]"
+                    >
                         Write poem
                     </div>
-                    <div class="text-xs opacity-70">
+
+                    <div
+                        class="mt-0.5 text-xs text-[var(--poet-muted)]"
+                    >
                         Open the writing studio
                     </div>
                 </div>

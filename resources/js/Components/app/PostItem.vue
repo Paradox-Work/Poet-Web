@@ -362,7 +362,7 @@ async function sendReaction() {
 </script>
 
 <template>
-    <div class="bg-white border border-gray-200 rounded p-4 mb-3 shadow dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100">
+    <article class="mb-5 rounded-2xl border border-[var(--poet-border)] bg-[var(--poet-surface)] px-5 py-5 text-[var(--poet-text)] shadow-[0_10px_35px_rgba(15,23,42,0.04)] transition hover:border-[var(--poet-border-strong)]">
         <div class="flex items-center justify-between mb-3">
 
             <PostUserHeader :post="post" />
@@ -404,7 +404,7 @@ async function sendReaction() {
             >
                 <div class="mb-2 flex flex-wrap items-center gap-1.5">
                     <span
-                        class="rounded-full bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-300"
+                        class="rounded-full bg-[var(--poet-accent-soft)] px-2 py-1 text-xs font-medium text-[var(--poet-accent)] dark:bg-indigo-950/50 dark:text-[var(--poet-accent)]"
                     >
                         Poem
                     </span>
@@ -509,7 +509,7 @@ async function sendReaction() {
                     v-for="tag in post.hashtags"
                     :key="tag"
                     :href="`/search/${encodeURIComponent('#' + tag)}`"
-                    class="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-indigo-600 hover:bg-indigo-50 dark:bg-gray-700 dark:text-indigo-300 dark:hover:bg-gray-600"
+                    class="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-[var(--poet-accent)] hover:bg-[var(--poet-accent-soft)] dark:bg-gray-700 dark:text-[var(--poet-accent)] dark:hover:bg-gray-600"
                 >
                     #{{ tag }}
                 </a>
@@ -569,11 +569,11 @@ async function sendReaction() {
             v-if="dedicatedPage"
             type="button"
             @click="returnFromPost"
-            class="group flex flex-col items-center gap-1 text-xs font-medium text-indigo-600 dark:text-indigo-300"
+            class="group flex flex-col items-center gap-1 text-xs font-medium text-[var(--poet-accent)] dark:text-[var(--poet-accent)]"
             aria-label="Return"
         >
             <span
-                class="flex h-14 w-14 items-center justify-center rounded-full bg-indigo-600 text-white shadow-md transition duration-300 group-hover:-translate-y-0.5 group-hover:bg-indigo-500 group-hover:shadow-lg"
+                class="flex h-14 w-14 items-center justify-center rounded-full bg-indigo-600 text-white shadow-md transition duration-300 group-hover:-translate-y-0.5 group-hover:bg-[var(--poet-accent-soft)]0 group-hover:shadow-lg"
             >
                 <ArrowUturnLeftIcon
                     class="h-6 w-6 transition-transform duration-300 group-hover:-rotate-12"
@@ -588,11 +588,11 @@ async function sendReaction() {
         <Link
             v-else
             :href="route('post.view', post.id)"
-            class="group flex flex-col items-center gap-1 text-xs font-medium text-indigo-600 dark:text-indigo-300"
+            class="group flex flex-col items-center gap-1 text-xs font-medium text-[var(--poet-accent)] dark:text-[var(--poet-accent)]"
             aria-label="View post"
         >
             <span
-                class="flex h-14 w-14 items-center justify-center rounded-full bg-indigo-600 text-white shadow-md transition duration-300 group-hover:-translate-y-0.5 group-hover:bg-indigo-500 group-hover:shadow-lg"
+                class="flex h-14 w-14 items-center justify-center rounded-full bg-indigo-600 text-white shadow-md transition duration-300 group-hover:-translate-y-0.5 group-hover:bg-[var(--poet-accent-soft)]0 group-hover:shadow-lg"
             >
                 <EyeIcon
                     class="h-6 w-6 transition-transform duration-300 group-hover:scale-110"
@@ -634,7 +634,7 @@ async function sendReaction() {
     </DisclosurePanel>
 
 </Disclosure>
-    </div>
+    </article>
 </template>
 
 <style scoped>

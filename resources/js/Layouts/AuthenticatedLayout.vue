@@ -96,9 +96,9 @@ function search() {
 
 <template>
     <div>
-        <div class="h-screen flex flex-col bg-gray-100 dark:bg-gray-900">
+        <div class="h-screen flex flex-col bg-[var(--poet-bg)] text-[var(--poet-text)]">
             <nav
-                class="border-b border-gray-100 bg-white dark:border-gray-700 dark:bg-gray-800"
+                class="border-b border-[var(--poet-border)] bg-[var(--poet-nav)]"
             >
                 <!-- Primary Navigation Menu -->
                 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -106,10 +106,19 @@ function search() {
                         <div class="flex">
                             <!-- Logo -->
                             <div class="flex shrink-0 items-center">
-                                <Link :href="route('dashboard')">
+                                <Link
+                                    :href="route('dashboard')"
+                                    class="flex items-center gap-2"
+                                >
                                     <ApplicationLogo
-                                        class="block h-9 w-auto fill-current text-gray-800 dark:text-gray-200"
+                                        class="block h-8 w-auto fill-current text-[var(--poet-text)]"
                                     />
+
+                                    <span
+                                        class="hidden font-serif text-lg font-semibold tracking-tight text-[var(--poet-text)] lg:inline"
+                                    >
+                                        Poet-Web
+                                    </span>
                                 </Link>
                             </div>
 
