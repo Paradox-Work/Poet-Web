@@ -352,198 +352,198 @@ if (props.openDraftId) {
 
     <AuthenticatedLayout>
         <div class="flex h-full min-h-0 flex-col bg-stone-50 dark:bg-gray-900">
-            <header class="flex items-center justify-between gap-4 border-b border-stone-200 bg-white px-5 py-3 dark:border-gray-700 dark:bg-gray-800">
-                <div class="flex items-center gap-3">
-                    <Link
-                        :href="route('dashboard')"
-                        class="rounded-lg p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
-                    >
-                        <ArrowLeftIcon class="h-5 w-5" />
-                    </Link>
+            <header class="bg-white dark:bg-gray-800">
+                <div class="flex items-center justify-between gap-4 px-5 pt-3">
+                    <div class="flex items-center gap-3">
+                        <Link
+                            :href="route('dashboard')"
+                            class="rounded-lg p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                        >
+                            <ArrowLeftIcon class="h-5 w-5" />
+                        </Link>
 
-                    <div>
-                        <h1 class="font-serif text-xl font-semibold text-gray-900 dark:text-gray-100">
-                            Write poem
-                        </h1>
-                        <div class="text-xs text-gray-400">
-                            {{
-                                saveState === 'saving'
-                                    ? 'Saving...'
-                                    : saveState === 'saved'
-                                        ? 'Saved'
-                                        : saveState === 'error'
-                                            ? 'Save failed'
-                                            : 'Autosave ready'
-                            }}
-                            <template v-if="savedAt">
-                                · {{ new Date(savedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}
-                            </template>
+                        <div>
+                            <h1 class="font-serif text-xl font-semibold text-gray-900 dark:text-gray-100">
+                                Write poem
+                            </h1>
+                            <div class="text-xs text-gray-400">
+                                {{
+                                    saveState === 'saving'
+                                        ? 'Saving...'
+                                        : saveState === 'saved'
+                                            ? 'Saved'
+                                            : saveState === 'error'
+                                                ? 'Save failed'
+                                                : 'Autosave ready'
+                                }}
+                                <template v-if="savedAt">
+                                    · {{ new Date(savedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}
+                                </template>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="flex items-center gap-2">
-                    <button
-                        type="button"
-                        @click="newPoem"
-                        class="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
-                    >
-                        <PlusIcon class="h-4 w-4" />
-                        New poem
-                    </button>
-
-                    <div class="relative">
+                    <div class="flex items-center gap-2">
                         <button
                             type="button"
-                            @click="draftMenuOpen = !draftMenuOpen"
+                            @click="newPoem"
                             class="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
                         >
-                            <DocumentTextIcon class="h-4 w-4" />
-                            Open draft
-                            <ChevronDownIcon class="h-4 w-4" />
+                            <PlusIcon class="h-4 w-4" />
+                            New poem
                         </button>
 
-                        <div
-                            v-if="draftMenuOpen"
-                            class="absolute right-0 z-30 mt-2 w-80 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-800"
-                        >
+                        <div class="relative">
+                            <button
+                                type="button"
+                                @click="draftMenuOpen = !draftMenuOpen"
+                                class="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
+                            >
+                                <DocumentTextIcon class="h-4 w-4" />
+                                Open draft
+                                <ChevronDownIcon class="h-4 w-4" />
+                            </button>
+
                             <div
-                                v-if="drafts.length"
-                                class="max-h-80 overflow-auto p-2"
+                                v-if="draftMenuOpen"
+                                class="absolute right-0 z-30 mt-2 w-80 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-800"
                             >
-                                <button
-                                    v-for="draft in drafts"
-                                    :key="draft.id"
-                                    type="button"
-                                    @click="openDraft(draft)"
-                                    class="block w-full rounded-lg px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700"
+                                <div
+                                    v-if="drafts.length"
+                                    class="max-h-80 overflow-auto p-2"
                                 >
-                                    <div class="truncate text-sm font-medium text-gray-800 dark:text-gray-100">
-                                        {{ draft.title || 'Untitled poem' }}
-                                    </div>
-                                    <div class="mt-1 text-xs capitalize text-gray-400">
-                                        {{ (draft.poem_form || 'free_verse').replaceAll('_', ' ') }}
-                                    </div>
-                                </button>
-                            </div>
+                                    <button
+                                        v-for="draft in drafts"
+                                        :key="draft.id"
+                                        type="button"
+                                        @click="openDraft(draft)"
+                                        class="block w-full rounded-lg px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700"
+                                    >
+                                        <div class="truncate text-sm font-medium text-gray-800 dark:text-gray-100">
+                                            {{ draft.title || 'Untitled poem' }}
+                                        </div>
+                                        <div class="mt-1 text-xs capitalize text-gray-400">
+                                            {{ (draft.poem_form || 'free_verse').replaceAll('_', ' ') }}
+                                        </div>
+                                    </button>
+                                </div>
 
-                            <div v-else class="p-4 text-sm text-gray-400">
-                                No saved drafts yet.
-                            </div>
+                                <div v-else class="p-4 text-sm text-gray-400">
+                                    No saved drafts yet.
+                                </div>
 
-                            <Link
-                                :href="route('draft.index')"
-                                class="block border-t border-gray-100 px-4 py-3 text-sm font-medium text-indigo-600 hover:bg-gray-50 dark:border-gray-700 dark:text-indigo-300 dark:hover:bg-gray-700"
-                            >
-                                View all drafts
-                            </Link>
+                                <Link
+                                    :href="route('draft.index')"
+                                    class="block border-t border-gray-100 px-4 py-3 text-sm font-medium text-indigo-600 hover:bg-gray-50 dark:border-gray-700 dark:text-indigo-300 dark:hover:bg-gray-700"
+                                >
+                                    View all drafts
+                                </Link>
+                            </div>
                         </div>
-                    </div>
 
-                    <button
-                        type="button"
-                        @click="publish"
-                        :disabled="form.processing"
-                        class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-50"
-                    >
-                        {{ form.processing ? 'Publishing...' : 'Publish' }}
-                    </button>
-                </div>
-            </header>
-
-            <div
-                class="border-b border-stone-200 bg-white px-5 py-2.5 dark:border-gray-700 dark:bg-gray-800"
-            >
-                <div class="flex flex-wrap items-center gap-2">
-                    <div class="flex items-center gap-2">
-                        <span class="text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">
-                            Form
-                        </span>
-
-                        <select
-                            v-model="form.poem_form"
-                            class="rounded-lg border-gray-300 bg-white py-1.5 pl-3 pr-8 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-                        >
-                            <option
-                                v-for="item in poemForms"
-                                :key="item.id"
-                                :value="item.id"
-                            >
-                                {{ item.name }}
-                            </option>
-                        </select>
-                    </div>
-
-                    <div class="h-5 w-px bg-stone-200 dark:bg-gray-700"></div>
-
-                    <div class="flex items-center gap-1.5 rounded-lg bg-stone-100 px-2.5 py-1.5 text-xs dark:bg-gray-900/60">
-                        <span class="text-gray-400">Lines</span>
-                        <span class="font-semibold text-gray-700 dark:text-gray-100">
-                            {{ lineProgress }}
-                        </span>
-                    </div>
-
-                    <div class="flex items-center gap-1.5 rounded-lg bg-stone-100 px-2.5 py-1.5 text-xs dark:bg-gray-900/60">
-                        <span class="text-gray-400">Stanzas</span>
-                        <span class="font-semibold text-gray-700 dark:text-gray-100">
-                            {{ stanzaCount }}
-                        </span>
-                    </div>
-
-                    <div class="flex items-center gap-1.5 rounded-lg bg-stone-100 px-2.5 py-1.5 text-xs dark:bg-gray-900/60">
-                        <span class="text-gray-400">Genres</span>
-                        <span class="font-semibold text-gray-700 dark:text-gray-100">
-                            {{ form.poem_genres.length }}
-                        </span>
-                    </div>
-
-                    <div class="relative">
                         <button
                             type="button"
-                            @click="formGuideOpen = !formGuideOpen"
-                            class="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
+                            @click="publish"
+                            :disabled="form.processing"
+                            class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-50"
                         >
-                            Form guide
+                            {{ form.processing ? 'Publishing...' : 'Publish' }}
                         </button>
+                    </div>
+                </div>
 
-                        <div
-                            v-if="formGuideOpen"
-                            class="absolute left-0 z-30 mt-2 w-80 rounded-xl border border-gray-200 bg-white p-4 shadow-xl dark:border-gray-700 dark:bg-gray-800"
-                        >
-                            <div class="mb-1 font-serif text-base font-semibold text-gray-900 dark:text-gray-100">
-                                {{ selectedForm.name }}
-                            </div>
+                <div class="mt-2 border-b border-stone-200 px-5 pb-2.5 dark:border-gray-700">
+                    <div class="ml-10 flex flex-wrap items-center gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">
+                                Form
+                            </span>
 
-                            <p class="mb-3 text-sm leading-5 text-gray-500 dark:text-gray-400">
-                                {{ selectedForm.summary }}
-                            </p>
-
-                            <ul class="space-y-2 text-sm leading-5 text-gray-600 dark:text-gray-300">
-                                <li
-                                    v-for="rule in selectedForm.structure"
-                                    :key="rule"
-                                    class="flex gap-2"
+                            <select
+                                v-model="form.poem_form"
+                                class="rounded-lg border-gray-300 bg-white py-1.5 pl-3 pr-8 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+                            >
+                                <option
+                                    v-for="item in poemForms"
+                                    :key="item.id"
+                                    :value="item.id"
                                 >
-                                    <span class="text-indigo-400">•</span>
-                                    <span>{{ rule }}</span>
-                                </li>
-                            </ul>
+                                    {{ item.name }}
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="h-5 w-px bg-stone-200 dark:bg-gray-700"></div>
+
+                        <div class="flex items-center gap-1.5 rounded-lg bg-stone-100 px-2.5 py-1.5 text-xs dark:bg-gray-900/60">
+                            <span class="text-gray-400">Lines</span>
+                            <span class="font-semibold text-gray-700 dark:text-gray-100">
+                                {{ lineProgress }}
+                            </span>
+                        </div>
+
+                        <div class="flex items-center gap-1.5 rounded-lg bg-stone-100 px-2.5 py-1.5 text-xs dark:bg-gray-900/60">
+                            <span class="text-gray-400">Stanzas</span>
+                            <span class="font-semibold text-gray-700 dark:text-gray-100">
+                                {{ stanzaCount }}
+                            </span>
+                        </div>
+
+                        <div class="flex items-center gap-1.5 rounded-lg bg-stone-100 px-2.5 py-1.5 text-xs dark:bg-gray-900/60">
+                            <span class="text-gray-400">Genres</span>
+                            <span class="font-semibold text-gray-700 dark:text-gray-100">
+                                {{ form.poem_genres.length }}
+                            </span>
+                        </div>
+
+                        <div class="relative">
+                            <button
+                                type="button"
+                                @click="formGuideOpen = !formGuideOpen"
+                                class="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
+                            >
+                                Form guide
+                            </button>
 
                             <div
-                                v-if="selectedForm.rhymeScheme"
-                                class="mt-3 border-t border-gray-100 pt-3 dark:border-gray-700"
+                                v-if="formGuideOpen"
+                                class="absolute left-0 z-30 mt-2 w-80 rounded-xl border border-gray-200 bg-white p-4 shadow-xl dark:border-gray-700 dark:bg-gray-800"
                             >
-                                <div class="text-xs font-semibold uppercase tracking-wide text-gray-400">
-                                    Rhyme scheme
+                                <div class="mb-1 font-serif text-base font-semibold text-gray-900 dark:text-gray-100">
+                                    {{ selectedForm.name }}
                                 </div>
-                                <div class="mt-1 font-mono text-sm text-gray-700 dark:text-gray-200">
-                                    {{ selectedForm.rhymeScheme }}
+
+                                <p class="mb-3 text-sm leading-5 text-gray-500 dark:text-gray-400">
+                                    {{ selectedForm.summary }}
+                                </p>
+
+                                <ul class="space-y-2 text-sm leading-5 text-gray-600 dark:text-gray-300">
+                                    <li
+                                        v-for="rule in selectedForm.structure"
+                                        :key="rule"
+                                        class="flex gap-2"
+                                    >
+                                        <span class="text-indigo-400">•</span>
+                                        <span>{{ rule }}</span>
+                                    </li>
+                                </ul>
+
+                                <div
+                                    v-if="selectedForm.rhymeScheme"
+                                    class="mt-3 border-t border-gray-100 pt-3 dark:border-gray-700"
+                                >
+                                    <div class="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                                        Rhyme scheme
+                                    </div>
+                                    <div class="mt-1 font-mono text-sm text-gray-700 dark:text-gray-200">
+                                        {{ selectedForm.rhymeScheme }}
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            </header>
 
             <div class="grid min-h-0 flex-1 lg:grid-cols-[280px_minmax(0,1fr)]">
                 <aside class="overflow-y-auto border-r border-stone-200 bg-stone-100/70 p-4 dark:border-gray-700 dark:bg-gray-800/60">
