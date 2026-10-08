@@ -47,6 +47,7 @@ const saveState = ref('idle');
 const savedAt = ref(null);
 const draftMenuOpen = ref(false);
 const formGuideOpen = ref(false);
+const genrePickerOpen = ref(false);
 const hashtagsInput = ref('');
 const customGenreInput = ref('');
 
@@ -351,8 +352,8 @@ if (props.openDraftId) {
     <Head title="Write poem" />
 
     <AuthenticatedLayout>
-        <div class="flex h-full min-h-0 flex-col bg-stone-50 dark:bg-gray-900">
-            <header class="bg-white dark:bg-gray-800">
+        <div class="h-full overflow-y-auto bg-stone-50 dark:bg-gray-900">
+            <header class="sticky top-0 z-40 bg-white/95 backdrop-blur dark:bg-gray-800/95">
                 <div class="flex items-center justify-between gap-4 px-5 pt-3">
                     <div class="flex items-center gap-3">
                         <Link
@@ -545,8 +546,8 @@ if (props.openDraftId) {
                 </div>
             </header>
 
-            <div class="grid min-h-0 flex-1 lg:grid-cols-[280px_minmax(0,1fr)]">
-                <aside class="overflow-y-auto border-r border-stone-200 bg-stone-100/70 p-4 dark:border-gray-700 dark:bg-gray-800/60">
+            <div class="grid min-h-full lg:grid-cols-[280px_minmax(0,1fr)]">
+                <aside class="border-r border-stone-200 bg-stone-100/70 p-4 dark:border-gray-700 dark:bg-gray-800/60">
                     <div class="space-y-5">
                         <div>
                             <div class="text-xs font-semibold uppercase tracking-[0.16em] text-gray-400">
@@ -567,21 +568,46 @@ if (props.openDraftId) {
                                 </span>
                             </div>
 
-                            <div class="max-h-44 overflow-y-auto rounded-lg border border-stone-200 bg-white p-2 dark:border-gray-700 dark:bg-gray-900/60">
+                            <div class="relative">
                                 <button
-                                    v-for="genre in poemGenres"
-                                    :key="genre"
                                     type="button"
-                                    @click="toggleGenre(genre)"
-                                    :class="[
-                                        'mb-1 mr-1 rounded-full px-2.5 py-1 text-xs transition',
-                                        form.poem_genres.includes(genre)
-                                            ? 'bg-indigo-600 text-white'
-                                            : 'bg-stone-100 text-gray-600 hover:bg-stone-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
-                                    ]"
+                                    @click="genrePickerOpen = !genrePickerOpen"
+                                    class="flex w-full items-center justify-between rounded-lg border border-stone-200 bg-white px-3 py-2 text-left text-sm text-gray-600 hover:bg-stone-50 dark:border-gray-700 dark:bg-gray-900/60 dark:text-gray-200 dark:hover:bg-gray-800"
                                 >
-                                    {{ genre }}
+                                    <span>
+                                        {{
+                                            form.poem_genres.length
+                                                ? 'Edit genres'
+                                                : 'Choose genres'
+                                        }}
+                                    </span>
+
+                                    <ChevronDownIcon
+                                        class="h-4 w-4 text-gray-400"
+                                    />
                                 </button>
+
+                                <div
+                                    v-if="genrePickerOpen"
+                                    class="absolute left-0 right-0 z-30 mt-2 rounded-xl border border-gray-200 bg-white p-3 shadow-xl dark:border-gray-700 dark:bg-gray-800"
+                                >
+                                    <div class="flex flex-wrap gap-1.5">
+                                        <button
+                                            v-for="genre in poemGenres"
+                                            :key="genre"
+                                            type="button"
+                                            @click="toggleGenre(genre)"
+                                            :class="[
+                                                'rounded-full px-2.5 py-1 text-xs transition',
+                                                form.poem_genres.includes(genre)
+                                                    ? 'bg-indigo-600 text-white'
+                                                    : 'bg-stone-100 text-gray-600 hover:bg-stone-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+                                            ]"
+                                        >
+                                            {{ genre }}
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="mt-2 flex gap-2">
@@ -651,7 +677,7 @@ if (props.openDraftId) {
                     </div>
                 </aside>
 
-                <main class="overflow-y-auto p-5 lg:p-8">
+                <main class="p-5 lg:p-8">
                     <div class="mx-auto max-w-4xl">
                         <div class="rounded-2xl border border-stone-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
                             <input
