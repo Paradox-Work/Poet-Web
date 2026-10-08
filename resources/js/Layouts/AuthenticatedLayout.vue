@@ -154,7 +154,21 @@ function search() {
                                     Home
                                 </NavLink>
 
-                                <div class="flex items-stretch">
+                                <NavLink
+                                    :href="route('draft.index')"
+                                    :active="route().current('draft.index')"
+                                >
+                                    Drafts
+                                </NavLink>
+
+                                <NavLink
+                                    :href="route('social.index')"
+                                    :active="route().current('social.index')"
+                                >
+                                    Social
+                                </NavLink>
+
+                                <div class="flex items-center">
                                     <Dropdown
                                         v-if="authUser"
                                         align="left"
@@ -164,7 +178,7 @@ function search() {
                                         <template #trigger>
                                             <button
                                                 type="button"
-                                                class="inline-flex h-full items-center gap-1 border-b-2 border-transparent px-1 pt-1 text-sm font-medium leading-5 text-gray-500 transition duration-150 ease-in-out hover:border-gray-300 hover:text-gray-700 focus:outline-none dark:text-gray-400 dark:hover:border-gray-700 dark:hover:text-gray-300"
+                                                class="inline-flex items-center gap-1.5 rounded-full bg-[var(--poet-accent-soft)] px-3 py-2 text-sm font-semibold text-[var(--poet-accent-strong)] transition hover:-translate-y-0.5 hover:shadow-sm focus:outline-none"
                                             >
                                                 Create
 
@@ -217,20 +231,6 @@ function search() {
                                         </template>
                                     </Dropdown>
                                 </div>
-
-                                <NavLink
-                                    :href="route('draft.index')"
-                                    :active="route().current('draft.index')"
-                                >
-                                    Drafts
-                                </NavLink>
-
-                                <NavLink
-                                    :href="route('social.index')"
-                                    :active="route().current('social.index')"
-                                >
-                                    Social
-                                </NavLink>
                             </div>
                         </div>
 

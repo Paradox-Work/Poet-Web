@@ -60,6 +60,11 @@ const props = defineProps({
         default: false
     },
 
+    deckPreview: {
+        type: Boolean,
+        default: false
+    },
+
     canGoPrevious: {
         type: Boolean,
         default: false
@@ -387,6 +392,7 @@ async function sendReaction() {
             <PostUserHeader :post="post" />
 
             <div
+                v-if="!deckPreview"
                 class="flex items-center gap-2"
             >
                 <div
@@ -551,13 +557,16 @@ async function sendReaction() {
             />
 
         </div>
-        <Disclosure v-slot="{ open }">
+        <Disclosure
+            v-if="!deckPreview"
+            v-slot="{ open }"
+        >
 
     <div
         :class="[
             'mt-5 grid items-end',
             deckNavigation
-                ? 'grid-cols-[52px_1fr_52px] gap-3'
+                ? 'grid-cols-[40px_1fr_40px] gap-2'
                 : 'grid-cols-1'
         ]"
     >
@@ -566,7 +575,7 @@ async function sendReaction() {
             type="button"
             @click="emit('previous')"
             :disabled="!canGoPrevious"
-            class="group flex h-12 w-12 items-center justify-center self-end justify-self-start rounded-full border border-gray-200 bg-white text-gray-600 transition hover:-translate-y-0.5 hover:shadow-md disabled:pointer-events-none disabled:opacity-20 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
+            class="group flex h-10 w-10 items-center justify-center self-end justify-self-start rounded-full border border-gray-200 bg-white text-gray-600 transition hover:-translate-y-0.5 hover:shadow-md disabled:pointer-events-none disabled:opacity-20 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
             aria-label="Previous post"
         >
             <ChevronLeftIcon
@@ -574,7 +583,7 @@ async function sendReaction() {
             />
         </button>
 
-        <div class="flex items-end justify-center gap-10">
+        <div class="flex items-end justify-center gap-8">
             <button
                 type="button"
                 @click="sendReaction"
@@ -589,14 +598,14 @@ async function sendReaction() {
             >
                 <span
                     :class="[
-                        'flex h-12 w-12 items-center justify-center rounded-full border transition',
+                        'flex h-11 w-11 items-center justify-center rounded-full border transition',
                         post.current_user_has_reaction
                             ? 'border-sky-300 bg-sky-100 text-sky-700 dark:border-sky-800 dark:bg-sky-900/60 dark:text-sky-300'
                             : 'border-gray-200 bg-white text-gray-700 hover:-translate-y-0.5 hover:shadow-md dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100'
                     ]"
                 >
                     <HandThumbUpIcon
-                        class="h-5.5 w-5.5"
+                        class="h-5 w-5"
                     />
                 </span>
 
@@ -613,10 +622,10 @@ async function sendReaction() {
                 aria-label="Return"
             >
                 <span
-                    class="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--poet-accent)] text-white shadow-md transition duration-300 group-hover:-translate-y-0.5 group-hover:shadow-lg"
+                    class="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--poet-accent)] text-white shadow-md transition duration-300 group-hover:-translate-y-0.5 group-hover:shadow-lg"
                 >
                     <ArrowUturnLeftIcon
-                        class="h-7 w-7 transition-transform duration-300 group-hover:-rotate-12"
+                        class="h-6 w-6 transition-transform duration-300 group-hover:-rotate-12"
                     />
                 </span>
 
@@ -632,10 +641,10 @@ async function sendReaction() {
                 aria-label="View post"
             >
                 <span
-                    class="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--poet-accent)] text-white shadow-md transition duration-300 group-hover:-translate-y-0.5 group-hover:shadow-lg"
+                    class="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--poet-accent)] text-white shadow-md transition duration-300 group-hover:-translate-y-0.5 group-hover:shadow-lg"
                 >
                     <EyeIcon
-                        class="h-7 w-7 transition-transform duration-300 group-hover:scale-110"
+                        class="h-6 w-6 transition-transform duration-300 group-hover:scale-110"
                     />
                 </span>
 
@@ -649,10 +658,10 @@ async function sendReaction() {
                 aria-label="Show comments"
             >
                 <span
-                    class="flex h-12 w-12 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 transition group-hover:-translate-y-0.5 group-hover:shadow-md dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                    class="flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 transition group-hover:-translate-y-0.5 group-hover:shadow-md dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
                 >
                     <ChatBubbleOvalLeftIcon
-                        class="h-5.5 w-5.5"
+                        class="h-5 w-5"
                     />
                 </span>
 
@@ -667,7 +676,7 @@ async function sendReaction() {
             type="button"
             @click="emit('next')"
             :disabled="!canGoNext"
-            class="group flex h-12 w-12 items-center justify-center self-end justify-self-end rounded-full border border-gray-200 bg-white text-gray-600 transition hover:-translate-y-0.5 hover:shadow-md disabled:pointer-events-none disabled:opacity-20 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
+            class="group flex h-10 w-10 items-center justify-center self-end justify-self-end rounded-full border border-gray-200 bg-white text-gray-600 transition hover:-translate-y-0.5 hover:shadow-md disabled:pointer-events-none disabled:opacity-20 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
             aria-label="Next post"
         >
             <ChevronRightIcon

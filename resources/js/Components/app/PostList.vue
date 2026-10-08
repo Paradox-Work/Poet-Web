@@ -613,16 +613,22 @@ function removePost(postId) {
             >
                 <div
                     class="transition duration-300"
-                    :class="
+                    :class="[
                         index === activeIndex
                             ? 'scale-100'
-                            : 'scale-[0.965]'
-                    "
+                            : 'scale-[0.965]',
+                        index === activeIndex
+                            ? ''
+                            : 'pointer-events-none'
+                    ]"
                 >
                     <PostItem
                         :post="post"
                         :deck-navigation="
                             index === activeIndex
+                        "
+                        :deck-preview="
+                            index !== activeIndex
                         "
                         :can-go-previous="
                             activeIndex > 0
