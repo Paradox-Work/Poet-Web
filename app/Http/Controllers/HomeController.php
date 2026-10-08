@@ -32,6 +32,25 @@ class HomeController extends Controller
             $feed = 'poems';
         }
 
+        $source =
+            $request->string('source')
+                ->toString();
+
+        if (
+            !in_array(
+                $source,
+                [
+                    'for_you',
+                    'following',
+                    'groups',
+                    'mine',
+                ],
+                true
+            )
+        ) {
+            $source = 'for_you';
+        }
+
         $genre =
             trim(
                 $request
@@ -50,10 +69,52 @@ class HomeController extends Controller
                 );
         }
 
-        $baseFeedQuery =
+        $sourceFeedQuery =
             Post::postsForTimeline(
                 $userId
-            )
+            );
+
+        if (
+            $source === 'following'
+        ) {
+            $sourceFeedQuery
+                ->whereIn(
+                    'posts.user_id',
+                    function ($query) use (
+                        $userId
+                    ) {
+                        $query
+                            ->select('user_id')
+                            ->from('followers')
+                            ->where(
+                                'follower_id',
+                                $userId
+                            );
+                    }
+                );
+        } elseif (
+            $source === 'groups'
+        ) {
+            $sourceFeedQuery
+                ->whereNotNull(
+                    'posts.group_id'
+                );
+        } elseif (
+            $source === 'mine'
+        ) {
+            $sourceFeedQuery
+                ->where(
+                    'posts.user_id',
+                    $userId
+                );
+        } else {
+            /*
+             * For You combines:
+             * - my own work
+             * - accessible group publications
+             * - writers I follow
+             */
+            $sourceFeedQuery
                 ->where(
                     function ($query) use (
                         $userId
@@ -82,14 +143,15 @@ class HomeController extends Controller
                             );
                     }
                 );
+        }
 
         /*
-         * Genre counts come from every poem
-         * visible in this user's Home feed,
-         * before the selected genre is applied.
+         * Counts follow the selected source,
+         * but are calculated before applying
+         * the chosen genre itself.
          */
         $genreCounts =
-            (clone $baseFeedQuery)
+            (clone $sourceFeedQuery)
                 ->withoutEagerLoads()
                 ->where(
                     'posts.type',
@@ -119,7 +181,7 @@ class HomeController extends Controller
                 ->values();
 
         $postsQuery =
-            clone $baseFeedQuery;
+            clone $sourceFeedQuery;
 
         if (
             $feed === 'poems'
@@ -138,9 +200,6 @@ class HomeController extends Controller
                 'post'
             );
 
-            /*
-             * Posts do not have poem genres.
-             */
             $genre = '';
         }
 
@@ -176,6 +235,7 @@ class HomeController extends Controller
 
                 'feedFilters' => [
                     'feed' => $feed,
+                    'source' => $source,
                     'genre' =>
                         $genre !== ''
                             ? $genre

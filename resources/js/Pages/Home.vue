@@ -21,6 +21,7 @@ const props = defineProps({
         type: Object,
         default: () => ({
             feed: 'poems',
+            source: 'for_you',
             genre: null
         })
     },
@@ -30,6 +31,25 @@ const props = defineProps({
         default: () => []
     }
 });
+
+const sourceOptions = [
+    {
+        value: 'for_you',
+        label: 'For You'
+    },
+    {
+        value: 'following',
+        label: 'Following'
+    },
+    {
+        value: 'groups',
+        label: 'Groups'
+    },
+    {
+        value: 'mine',
+        label: 'My Art'
+    }
+];
 
 const publicationWord =
     computed(() => {
@@ -66,15 +86,28 @@ const feedLabel =
             : typeLabel;
     });
 
-function navigateFilters(
-    feed,
-    genre
-) {
+function navigateFilters({
+    feed =
+        props.feedFilters.feed
+            ?? 'poems',
+
+    source =
+        props.feedFilters.source
+            ?? 'for_you',
+
+    genre =
+        props.feedFilters.genre
+            ?? null
+} = {}) {
     const query = {
-        feed
+        feed,
+        source
     };
 
-    if (genre) {
+    if (
+        genre &&
+        feed !== 'posts'
+    ) {
         query.genre = genre;
     }
 
@@ -93,23 +126,34 @@ function changeFeed(event) {
     const feed =
         event.target.value;
 
-    navigateFilters(
+    navigateFilters({
         feed,
-        feed === 'posts'
-            ? null
-            : props.feedFilters.genre
-    );
+        genre:
+            feed === 'posts'
+                ? null
+                : props.feedFilters.genre
+    });
 }
 
 function changeGenre(event) {
-    const genre =
-        event.target.value || null;
+    navigateFilters({
+        genre:
+            event.target.value ||
+            null
+    });
+}
 
-    navigateFilters(
-        props.feedFilters.feed
-            ?? 'poems',
-        genre
-    );
+function changeSource(source) {
+    if (
+        source ===
+        props.feedFilters.source
+    ) {
+        return;
+    }
+
+    navigateFilters({
+        source
+    });
 }
 </script>
 
@@ -208,10 +252,46 @@ function changeGenre(event) {
                     </div>
                 </div>
 
+                <nav
+                    class="flex shrink-0 justify-center pt-5"
+                    aria-label="Feed source"
+                >
+                    <div
+                        class="flex items-center gap-7 sm:gap-10"
+                    >
+                        <button
+                            v-for="source in sourceOptions"
+                            :key="source.value"
+                            type="button"
+                            @click="
+                                changeSource(
+                                    source.value
+                                )
+                            "
+                            :class="[
+                                'relative pb-2 text-sm font-medium transition',
+                                feedFilters.source === source.value
+                                    ? 'text-[var(--poet-text)]'
+                                    : 'text-[var(--poet-muted)] hover:text-[var(--poet-text)]'
+                            ]"
+                        >
+                            {{ source.label }}
+
+                            <span
+                                v-if="
+                                    feedFilters.source ===
+                                    source.value
+                                "
+                                class="absolute inset-x-1 -bottom-px h-0.5 rounded-full bg-[var(--poet-accent)]"
+                            />
+                        </button>
+                    </div>
+                </nav>
+
                 <div class="min-h-0 flex-1">
                     <PostList
                         :key="
-                            `${feedFilters.feed}-${feedFilters.genre ?? 'all'}`
+                            `${feedFilters.source}-${feedFilters.feed}-${feedFilters.genre ?? 'all'}`
                         "
                         :posts="posts"
                         mode="deck"
