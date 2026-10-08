@@ -24,6 +24,11 @@ const props = defineProps({
     group: {
         type: Object,
         default: null
+    },
+
+    compact: {
+        type: Boolean,
+        default: false
     }
 });
 
@@ -43,15 +48,29 @@ function showCreatePostModal() {
 
 <template>
     <div
-        class="rounded-2xl border border-[var(--poet-border)] bg-[var(--poet-surface)] p-3 shadow-sm"
+        :class="[
+            'rounded-2xl border border-[var(--poet-border)] bg-[var(--poet-surface)] shadow-sm',
+            compact
+                ? 'p-2'
+                : 'p-3'
+        ]"
     >
         <div
-            class="grid gap-2 sm:grid-cols-2"
+            :class="
+                compact
+                    ? 'grid gap-2'
+                    : 'grid gap-2 sm:grid-cols-2'
+            "
         >
             <button
                 type="button"
                 @click="showCreatePostModal"
-                class="group flex items-center gap-3 rounded-xl px-4 py-3 text-left transition hover:bg-[var(--poet-surface-soft)]"
+                :class="[
+                    'group flex items-center gap-3 rounded-xl text-left transition hover:bg-[var(--poet-surface-soft)]',
+                    compact
+                        ? 'px-3 py-2.5'
+                        : 'px-4 py-3'
+                ]"
             >
                 <span
                     class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--poet-border)] text-[var(--poet-muted)] transition group-hover:text-[var(--poet-text)]"
@@ -85,7 +104,12 @@ function showCreatePostModal() {
                             : {}
                     )
                 "
-                class="group flex items-center gap-3 rounded-xl bg-[var(--poet-accent-soft)] px-4 py-3 text-left transition hover:-translate-y-0.5"
+                :class="[
+                    'group flex items-center gap-3 rounded-xl bg-[var(--poet-accent-soft)] text-left transition hover:-translate-y-0.5',
+                    compact
+                        ? 'px-3 py-2.5'
+                        : 'px-4 py-3'
+                ]"
             >
                 <span
                     class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--poet-accent)] text-white shadow-sm"
