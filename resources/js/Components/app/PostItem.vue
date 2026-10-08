@@ -17,6 +17,7 @@ import {
 } from '@heroicons/vue/20/solid';
 
 import {
+    ArrowUturnLeftIcon,
     ChatBubbleOvalLeftIcon,
     EyeIcon,
     MapPinIcon
@@ -43,6 +44,11 @@ const props = defineProps({
     post: Object,
 
     showHashtags: {
+        type: Boolean,
+        default: false
+    },
+
+    dedicatedPage: {
         type: Boolean,
         default: false
     }
@@ -278,6 +284,19 @@ function deletePost() {
     );
 }
 
+function returnFromPost() {
+    if (
+        window.history.length > 1
+    ) {
+        window.history.back();
+        return;
+    }
+
+    router.visit(
+        route('dashboard')
+    );
+}
+
 const reactionPending = ref(false);
 
 async function sendReaction() {
@@ -500,16 +519,37 @@ async function sendReaction() {
             </span>
         </button>
 
+        <button
+            v-if="dedicatedPage"
+            type="button"
+            @click="returnFromPost"
+            class="group flex flex-col items-center gap-1 text-xs font-medium text-indigo-600 dark:text-indigo-300"
+            aria-label="Return"
+        >
+            <span
+                class="flex h-14 w-14 items-center justify-center rounded-full bg-indigo-600 text-white shadow-md transition duration-300 group-hover:-translate-y-0.5 group-hover:bg-indigo-500 group-hover:shadow-lg"
+            >
+                <ArrowUturnLeftIcon
+                    class="h-6 w-6 transition-transform duration-300 group-hover:-rotate-12"
+                />
+            </span>
+
+            <span>
+                Return
+            </span>
+        </button>
+
         <Link
+            v-else
             :href="route('post.view', post.id)"
             class="group flex flex-col items-center gap-1 text-xs font-medium text-indigo-600 dark:text-indigo-300"
             aria-label="View post"
         >
             <span
-                class="flex h-14 w-14 items-center justify-center rounded-full bg-indigo-600 text-white shadow-md transition group-hover:-translate-y-0.5 group-hover:bg-indigo-500 group-hover:shadow-lg"
+                class="flex h-14 w-14 items-center justify-center rounded-full bg-indigo-600 text-white shadow-md transition duration-300 group-hover:-translate-y-0.5 group-hover:bg-indigo-500 group-hover:shadow-lg"
             >
                 <EyeIcon
-                    class="h-6 w-6"
+                    class="h-6 w-6 transition-transform duration-300 group-hover:scale-110"
                 />
             </span>
 

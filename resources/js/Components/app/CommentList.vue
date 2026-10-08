@@ -458,7 +458,7 @@ function onCommentDelete(
                 "
                 rows="2"
                 maxlength="2000"
-                class="flex-1 rounded-md border-gray-300 resize-none"
+                class="flex-1 resize-none rounded-md border-gray-300 bg-white text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500"
             />
 
 
@@ -556,7 +556,7 @@ function onCommentDelete(
                     "
                     rows="2"
                     maxlength="2000"
-                    class="w-full rounded-md border-gray-300 resize-none"
+                    class="w-full resize-none rounded-md border-gray-300 bg-white text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500"
                 />
 
 
@@ -569,7 +569,7 @@ function onCommentDelete(
                         @click="
                             editingComment = null
                         "
-                        class="text-gray-600 hover:underline"
+                        class="text-gray-600 hover:underline dark:text-gray-300"
                     >
                         Cancel
                     </button>
@@ -628,8 +628,8 @@ function onCommentDelete(
                             class="flex items-center gap-1 rounded px-2 py-1 text-xs transition"
                             :class="[
                                 comment.current_user_has_reaction
-                                    ? 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
-                                    : 'text-gray-500 hover:bg-gray-100',
+                                    ? 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:text-indigo-300 dark:hover:bg-indigo-950/60'
+                                    : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700',
 
                                 reactingCommentId ===
                                     comment.id
@@ -660,7 +660,7 @@ function onCommentDelete(
 
                         <!-- Replies -->
                         <DisclosureButton
-                            class="flex items-center gap-1 rounded px-2 py-1 text-xs text-indigo-600 hover:bg-indigo-50"
+                            class="flex items-center gap-1 rounded px-2 py-1 text-xs text-indigo-600 hover:bg-indigo-50 dark:text-indigo-300 dark:hover:bg-indigo-950/40"
                         >
 
                             <ChatBubbleLeftEllipsisIcon

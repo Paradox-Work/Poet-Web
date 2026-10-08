@@ -100,6 +100,7 @@ function onModalHide() {
             <PostItem
                 :post="post"
                 show-hashtags
+                dedicated-page
                 @edit-click="
                     openEditModal
                 "
