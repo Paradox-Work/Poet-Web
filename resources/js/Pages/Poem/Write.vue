@@ -46,6 +46,7 @@ const draftId = ref(null);
 const saveState = ref('idle');
 const savedAt = ref(null);
 const draftMenuOpen = ref(false);
+const formGuideOpen = ref(false);
 const hashtagsInput = ref('');
 const customGenreInput = ref('');
 
@@ -450,75 +451,111 @@ if (props.openDraftId) {
                 </div>
             </header>
 
-            <div class="grid min-h-0 flex-1 lg:grid-cols-[320px_minmax(0,1fr)]">
-                <aside class="overflow-y-auto border-r border-stone-200 bg-stone-100/70 p-5 dark:border-gray-700 dark:bg-gray-800/60">
-                    <div class="space-y-6">
-                        <section>
-                            <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-400">
-                                Poem form
-                            </label>
+            <div
+                class="border-b border-stone-200 bg-white px-5 py-2.5 dark:border-gray-700 dark:bg-gray-800"
+            >
+                <div class="flex flex-wrap items-center gap-2">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">
+                            Form
+                        </span>
 
-                            <select
-                                v-model="form.poem_form"
-                                class="block w-full rounded-lg border-gray-300 bg-white text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+                        <select
+                            v-model="form.poem_form"
+                            class="rounded-lg border-gray-300 bg-white py-1.5 pl-3 pr-8 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+                        >
+                            <option
+                                v-for="item in poemForms"
+                                :key="item.id"
+                                :value="item.id"
                             >
-                                <option
-                                    v-for="item in poemForms"
-                                    :key="item.id"
-                                    :value="item.id"
-                                >
-                                    {{ item.name }}
-                                </option>
-                            </select>
+                                {{ item.name }}
+                            </option>
+                        </select>
+                    </div>
 
-                            <p class="mt-2 text-sm leading-5 text-gray-500 dark:text-gray-400">
+                    <div class="h-5 w-px bg-stone-200 dark:bg-gray-700"></div>
+
+                    <div class="flex items-center gap-1.5 rounded-lg bg-stone-100 px-2.5 py-1.5 text-xs dark:bg-gray-900/60">
+                        <span class="text-gray-400">Lines</span>
+                        <span class="font-semibold text-gray-700 dark:text-gray-100">
+                            {{ lineProgress }}
+                        </span>
+                    </div>
+
+                    <div class="flex items-center gap-1.5 rounded-lg bg-stone-100 px-2.5 py-1.5 text-xs dark:bg-gray-900/60">
+                        <span class="text-gray-400">Stanzas</span>
+                        <span class="font-semibold text-gray-700 dark:text-gray-100">
+                            {{ stanzaCount }}
+                        </span>
+                    </div>
+
+                    <div class="flex items-center gap-1.5 rounded-lg bg-stone-100 px-2.5 py-1.5 text-xs dark:bg-gray-900/60">
+                        <span class="text-gray-400">Genres</span>
+                        <span class="font-semibold text-gray-700 dark:text-gray-100">
+                            {{ form.poem_genres.length }}
+                        </span>
+                    </div>
+
+                    <div class="relative">
+                        <button
+                            type="button"
+                            @click="formGuideOpen = !formGuideOpen"
+                            class="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
+                        >
+                            Form guide
+                        </button>
+
+                        <div
+                            v-if="formGuideOpen"
+                            class="absolute left-0 z-30 mt-2 w-80 rounded-xl border border-gray-200 bg-white p-4 shadow-xl dark:border-gray-700 dark:bg-gray-800"
+                        >
+                            <div class="mb-1 font-serif text-base font-semibold text-gray-900 dark:text-gray-100">
+                                {{ selectedForm.name }}
+                            </div>
+
+                            <p class="mb-3 text-sm leading-5 text-gray-500 dark:text-gray-400">
                                 {{ selectedForm.summary }}
                             </p>
-                        </section>
 
-                        <section class="rounded-xl border border-stone-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900/60">
-                            <h2 class="mb-3 text-sm font-semibold text-gray-800 dark:text-gray-100">
-                                Structure
-                            </h2>
-
-                            <ul class="space-y-2 text-sm leading-5 text-gray-500 dark:text-gray-400">
+                            <ul class="space-y-2 text-sm leading-5 text-gray-600 dark:text-gray-300">
                                 <li
                                     v-for="rule in selectedForm.structure"
                                     :key="rule"
+                                    class="flex gap-2"
                                 >
-                                    {{ rule }}
+                                    <span class="text-indigo-400">•</span>
+                                    <span>{{ rule }}</span>
                                 </li>
                             </ul>
-                        </section>
 
-                        <section class="grid grid-cols-2 gap-3">
-                            <div class="rounded-xl border border-stone-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-900/60">
-                                <div class="text-xs uppercase tracking-wide text-gray-400">
-                                    Lines
+                            <div
+                                v-if="selectedForm.rhymeScheme"
+                                class="mt-3 border-t border-gray-100 pt-3 dark:border-gray-700"
+                            >
+                                <div class="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                                    Rhyme scheme
                                 </div>
-                                <div class="mt-1 text-lg font-semibold text-gray-800 dark:text-gray-100">
-                                    {{ lineProgress }}
+                                <div class="mt-1 font-mono text-sm text-gray-700 dark:text-gray-200">
+                                    {{ selectedForm.rhymeScheme }}
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                            <div class="rounded-xl border border-stone-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-900/60">
-                                <div class="text-xs uppercase tracking-wide text-gray-400">
-                                    Stanzas
-                                </div>
-                                <div class="mt-1 text-lg font-semibold text-gray-800 dark:text-gray-100">
-                                    {{ stanzaCount }}
-                                </div>
-                            </div>
-                        </section>
-
-                        <section v-if="selectedForm.rhymeScheme">
+            <div class="grid min-h-0 flex-1 lg:grid-cols-[280px_minmax(0,1fr)]">
+                <aside class="overflow-y-auto border-r border-stone-200 bg-stone-100/70 p-4 dark:border-gray-700 dark:bg-gray-800/60">
+                    <div class="space-y-5">
+                        <div>
                             <div class="text-xs font-semibold uppercase tracking-[0.16em] text-gray-400">
-                                Rhyme scheme
+                                Poem details
                             </div>
-                            <div class="mt-2 font-mono text-sm text-gray-700 dark:text-gray-200">
-                                {{ selectedForm.rhymeScheme }}
-                            </div>
-                        </section>
+                            <p class="mt-1 text-xs leading-5 text-gray-400">
+                                Optional publishing details that stay out of the writing area.
+                            </p>
+                        </div>
 
                         <section>
                             <div class="mb-2 flex items-center justify-between">
