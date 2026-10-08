@@ -391,7 +391,9 @@ async function sendReaction() {
             'rounded-2xl border border-[var(--poet-border)] bg-[var(--poet-surface)] text-[var(--poet-text)] shadow-[0_10px_35px_rgba(15,23,42,0.04)] transition hover:border-[var(--poet-border-strong)]',
             deckPreview
                 ? 'h-[min(46vh,430px)] overflow-hidden px-4 py-4'
-                : 'mb-5 px-5 py-5'
+                : deckNavigation
+                    ? 'mb-5 flex min-h-[clamp(380px,48vh,560px)] flex-col px-5 py-5'
+                    : 'mb-5 px-5 py-5'
         ]"
     >
         <div class="flex items-center justify-between mb-3">
@@ -578,10 +580,10 @@ async function sendReaction() {
 
     <div
         :class="[
-            'mt-5 grid items-end',
+            'grid items-end',
             deckNavigation
-                ? 'grid-cols-[40px_1fr_40px] gap-2'
-                : 'grid-cols-1'
+                ? 'mt-auto grid-cols-[40px_1fr_40px] gap-2 pt-5'
+                : 'mt-5 grid-cols-1'
         ]"
     >
         <button
