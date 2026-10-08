@@ -383,6 +383,13 @@ class PostController extends Controller
         $postOwner = $post->user;
         $group = $post->group;
 
+        /*
+         * Keep an audit trail of who
+         * performed the soft delete.
+         */
+        $post->deleted_by = $userId;
+        $post->save();
+
         $post->delete();
 
         if (
