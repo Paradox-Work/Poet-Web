@@ -29,6 +29,11 @@ Route::middleware('auth')->group(function () {
     )->name('post.create');
 
     Route::get(
+        '/drafts',
+        [\App\Http\Controllers\PostController::class, 'drafts']
+    )->name('draft.index');
+
+    Route::get(
         '/drafts/latest',
         [\App\Http\Controllers\PostController::class, 'latestDraft']
     )->name('draft.latest');

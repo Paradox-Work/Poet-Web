@@ -121,7 +121,14 @@ function search() {
                                     :href="route('dashboard')"
                                     :active="route().current('dashboard')"
                                 >
-                                    Dashboard
+                                    Home
+                                </NavLink>
+
+                                <NavLink
+                                    :href="route('draft.index')"
+                                    :active="route().current('draft.index')"
+                                >
+                                    Drafts
                                 </NavLink>
                             </div>
                         </div>
@@ -297,7 +304,14 @@ function search() {
                             :href="route('dashboard')"
                             :active="route().current('dashboard')"
                         >
-                            Dashboard
+                            Home
+                        </ResponsiveNavLink>
+
+                        <ResponsiveNavLink
+                            :href="route('draft.index')"
+                            :active="route().current('draft.index')"
+                        >
+                            Drafts
                         </ResponsiveNavLink>
                     </div>
 

@@ -531,13 +531,33 @@ watch(
             return;
         }
 
-        form.id = post.id ?? null;
+        const isDraft =
+            post.status === 'draft';
+
+        form.id =
+            isDraft
+                ? null
+                : (post.id ?? null);
+
         form.type = post.type ?? 'post';
 
-        draftId.value = null;
-        draftState.value = 'idle';
-        draftSavedAt.value = null;
-        draftLoadAttempted.value = false;
+        draftId.value =
+            isDraft
+                ? post.id
+                : null;
+
+        draftState.value =
+            isDraft
+                ? 'restored'
+                : 'idle';
+
+        draftSavedAt.value =
+            isDraft
+                ? (post.draft_saved_at ?? null)
+                : null;
+
+        draftLoadAttempted.value =
+            isDraft;
         form.title = post.title ?? '';
         form.caption = post.caption ?? '';
         form.hashtags = post.hashtags ?? [];
@@ -555,7 +575,10 @@ watch(
 
         form.deleted_file_ids = [];
         form.attachments = [];
-        form._method = post.id ? 'PUT' : 'POST';
+        form._method =
+            isDraft || post.id
+                ? 'PUT'
+                : 'POST';
 
         attachmentFiles.value = [];
         attachmentErrors.value = [];

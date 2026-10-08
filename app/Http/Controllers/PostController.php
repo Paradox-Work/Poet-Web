@@ -26,6 +26,80 @@ use App\Http\Requests\UpdateCommentRequest;
 
 class PostController extends Controller
 {
+    public function drafts(
+        Request $request
+    ) {
+        $drafts = Post::query()
+            ->with('group')
+            ->where(
+                'user_id',
+                $request->user()->id
+            )
+            ->where(
+                'status',
+                'draft'
+            )
+            ->latest('draft_saved_at')
+            ->get()
+            ->map(
+                function (Post $draft) {
+                    $plainBody =
+                        trim(
+                            preg_replace(
+                                '/\\s+/',
+                                ' ',
+                                strip_tags(
+                                    $draft->body ?? ''
+                                )
+                            )
+                        );
+
+                    return [
+                        'id' => $draft->id,
+                        'status' => 'draft',
+                        'type' =>
+                            $draft->type ?? 'poem',
+                        'title' =>
+                            $draft->title,
+                        'caption' =>
+                            $draft->caption,
+                        'hashtags' =>
+                            $draft->hashtags ?? [],
+                        'body' =>
+                            $draft->body,
+                        'preview' =>
+                            mb_strimwidth(
+                                $plainBody,
+                                0,
+                                180,
+                                '…'
+                            ),
+                        'group' =>
+                            $draft->group
+                                ? [
+                                    'id' =>
+                                        $draft->group->id,
+                                    'name' =>
+                                        $draft->group->name,
+                                    'slug' =>
+                                        $draft->group->slug,
+                                ]
+                                : null,
+                        'draft_saved_at' =>
+                            $draft->draft_saved_at
+                                ?->toISOString(),
+                    ];
+                }
+            );
+
+        return inertia(
+            'Drafts/Index',
+            [
+                'drafts' => $drafts,
+            ]
+        );
+    }
+
     public function latestDraft(
         Request $request
     ) {
