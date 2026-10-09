@@ -1,50 +1,172 @@
 <?php
 
+use App\Enums\GroupUserRole;
+use App\Enums\GroupUserStatus;
+use App\Models\Group;
+use App\Models\GroupUser;
+use App\Models\Post;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Tests\TestCase;
-
-/*
-|--------------------------------------------------------------------------
-| Test Case
-|--------------------------------------------------------------------------
-|
-| The closure you provide to your test functions is always bound to a specific PHPUnit test
-| case class. By default, that class is "PHPUnit\Framework\TestCase". Of course, you may
-| need to change it using the "pest()" function to bind a different classes or traits.
-|
-*/
 
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
     ->in('Feature');
 
-/*
-|--------------------------------------------------------------------------
-| Expectations
-|--------------------------------------------------------------------------
-|
-| When you're writing tests, you often need to check that values meet certain conditions. The
-| "expect()" function gives you access to a set of "expectations" methods that you can use
-| to assert different things. Of course, you may extend the Expectation API at any time.
-|
-*/
+function poetTestGroup(
+    User $owner,
+    array $attributes = []
+): Group {
+    $group =
+        Group::create(
+            array_merge(
+                [
+                    'name' =>
+                        'Test Writers ' .
+                        Str::random(8),
 
-expect()->extend('toBeOne', function () {
-    return $this->toBe(1);
-});
+                    'user_id' =>
+                        $owner->id,
 
-/*
-|--------------------------------------------------------------------------
-| Functions
-|--------------------------------------------------------------------------
-|
-| While Pest is very powerful out-of-the-box, you may have some testing code specific to your
-| project that you don't want to repeat in every file. Here you can also expose helpers as
-| global functions to help you to reduce the number of lines of code in your test files.
-|
-*/
+                    'auto_approval' =>
+                        false,
 
-function something()
-{
-    // ..
+                    'about' =>
+                        'A group used by the automated qualification tests.',
+                ],
+                $attributes
+            )
+        );
+
+    poetTestAddGroupUser(
+        $group,
+        $owner,
+        GroupUserStatus::APPROVED->value,
+        GroupUserRole::ADMIN->value,
+        $owner
+    );
+
+    return $group;
+}
+
+function poetTestAddGroupUser(
+    Group $group,
+    User $user,
+    string $status =
+        GroupUserStatus::APPROVED->value,
+    string $role =
+        GroupUserRole::MEMBER->value,
+    ?User $createdBy = null,
+    array $attributes = []
+): GroupUser {
+    return GroupUser::create(
+        array_merge(
+            [
+                'status' =>
+                    $status,
+
+                'role' =>
+                    $role,
+
+                'user_id' =>
+                    $user->id,
+
+                'group_id' =>
+                    $group->id,
+
+                'created_by' =>
+                    $createdBy?->id
+                    ?? $group->user_id,
+            ],
+            $attributes
+        )
+    );
+}
+
+function poetTestPost(
+    User $user,
+    array $attributes = []
+): Post {
+    return Post::create(
+        array_merge(
+            [
+                'user_id' =>
+                    $user->id,
+
+                'group_id' =>
+                    null,
+
+                'type' =>
+                    'post',
+
+                'content_rating' =>
+                    'general',
+
+                'poem_form' =>
+                    null,
+
+                'poem_genres' =>
+                    [],
+
+                'title' =>
+                    null,
+
+                'caption' =>
+                    null,
+
+                'hashtags' =>
+                    [],
+
+                'body' =>
+                    '<p>Test publication</p>',
+
+                'status' =>
+                    'published',
+
+                'published_at' =>
+                    now(),
+
+                'draft_saved_at' =>
+                    null,
+            ],
+            $attributes
+        )
+    );
+}
+
+function poetTestPostPayload(
+    array $overrides = []
+): array {
+    return array_merge(
+        [
+            'type' =>
+                'post',
+
+            'content_rating' =>
+                'general',
+
+            'poem_form' =>
+                null,
+
+            'poem_genres' =>
+                [],
+
+            'title' =>
+                null,
+
+            'caption' =>
+                null,
+
+            'hashtags' =>
+                [],
+
+            'body' =>
+                '<p>Test publication</p>',
+
+            'group_id' =>
+                null,
+        ],
+        $overrides
+    );
 }

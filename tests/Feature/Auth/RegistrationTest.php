@@ -17,3 +17,31 @@ test('new users can register', function () {
     $this->assertAuthenticated();
     $response->assertRedirect(route('dashboard', absolute: false));
 });
+
+
+test('weak passwords are rejected', function () {
+    $response =
+        $this->post(
+            '/register',
+            [
+                'name' =>
+                    'Weak Password User',
+
+                'email' =>
+                    'weak@example.com',
+
+                'password' =>
+                    'password',
+
+                'password_confirmation' =>
+                    'password',
+            ]
+        );
+
+    $response
+        ->assertSessionHasErrors(
+            'password'
+        );
+
+    $this->assertGuest();
+});
