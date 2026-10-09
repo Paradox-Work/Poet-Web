@@ -1,10 +1,10 @@
 <template>
     <AuthenticatedLayout>
         <div
-            class="h-full overflow-y-auto bg-[var(--poet-bg)]"
+            class="h-full overflow-hidden bg-[var(--poet-bg)]"
         >
             <div
-                class="mx-auto w-full max-w-5xl px-3 pb-6 sm:px-4 sm:pb-10 lg:px-6"
+                class="mx-auto flex h-full min-h-0 w-full max-w-5xl flex-col px-3 pb-3 sm:px-4 sm:pb-4 lg:px-6"
             >
                 <div
                     v-show="showNotification && success"
@@ -21,7 +21,7 @@
                 </div>
 
                 <section
-                    class="mt-3 overflow-hidden rounded-xl border border-[var(--poet-border)] bg-[var(--poet-surface)] sm:mt-5 sm:rounded-2xl"
+                    class="mt-3 shrink-0 overflow-hidden rounded-xl border border-[var(--poet-border)] bg-[var(--poet-surface)] sm:mt-5 sm:rounded-2xl"
                 >
                     <div
                         class="group relative h-36 bg-[var(--poet-surface-soft)] sm:h-56"
@@ -187,9 +187,11 @@
                     </div>
                 </section>
 
-                <section class="mt-3 sm:mt-4">
+                <section
+                    class="mt-3 flex min-h-0 flex-1 flex-col sm:mt-4"
+                >
                     <div
-                        class="flex flex-col gap-3 border-b border-[var(--poet-border)] pb-3 md:flex-row md:items-end md:justify-between"
+                        class="flex shrink-0 flex-col gap-3 border-b border-[var(--poet-border)] pb-3 md:flex-row md:items-end md:justify-between"
                     >
                         <nav
                             class="scrollbar-hidden -mx-1 flex min-w-0 snap-x overflow-x-auto px-1"
@@ -259,7 +261,7 @@
 
                     <div
                         v-if="isPeopleTab"
-                        class="flex flex-wrap items-center justify-between gap-2 py-3 text-xs text-[var(--poet-muted)]"
+                        class="flex shrink-0 flex-wrap items-center justify-between gap-2 py-3 text-xs text-[var(--poet-muted)]"
                     >
                         <span>
                             {{
@@ -294,11 +296,14 @@
                         </span>
                     </div>
 
-                    <div v-if="selectedTab === 'posts'">
+                    <div
+                        v-if="selectedTab === 'posts'"
+                        class="flex min-h-0 flex-1 flex-col"
+                    >
                         <template v-if="posts">
                             <div
                                 v-if="posts.meta?.total"
-                                class="flex items-center justify-between gap-2 py-2.5 text-[11px] text-[var(--poet-muted)] sm:py-3 sm:text-xs"
+                                class="flex shrink-0 items-center justify-between gap-2 py-2.5 text-[11px] text-[var(--poet-muted)] sm:py-3 sm:text-xs"
                             >
                                 <span>
                                     {{ posts.meta.total }}
@@ -312,22 +317,28 @@
                                 </span>
                             </div>
 
-                            <ProfilePublicationGrid
+                            <div
                                 v-if="posts.data?.length"
-                                :posts="posts.data"
-                                :pinned-post-id="
-                                    user.pinned_post_id
-                                "
-                            />
+                                class="scrollbar-hidden min-h-0 flex-1 overflow-y-auto overscroll-contain pb-2"
+                            >
+                                <ProfilePublicationGrid
+                                    :posts="posts.data"
+                                    :pinned-post-id="
+                                        user.pinned_post_id
+                                    "
+                                />
+                            </div>
 
                             <div
                                 v-else
-                                class="rounded-2xl border border-[var(--poet-border)] bg-[var(--poet-surface)] py-12 text-center text-sm text-[var(--poet-muted)]"
+                                class="flex min-h-0 flex-1 items-center justify-center rounded-2xl border border-[var(--poet-border)] bg-[var(--poet-surface)] py-12 text-center text-sm text-[var(--poet-muted)]"
                             >
                                 No publications yet.
                             </div>
 
-                            <div class="mt-5">
+                            <div
+                                class="shrink-0 border-t border-[var(--poet-border)] pb-1 pt-3"
+                            >
                                 <CompactPaginator
                                     :meta="posts.meta"
                                     label="Publication pages"
@@ -338,28 +349,35 @@
 
                         <div
                             v-else
-                            class="rounded-2xl border border-[var(--poet-border)] bg-[var(--poet-surface)] py-12 text-center text-sm text-[var(--poet-muted)]"
+                            class="flex min-h-0 flex-1 items-center justify-center rounded-2xl border border-[var(--poet-border)] bg-[var(--poet-surface)] py-12 text-center text-sm text-[var(--poet-muted)]"
                         >
                             Log in to view publications.
                         </div>
                     </div>
 
-                    <div v-else-if="selectedTab === 'followers'">
+                    <div
+                        v-else-if="selectedTab === 'followers'"
+                        class="flex min-h-0 flex-1 flex-col"
+                    >
                         <div
                             v-if="followers.data?.length"
-                            class="grid grid-cols-2 gap-2 sm:grid-cols-2 lg:grid-cols-4"
+                            class="scrollbar-hidden min-h-0 flex-1 overflow-y-auto overscroll-contain pb-2"
                         >
-                            <UserListItem
-                                v-for="follower in followers.data"
-                                :key="follower.id"
-                                :user="follower"
-                                card-mode
-                            />
+                            <div
+                                class="grid grid-cols-2 gap-2 sm:grid-cols-2 lg:grid-cols-4"
+                            >
+                                <UserListItem
+                                    v-for="follower in followers.data"
+                                    :key="follower.id"
+                                    :user="follower"
+                                    card-mode
+                                />
+                            </div>
                         </div>
 
                         <div
                             v-else
-                            class="rounded-2xl border border-[var(--poet-border)] bg-[var(--poet-surface)] py-12 text-center text-sm text-[var(--poet-muted)]"
+                            class="flex min-h-0 flex-1 items-center justify-center rounded-2xl border border-[var(--poet-border)] bg-[var(--poet-surface)] py-12 text-center text-sm text-[var(--poet-muted)]"
                         >
                             {{
                                 peopleSearch
@@ -368,7 +386,9 @@
                             }}
                         </div>
 
-                        <div class="mt-5">
+                        <div
+                            class="shrink-0 border-t border-[var(--poet-border)] pb-1 pt-3"
+                        >
                             <CompactPaginator
                                 :meta="followers.meta"
                                 label="Follower pages"
@@ -377,22 +397,29 @@
                         </div>
                     </div>
 
-                    <div v-else-if="selectedTab === 'following'">
+                    <div
+                        v-else-if="selectedTab === 'following'"
+                        class="flex min-h-0 flex-1 flex-col"
+                    >
                         <div
                             v-if="followings.data?.length"
-                            class="grid grid-cols-2 gap-2 sm:grid-cols-2 lg:grid-cols-4"
+                            class="scrollbar-hidden min-h-0 flex-1 overflow-y-auto overscroll-contain pb-2"
                         >
-                            <UserListItem
-                                v-for="following in followings.data"
-                                :key="following.id"
-                                :user="following"
-                                card-mode
-                            />
+                            <div
+                                class="grid grid-cols-2 gap-2 sm:grid-cols-2 lg:grid-cols-4"
+                            >
+                                <UserListItem
+                                    v-for="following in followings.data"
+                                    :key="following.id"
+                                    :user="following"
+                                    card-mode
+                                />
+                            </div>
                         </div>
 
                         <div
                             v-else
-                            class="rounded-2xl border border-[var(--poet-border)] bg-[var(--poet-surface)] py-12 text-center text-sm text-[var(--poet-muted)]"
+                            class="flex min-h-0 flex-1 items-center justify-center rounded-2xl border border-[var(--poet-border)] bg-[var(--poet-surface)] py-12 text-center text-sm text-[var(--poet-muted)]"
                         >
                             {{
                                 peopleSearch
@@ -401,7 +428,9 @@
                             }}
                         </div>
 
-                        <div class="mt-5">
+                        <div
+                            class="shrink-0 border-t border-[var(--poet-border)] pb-1 pt-3"
+                        >
                             <CompactPaginator
                                 :meta="followings.meta"
                                 label="Following pages"
@@ -412,7 +441,7 @@
 
                     <div
                         v-else-if="selectedTab === 'photos'"
-                        class="rounded-2xl border border-[var(--poet-border)] bg-[var(--poet-surface)] p-3"
+                        class="scrollbar-hidden min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-2xl border border-[var(--poet-border)] bg-[var(--poet-surface)] p-3"
                     >
                         <TabPhotos
                             v-if="photos"
@@ -433,7 +462,7 @@
                                 'my_profile' &&
                             isMyProfile
                         "
-                        class="border-y border-[var(--poet-border)] bg-[var(--poet-surface)] px-3 py-4 sm:rounded-2xl sm:border sm:p-6"
+                        class="scrollbar-hidden min-h-0 flex-1 overflow-y-auto overscroll-contain border-y border-[var(--poet-border)] bg-[var(--poet-surface)] px-3 py-4 sm:rounded-2xl sm:border sm:p-6"
                     >
                         <Edit
                             :must-verify-email="mustVerifyEmail"
