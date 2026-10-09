@@ -1,6 +1,15 @@
 <?php
 
+use App\Http\Controllers\CommentController;
+use App\Http\Controllers\DraftController;
 use App\Http\Controllers\GroupController;
+use App\Http\Controllers\GroupImageController;
+use App\Http\Controllers\GroupInvitationController;
+use App\Http\Controllers\GroupMembershipController;
+use App\Http\Controllers\PoemController;
+use App\Http\Controllers\PostAttachmentController;
+use App\Http\Controllers\PostController;
+use App\Http\Controllers\PostInteractionController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -25,58 +34,58 @@ Route::middleware('auth')->group(function () {
     
     Route::post(
         '/posts', 
-        [\App\Http\Controllers\PostController::class, 'store']
+        [PostController::class, 'store']
     )
         ->middleware('throttle:20,1')
         ->name('post.create');
 
     Route::get(
         '/write/poem',
-        [\App\Http\Controllers\PostController::class, 'writePoem']
+        [PoemController::class, 'writePoem']
     )->name('poem.write');
 
     Route::get(
         '/drafts',
-        [\App\Http\Controllers\PostController::class, 'drafts']
+        [DraftController::class, 'drafts']
     )->name('draft.index');
 
     Route::get(
         '/drafts/latest',
-        [\App\Http\Controllers\PostController::class, 'latestDraft']
+        [DraftController::class, 'latestDraft']
     )->name('draft.latest');
 
     Route::post(
         '/drafts',
-        [\App\Http\Controllers\PostController::class, 'storeDraft']
+        [DraftController::class, 'storeDraft']
     )
         ->middleware('throttle:90,1')
         ->name('draft.store');
 
     Route::put(
         '/drafts/{post}',
-        [\App\Http\Controllers\PostController::class, 'updateDraft']
+        [DraftController::class, 'updateDraft']
     )
         ->middleware('throttle:90,1')
         ->name('draft.update');
 
     Route::put(
         '/posts/{post}',
-        [\App\Http\Controllers\PostController::class, 'update']
+        [PostController::class, 'update']
     )->name('post.update');
 
     Route::delete(
         '/posts/{post}',
-        [\App\Http\Controllers\PostController::class, 'destroy']
+        [PostController::class, 'destroy']
     )->name('post.destroy');
 
     Route::get(
         '/posts/{post}',
-        [\App\Http\Controllers\PostController::class, 'view']
+        [PostController::class, 'view']
     )->name('post.view');
 
     Route::get(
         '/posts/attachments/{attachment}/download',
-        [\App\Http\Controllers\PostController::class, 'downloadAttachment']
+        [PostAttachmentController::class, 'downloadAttachment']
     )->name('post.download');
     
     Route::post(
@@ -86,36 +95,36 @@ Route::middleware('auth')->group(function () {
 
     Route::post(
         '/posts/{post}/reaction',
-        [\App\Http\Controllers\PostController::class, 'postReaction']
+        [PostInteractionController::class, 'postReaction']
     )
         ->middleware('throttle:90,1')
         ->name('post.reaction');
 
     Route::post(
         '/posts/{post}/pin',
-        [\App\Http\Controllers\PostController::class, 'pinUnpin']
+        [PostInteractionController::class, 'pinUnpin']
     )->name('post.pin');
 
     Route::post(
         '/posts/{post}/comments',
-        [\App\Http\Controllers\PostController::class, 'createComment']
+        [CommentController::class, 'createComment']
     )
         ->middleware('throttle:30,1')
         ->name('post.comment.create');
     
     Route::put(
         '/comments/{comment}',
-        [\App\Http\Controllers\PostController::class, 'updateComment']
+        [CommentController::class, 'updateComment']
     )->name('post.comment.update');
 
     Route::delete(
         '/comments/{comment}',
-        [\App\Http\Controllers\PostController::class, 'deleteComment']
+        [CommentController::class, 'deleteComment']
     )->name('post.comment.delete');
 
     Route::post(
         '/comments/{comment}/reaction',
-        [\App\Http\Controllers\PostController::class, 'commentReaction']
+        [CommentController::class, 'commentReaction']
     )
         ->middleware('throttle:90,1')
         ->name('post.comment.reaction');
@@ -137,51 +146,51 @@ Route::middleware('auth')->group(function () {
 
     Route::post(
         '/groups/{group:slug}/images',
-        [GroupController::class, 'updateImage']
+        [GroupImageController::class, 'updateImage']
     )->name('group.updateImages');
 
     Route::post(
         '/groups/{group:slug}/invitations',
-        [GroupController::class, 'inviteUsers']
+        [GroupInvitationController::class, 'inviteUsers']
     )
         ->middleware('throttle:20,1')
         ->name('group.inviteUsers');
 
     Route::get(
         '/groups/invitations/{token}',
-        [GroupController::class, 'showInvitation']
+        [GroupInvitationController::class, 'showInvitation']
     )->name('group.invitation');
 
     Route::post(
         '/groups/invitations/{token}/accept',
-        [GroupController::class, 'approveInvitation']
+        [GroupInvitationController::class, 'approveInvitation']
     )->name('group.approveInvitation');
 
     Route::post(
         '/groups/invitations/{token}/decline',
-        [GroupController::class, 'declineInvitation']
+        [GroupInvitationController::class, 'declineInvitation']
     )->name('group.declineInvitation');
 
     Route::post(
         '/groups/{group:slug}/join',
-        [GroupController::class, 'join']
+        [GroupMembershipController::class, 'join']
     )
         ->middleware('throttle:10,1')
         ->name('group.join');
 
     Route::post(
         '/groups/{group:slug}/requests/resolve',
-        [GroupController::class,'resolveJoinRequest']
+        [GroupMembershipController::class,'resolveJoinRequest']
     )->name('group.resolveJoinRequest');
 
     Route::post(
         '/groups/{group:slug}/members/role',
-        [GroupController::class, 'changeRole']
+        [GroupMembershipController::class, 'changeRole']
     )->name('group.changeRole');
 
     Route::delete(
         '/groups/{group:slug}/members',
-        [GroupController::class, 'removeUser']
+        [GroupMembershipController::class, 'removeUser']
     )->name('group.removeUser');
 
     Route::post(
