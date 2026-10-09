@@ -5,7 +5,6 @@ namespace App\Notifications;
 use App\Models\Group;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -13,22 +12,24 @@ class InvitationApproved extends Notification
 {
     use Queueable;
 
-    /**
-     * Create a new notification instance.
-     */
     public function __construct(
         public Group $group,
         public User $user
     ) {
     }
 
-    public function via(object $notifiable): array
-    {
-        return ['mail'];
+    public function via(
+        object $notifiable
+    ): array {
+        return [
+            'mail',
+            'database',
+        ];
     }
 
-    public function toMail(object $notifiable): MailMessage
-    {
+    public function toMail(
+        object $notifiable
+    ): MailMessage {
         return (new MailMessage)
             ->subject(
                 'Group invitation accepted'
@@ -48,15 +49,30 @@ class InvitationApproved extends Notification
             );
     }
 
-    /**
-     * Get the array representation of the notification.
-     *
-     * @return array<string, mixed>
-     */
-    public function toArray(object $notifiable): array
-    {
+    public function toArray(
+        object $notifiable
+    ): array {
         return [
-            //
+            'kind' =>
+                'group_invitation_accepted',
+
+            'title' =>
+                'Invitation accepted',
+
+            'message' =>
+                $this->user->name .
+                ' joined "' .
+                $this->group->name .
+                '" from your invitation.',
+
+            'action_label' =>
+                'Open group',
+
+            'action_url' =>
+                route(
+                    'group.profile',
+                    $this->group->slug
+                ),
         ];
     }
 }

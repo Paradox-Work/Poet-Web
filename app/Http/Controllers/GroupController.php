@@ -574,6 +574,11 @@ if ($isApprovedMember) {
             'token_used' => now(),
         ]);
 
+        $this->markInvitationNotificationRead(
+            $request->user(),
+            $token
+        );
+
         $groupUser->adminUser?->notify(
             new InvitationApproved(
                 $groupUser->group,
@@ -592,6 +597,78 @@ if ($isApprovedMember) {
                 $groupUser->group->name .
                 '".'
             );
+    }
+
+    public function declineInvitation(
+        Request $request,
+        string $token
+    ) {
+        $groupUser =
+            GroupUser::query()
+                ->with('group')
+                ->where(
+                    'token',
+                    $token
+                )
+                ->firstOrFail();
+
+        if (
+            $groupUser->user_id !==
+            $request->user()->id
+        ) {
+            abort(
+                403,
+                'This invitation belongs to another user.'
+            );
+        }
+
+        if (
+            $groupUser->status ===
+            GroupUserStatus::APPROVED->value
+        ) {
+            return back()->with(
+                'success',
+                'You already joined this group.'
+            );
+        }
+
+        if ($groupUser->token_used) {
+            return back()->with(
+                'success',
+                'This invitation has already been resolved.'
+            );
+        }
+
+        if (
+            !$groupUser->token_expire_date ||
+            $groupUser
+                ->token_expire_date
+                ->isPast()
+        ) {
+            abort(
+                410,
+                'This invitation has expired.'
+            );
+        }
+
+        $groupUser->update([
+            'status' =>
+                GroupUserStatus::REJECTED->value,
+
+            'token_used' => now(),
+        ]);
+
+        $this->markInvitationNotificationRead(
+            $request->user(),
+            $token
+        );
+
+        return back()->with(
+            'success',
+            'Invitation to "' .
+            $groupUser->group->name .
+            '" declined.'
+        );
     }
 
     public function join(
@@ -819,6 +896,36 @@ if ($isApprovedMember) {
             $user->name .
             ' was removed from the group.'
         );
+    }
+
+    private function markInvitationNotificationRead(
+        object $user,
+        string $token
+    ): void {
+        $notification =
+            $user
+                ->unreadNotifications()
+                ->get()
+                ->first(
+                    function ($notification) use (
+                        $token
+                    ) {
+                        return (
+                            $notification
+                                ->data['kind']
+                                ?? null
+                        ) ===
+                            'group_invitation' &&
+                            (
+                                $notification
+                                    ->data['invitation_token']
+                                    ?? null
+                            ) ===
+                            $token;
+                    }
+                );
+
+        $notification?->markAsRead();
     }
 
     public function changeRole(

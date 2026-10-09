@@ -17,13 +17,18 @@ class GroupRoleChanged extends Notification
     ) {
     }
 
-    public function via(object $notifiable): array
-    {
-        return ['mail'];
+    public function via(
+        object $notifiable
+    ): array {
+        return [
+            'mail',
+            'database',
+        ];
     }
 
-    public function toMail(object $notifiable): MailMessage
-    {
+    public function toMail(
+        object $notifiable
+    ): MailMessage {
         return (new MailMessage)
             ->subject(
                 'Your role changed in ' .
@@ -45,8 +50,31 @@ class GroupRoleChanged extends Notification
             );
     }
 
-    public function toArray(object $notifiable): array
-    {
-        return [];
+    public function toArray(
+        object $notifiable
+    ): array {
+        return [
+            'kind' =>
+                'group_role_changed',
+
+            'title' =>
+                'Group role changed',
+
+            'message' =>
+                'Your role in "' .
+                $this->group->name .
+                '" is now ' .
+                $this->role .
+                '.',
+
+            'action_label' =>
+                'Open group',
+
+            'action_url' =>
+                route(
+                    'group.profile',
+                    $this->group->slug
+                ),
+        ];
     }
 }

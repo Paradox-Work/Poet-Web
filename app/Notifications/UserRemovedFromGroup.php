@@ -19,7 +19,10 @@ class UserRemovedFromGroup extends Notification
     public function via(
         object $notifiable
     ): array {
-        return ['mail'];
+        return [
+            'mail',
+            'database',
+        ];
     }
 
     public function toMail(
@@ -47,6 +50,26 @@ class UserRemovedFromGroup extends Notification
     public function toArray(
         object $notifiable
     ): array {
-        return [];
+        return [
+            'kind' =>
+                'group_removed',
+
+            'title' =>
+                'Removed from group',
+
+            'message' =>
+                'You were removed from "' .
+                $this->group->name .
+                '".',
+
+            'action_label' =>
+                'Open group',
+
+            'action_url' =>
+                route(
+                    'group.profile',
+                    $this->group->slug
+                ),
+        ];
     }
 }

@@ -33,6 +33,9 @@ import TextInput
 import PostModal
     from '@/Components/app/PostModal.vue';
 
+import NotificationDropdown
+    from '@/Components/app/NotificationDropdown.vue';
+
 import {
     Link,
     router,
@@ -260,6 +263,11 @@ function search() {
                                 />
                             </div>
 
+                            <NotificationDropdown
+                                v-if="authUser"
+                                class="mr-1"
+                            />
+
                             <button
                                 type="button"
                                 @click="toggleTheme"
@@ -340,8 +348,13 @@ function search() {
                             </div>
                         </div>
 
-                        <!-- Hamburger -->
-                        <div class="-me-2 flex items-center sm:hidden">
+                        <!-- Mobile notifications + hamburger -->
+                        <div
+                            class="-me-2 flex items-center gap-1 sm:hidden"
+                        >
+                            <NotificationDropdown
+                                v-if="authUser"
+                            />
                             <button
                                 @click="
                                     showingNavigationDropdown =

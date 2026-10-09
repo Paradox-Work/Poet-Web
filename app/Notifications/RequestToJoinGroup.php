@@ -18,13 +18,18 @@ class RequestToJoinGroup extends Notification
     ) {
     }
 
-    public function via(object $notifiable): array
-    {
-        return ['mail'];
+    public function via(
+        object $notifiable
+    ): array {
+        return [
+            'mail',
+            'database',
+        ];
     }
 
-    public function toMail(object $notifiable): MailMessage
-    {
+    public function toMail(
+        object $notifiable
+    ): MailMessage {
         return (new MailMessage)
             ->subject(
                 'New request to join ' .
@@ -45,8 +50,30 @@ class RequestToJoinGroup extends Notification
             );
     }
 
-    public function toArray(object $notifiable): array
-    {
-        return [];
+    public function toArray(
+        object $notifiable
+    ): array {
+        return [
+            'kind' =>
+                'group_join_request',
+
+            'title' =>
+                'New join request',
+
+            'message' =>
+                $this->user->name .
+                ' wants to join "' .
+                $this->group->name .
+                '".',
+
+            'action_label' =>
+                'Review',
+
+            'action_url' =>
+                route(
+                    'group.profile',
+                    $this->group->slug
+                ),
+        ];
     }
 }

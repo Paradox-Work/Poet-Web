@@ -17,16 +17,22 @@ class GroupJoinRequestResolved extends Notification
     ) {
     }
 
-    public function via(object $notifiable): array
-    {
-        return ['mail'];
+    public function via(
+        object $notifiable
+    ): array {
+        return [
+            'mail',
+            'database',
+        ];
     }
 
-    public function toMail(object $notifiable): MailMessage
-    {
-        $action = $this->approved
-            ? 'approved'
-            : 'rejected';
+    public function toMail(
+        object $notifiable
+    ): MailMessage {
+        $action =
+            $this->approved
+                ? 'approved'
+                : 'rejected';
 
         return (new MailMessage)
             ->subject(
@@ -49,8 +55,38 @@ class GroupJoinRequestResolved extends Notification
             );
     }
 
-    public function toArray(object $notifiable): array
-    {
-        return [];
+    public function toArray(
+        object $notifiable
+    ): array {
+        $result =
+            $this->approved
+                ? 'approved'
+                : 'declined';
+
+        return [
+            'kind' =>
+                'group_join_request_resolved',
+
+            'title' =>
+                $this->approved
+                    ? 'Join request approved'
+                    : 'Join request declined',
+
+            'message' =>
+                'Your request to join "' .
+                $this->group->name .
+                '" was ' .
+                $result .
+                '.',
+
+            'action_label' =>
+                'Open group',
+
+            'action_url' =>
+                route(
+                    'group.profile',
+                    $this->group->slug
+                ),
+        ];
     }
 }

@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\NotificationController;
 
 Route::get('/', [HomeController::class, 'index'])
     ->middleware(['auth'])->name('dashboard');
@@ -138,6 +139,11 @@ Route::middleware('auth')->group(function () {
     )->name('group.approveInvitation');
 
     Route::post(
+        '/groups/invitations/{token}/decline',
+        [GroupController::class, 'declineInvitation']
+    )->name('group.declineInvitation');
+
+    Route::post(
         '/groups/{group:slug}/join',
         [GroupController::class, 'join']
     )->name('group.join');
@@ -174,6 +180,16 @@ Route::middleware('auth')->group(function () {
         '/profile',
          [ProfileController::class, 'destroy']
     )->name('profile.destroy');
+
+    Route::post(
+        '/notifications/{notification}/read',
+        [NotificationController::class, 'markRead']
+    )->name('notifications.read');
+
+    Route::post(
+        '/notifications/read-all',
+        [NotificationController::class, 'markAllRead']
+    )->name('notifications.readAll');
 
     Route::get(
         '/search/{search?}',
