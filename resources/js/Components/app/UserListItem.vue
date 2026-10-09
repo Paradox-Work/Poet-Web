@@ -60,7 +60,7 @@ defineEmits([
             <img
                 :src="
                     user.avatar_url ||
-                    '/img/default_avatar.webp'
+                    '/img/default_avatar.svg'
                 "
                 :alt="user.name"
                 class="h-10 w-10 rounded-full object-cover"
