@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Enums\GroupUserStatus;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use App\Support\RichTextSanitizer;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -39,6 +41,21 @@ class Post extends Model
             'published_at' => 'datetime',
             'draft_saved_at' => 'datetime',
         ];
+    }
+
+    protected function body(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) =>
+                RichTextSanitizer::sanitize(
+                    $value
+                ),
+
+            set: fn ($value) =>
+                RichTextSanitizer::sanitize(
+                    $value
+                ),
+        );
     }
 
     public function user(): BelongsTo

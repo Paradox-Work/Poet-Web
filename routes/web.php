@@ -26,7 +26,9 @@ Route::middleware('auth')->group(function () {
     Route::post(
         '/posts', 
         [\App\Http\Controllers\PostController::class, 'store']
-    )->name('post.create');
+    )
+        ->middleware('throttle:20,1')
+        ->name('post.create');
 
     Route::get(
         '/write/poem',
@@ -46,12 +48,16 @@ Route::middleware('auth')->group(function () {
     Route::post(
         '/drafts',
         [\App\Http\Controllers\PostController::class, 'storeDraft']
-    )->name('draft.store');
+    )
+        ->middleware('throttle:90,1')
+        ->name('draft.store');
 
     Route::put(
         '/drafts/{post}',
         [\App\Http\Controllers\PostController::class, 'updateDraft']
-    )->name('draft.update');
+    )
+        ->middleware('throttle:90,1')
+        ->name('draft.update');
 
     Route::put(
         '/posts/{post}',
@@ -81,7 +87,9 @@ Route::middleware('auth')->group(function () {
     Route::post(
         '/posts/{post}/reaction',
         [\App\Http\Controllers\PostController::class, 'postReaction']
-    )->name('post.reaction');
+    )
+        ->middleware('throttle:90,1')
+        ->name('post.reaction');
 
     Route::post(
         '/posts/{post}/pin',
@@ -91,7 +99,9 @@ Route::middleware('auth')->group(function () {
     Route::post(
         '/posts/{post}/comments',
         [\App\Http\Controllers\PostController::class, 'createComment']
-    )->name('post.comment.create');
+    )
+        ->middleware('throttle:30,1')
+        ->name('post.comment.create');
     
     Route::put(
         '/comments/{comment}',
@@ -106,7 +116,9 @@ Route::middleware('auth')->group(function () {
     Route::post(
         '/comments/{comment}/reaction',
         [\App\Http\Controllers\PostController::class, 'commentReaction']
-    )->name('post.comment.reaction');
+    )
+        ->middleware('throttle:90,1')
+        ->name('post.comment.reaction');
     
     Route::get(
         '/groups',
@@ -131,7 +143,9 @@ Route::middleware('auth')->group(function () {
     Route::post(
         '/groups/{group:slug}/invitations',
         [GroupController::class, 'inviteUsers']
-    )->name('group.inviteUsers');
+    )
+        ->middleware('throttle:20,1')
+        ->name('group.inviteUsers');
 
     Route::get(
         '/groups/invitations/{token}/accept',
@@ -146,7 +160,9 @@ Route::middleware('auth')->group(function () {
     Route::post(
         '/groups/{group:slug}/join',
         [GroupController::class, 'join']
-    )->name('group.join');
+    )
+        ->middleware('throttle:10,1')
+        ->name('group.join');
 
     Route::post(
         '/groups/{group:slug}/requests/resolve',
@@ -166,7 +182,9 @@ Route::middleware('auth')->group(function () {
     Route::post(
         '/users/{user}/follow',
         [UserController::class, 'follow']
-    )->name('user.follow');
+    )
+        ->middleware('throttle:30,1')
+        ->name('user.follow');
 
 
 //   Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
