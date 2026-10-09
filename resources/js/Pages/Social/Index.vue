@@ -1,5 +1,10 @@
 <script setup>
 import {
+    computed,
+    ref
+} from 'vue';
+
+import {
     Head,
     Link
 } from '@inertiajs/vue3';
@@ -23,6 +28,22 @@ const props = defineProps({
         default: () => []
     }
 });
+
+const activeTab =
+    ref('followers');
+
+const tabs = computed(() => [
+    {
+        value: 'followers',
+        label: 'Followers',
+        count: props.followers.length
+    },
+    {
+        value: 'groups',
+        label: 'Groups',
+        count: props.groups.length
+    }
+]);
 </script>
 
 <template>
@@ -30,45 +51,84 @@ const props = defineProps({
 
     <AuthenticatedLayout>
         <div
-            class="h-full overflow-y-auto bg-[var(--poet-bg)]"
+            class="h-full overflow-hidden bg-[var(--poet-bg)]"
         >
             <div
-                class="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8"
+                class="mx-auto flex h-full max-w-6xl flex-col px-4 pb-4 pt-6 sm:px-6 lg:px-8"
             >
-                <header class="mb-6">
+                <header class="shrink-0">
                     <div
                         class="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--poet-muted)]"
                     >
                         Social
                     </div>
 
-                    <h1
-                        class="mt-2 font-serif text-3xl font-semibold text-[var(--poet-text)]"
+                    <div
+                        class="mt-1 flex flex-wrap items-end justify-between gap-3"
                     >
-                        People and groups around you.
-                    </h1>
+                        <div>
+                            <h1
+                                class="font-serif text-3xl font-semibold text-[var(--poet-text)]"
+                            >
+                                Your writing circle.
+                            </h1>
+
+                            <p
+                                class="mt-1 text-sm text-[var(--poet-muted)]"
+                            >
+                                Keep up with writers you follow and the spaces you share.
+                            </p>
+                        </div>
+
+                        <div
+                            class="text-xs text-[var(--poet-muted)]"
+                        >
+                            {{
+                                followings.length
+                            }}
+                            following ·
+                            {{
+                                followers.length
+                            }}
+                            followers ·
+                            {{
+                                groups.length
+                            }}
+                            groups
+                        </div>
+                    </div>
                 </header>
 
                 <section
-                    class="rounded-2xl border border-[var(--poet-border)] bg-[var(--poet-surface)] p-4"
+                    class="mt-5 shrink-0 rounded-2xl border border-[var(--poet-border)] bg-[var(--poet-surface)] px-4 py-4"
                 >
-                    <div class="mb-4">
-                        <h2
-                            class="font-serif text-xl font-semibold text-[var(--poet-text)]"
-                        >
-                            Following
-                        </h2>
+                    <div
+                        class="mb-3 flex items-center justify-between gap-3"
+                    >
+                        <div>
+                            <h2
+                                class="font-serif text-lg font-semibold text-[var(--poet-text)]"
+                            >
+                                Following
+                            </h2>
 
-                        <p
-                            class="mt-1 text-sm text-[var(--poet-muted)]"
+                            <p
+                                class="text-xs text-[var(--poet-muted)]"
+                            >
+                                Writers you keep close.
+                            </p>
+                        </div>
+
+                        <span
+                            class="rounded-full bg-[var(--poet-surface-soft)] px-2.5 py-1 text-xs text-[var(--poet-muted)]"
                         >
-                            Writers you chose to keep close.
-                        </p>
+                            {{ followings.length }}
+                        </span>
                     </div>
 
                     <div
                         v-if="followings.length"
-                        class="scrollbar-hidden flex gap-5 overflow-x-auto pb-2"
+                        class="scrollbar-hidden flex snap-x gap-4 overflow-x-auto pb-1"
                     >
                         <Link
                             v-for="user in followings"
@@ -82,29 +142,26 @@ const props = defineProps({
                                     }
                                 )
                             "
-                            class="group flex w-20 shrink-0 flex-col items-center text-center"
+                            class="group w-20 shrink-0 snap-start text-center"
                         >
                             <div
-                                class="rounded-full p-[2px] ring-1 ring-[var(--poet-border)] transition group-hover:ring-[var(--poet-accent)]"
+                                class="mx-auto h-14 w-14 overflow-hidden rounded-full p-[2px] ring-1 ring-[var(--poet-border)] transition group-hover:ring-[var(--poet-accent)]"
                             >
                                 <img
-                                    :src="
-                                        user.avatar_url ||
-                                        '/img/default_avatar.webp'
-                                    "
+                                    :src="user.avatar_url"
                                     :alt="user.name"
-                                    class="h-14 w-14 rounded-full object-cover"
+                                    class="h-full w-full rounded-full object-cover"
                                 />
                             </div>
 
                             <div
-                                class="mt-2 w-full truncate text-xs font-medium text-[var(--poet-text)]"
+                                class="mt-2 truncate text-xs font-medium text-[var(--poet-text)]"
                             >
                                 {{ user.name }}
                             </div>
 
                             <div
-                                class="w-full truncate text-[10px] text-[var(--poet-muted)]"
+                                class="truncate text-[10px] text-[var(--poet-muted)]"
                             >
                                 @{{ user.username }}
                             </div>
@@ -119,29 +176,55 @@ const props = defineProps({
                     </div>
                 </section>
 
-                <div
-                    class="mt-6 grid gap-6 lg:grid-cols-2"
+                <section
+                    class="mt-5 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-[var(--poet-border)] bg-[var(--poet-surface)]"
                 >
-                    <section
-                        class="rounded-2xl border border-[var(--poet-border)] bg-[var(--poet-surface)] p-4"
+                    <div
+                        class="flex shrink-0 items-center border-b border-[var(--poet-border)] px-4"
                     >
-                        <div class="mb-4">
-                            <h2
-                                class="font-serif text-xl font-semibold text-[var(--poet-text)]"
-                            >
-                                Followers
-                            </h2>
+                        <button
+                            v-for="tab in tabs"
+                            :key="tab.value"
+                            type="button"
+                            @click="
+                                activeTab =
+                                    tab.value
+                            "
+                            :class="[
+                                'relative flex items-center gap-2 px-4 py-4 text-sm font-medium transition',
+                                activeTab === tab.value
+                                    ? 'text-[var(--poet-text)]'
+                                    : 'text-[var(--poet-muted)] hover:text-[var(--poet-text)]'
+                            ]"
+                        >
+                            {{ tab.label }}
 
-                            <p
-                                class="mt-1 text-sm text-[var(--poet-muted)]"
+                            <span
+                                class="rounded-full bg-[var(--poet-surface-soft)] px-2 py-0.5 text-[11px]"
                             >
-                                People who follow your writing.
-                            </p>
-                        </div>
+                                {{ tab.count }}
+                            </span>
 
+                            <span
+                                v-if="
+                                    activeTab ===
+                                    tab.value
+                                "
+                                class="absolute inset-x-4 bottom-0 h-0.5 rounded-full bg-[var(--poet-accent)]"
+                            />
+                        </button>
+                    </div>
+
+                    <div
+                        class="scrollbar-hidden min-h-0 flex-1 overflow-y-auto p-4"
+                    >
                         <div
-                            v-if="followers.length"
-                            class="grid gap-2 sm:grid-cols-2"
+                            v-if="
+                                activeTab ===
+                                    'followers' &&
+                                followers.length
+                            "
+                            class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3"
                         >
                             <Link
                                 v-for="user in followers"
@@ -155,15 +238,12 @@ const props = defineProps({
                                         }
                                     )
                                 "
-                                class="flex items-center gap-3 rounded-xl px-3 py-3 transition hover:bg-[var(--poet-surface-soft)]"
+                                class="group flex min-w-0 items-center gap-3 rounded-xl border border-transparent px-3 py-3 transition hover:border-[var(--poet-border)] hover:bg-[var(--poet-surface-soft)]"
                             >
                                 <img
-                                    :src="
-                                        user.avatar_url ||
-                                        '/img/default_avatar.webp'
-                                    "
+                                    :src="user.avatar_url"
                                     :alt="user.name"
-                                    class="h-10 w-10 rounded-full object-cover"
+                                    class="h-11 w-11 shrink-0 rounded-full object-cover"
                                 />
 
                                 <div class="min-w-0">
@@ -183,33 +263,12 @@ const props = defineProps({
                         </div>
 
                         <div
-                            v-else
-                            class="rounded-xl bg-[var(--poet-surface-soft)] px-4 py-5 text-sm text-[var(--poet-muted)]"
-                        >
-                            No followers yet.
-                        </div>
-                    </section>
-
-                    <section
-                        class="rounded-2xl border border-[var(--poet-border)] bg-[var(--poet-surface)] p-4"
-                    >
-                        <div class="mb-4">
-                            <h2
-                                class="font-serif text-xl font-semibold text-[var(--poet-text)]"
-                            >
-                                Groups
-                            </h2>
-
-                            <p
-                                class="mt-1 text-sm text-[var(--poet-muted)]"
-                            >
-                                Shared spaces you belong to.
-                            </p>
-                        </div>
-
-                        <div
-                            v-if="groups.length"
-                            class="grid gap-2 sm:grid-cols-2"
+                            v-else-if="
+                                activeTab ===
+                                    'groups' &&
+                                groups.length
+                            "
+                            class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3"
                         >
                             <Link
                                 v-for="group in groups"
@@ -220,18 +279,18 @@ const props = defineProps({
                                         group.slug
                                     )
                                 "
-                                class="flex items-center gap-3 rounded-xl px-3 py-3 transition hover:bg-[var(--poet-surface-soft)]"
+                                class="group flex min-w-0 items-center gap-3 rounded-xl border border-transparent px-3 py-3 transition hover:border-[var(--poet-border)] hover:bg-[var(--poet-surface-soft)]"
                             >
                                 <img
                                     v-if="group.thumbnail_url"
                                     :src="group.thumbnail_url"
                                     :alt="group.name"
-                                    class="h-10 w-10 rounded-full object-cover"
+                                    class="h-11 w-11 shrink-0 rounded-full object-cover"
                                 />
 
                                 <div
                                     v-else
-                                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--poet-accent-soft)] font-serif text-sm text-[var(--poet-accent)]"
+                                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--poet-accent-soft)] font-serif text-sm font-semibold text-[var(--poet-accent)]"
                                 >
                                     {{
                                         group.name
@@ -251,7 +310,8 @@ const props = defineProps({
                                         class="truncate text-xs text-[var(--poet-muted)]"
                                     >
                                         {{
-                                            group.role === 'admin'
+                                            group.role ===
+                                                'admin'
                                                 ? 'Admin'
                                                 : 'Member'
                                         }}
@@ -262,12 +322,36 @@ const props = defineProps({
 
                         <div
                             v-else
-                            class="rounded-xl bg-[var(--poet-surface-soft)] px-4 py-5 text-sm text-[var(--poet-muted)]"
+                            class="flex h-full min-h-52 items-center justify-center"
                         >
-                            You are not in any groups yet.
+                            <div
+                                class="max-w-sm text-center"
+                            >
+                                <div
+                                    class="font-serif text-lg font-semibold text-[var(--poet-text)]"
+                                >
+                                    {{
+                                        activeTab ===
+                                            'followers'
+                                            ? 'No followers yet.'
+                                            : 'No groups yet.'
+                                    }}
+                                </div>
+
+                                <p
+                                    class="mt-1 text-sm text-[var(--poet-muted)]"
+                                >
+                                    {{
+                                        activeTab ===
+                                            'followers'
+                                            ? 'People who follow your writing will appear here.'
+                                            : 'Groups you join will appear here.'
+                                    }}
+                                </p>
+                            </div>
                         </div>
-                    </section>
-                </div>
+                    </div>
+                </section>
             </div>
         </div>
     </AuthenticatedLayout>
