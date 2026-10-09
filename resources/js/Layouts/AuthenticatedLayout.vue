@@ -119,7 +119,7 @@ function search() {
     <div>
         <div class="h-screen flex flex-col bg-[var(--poet-bg)] text-[var(--poet-text)]">
             <nav
-                class="border-b border-[var(--poet-border)] bg-[var(--poet-nav)]/95 backdrop-blur-md"
+                class="relative z-[100] overflow-visible border-b border-[var(--poet-border)] bg-[var(--poet-nav)]/95 backdrop-blur-md"
             >
                 <!-- Primary Navigation Menu -->
                 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
