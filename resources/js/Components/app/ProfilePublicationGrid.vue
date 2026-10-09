@@ -120,7 +120,7 @@ function publicationTitle(post) {
 
 <template>
     <div
-        class="grid grid-cols-2 gap-1.5 sm:grid-cols-3 sm:gap-2 lg:grid-cols-4"
+        class="grid grid-cols-2 gap-1 sm:grid-cols-3 sm:gap-2 lg:grid-cols-4"
     >
         <Link
             v-for="post in posts"
@@ -131,7 +131,7 @@ function publicationTitle(post) {
                     post.id
                 )
             "
-            class="group relative h-32 overflow-hidden rounded-lg border border-[var(--poet-border)] bg-[var(--poet-surface)] transition duration-200 hover:-translate-y-0.5 hover:border-[var(--poet-border-strong)] hover:shadow-lg sm:h-40 sm:rounded-xl"
+            class="group relative h-28 overflow-hidden rounded-lg border border-[var(--poet-border)] bg-[var(--poet-surface)] transition duration-200 hover:-translate-y-0.5 hover:border-[var(--poet-border-strong)] hover:shadow-lg sm:h-40 sm:rounded-xl"
         >
             <template
                 v-if="firstVisual(post)"
@@ -194,7 +194,7 @@ function publicationTitle(post) {
             />
 
             <div
-                class="absolute inset-0 flex flex-col p-2.5 sm:p-3"
+                class="absolute inset-0 flex flex-col p-2 sm:p-3"
             >
                 <div
                     class="flex items-start justify-between gap-2"
@@ -204,7 +204,7 @@ function publicationTitle(post) {
                     >
                         <span
                             :class="[
-                                'rounded-full px-2 py-0.5 text-[10px] font-medium',
+                                'rounded-full px-1.5 py-0.5 text-[9px] font-medium sm:px-2 sm:text-[10px]',
                                 post.type === 'poem'
                                     ? 'bg-[var(--poet-accent-soft)] text-[var(--poet-accent)]'
                                     : 'bg-sky-950/50 text-sky-200'
@@ -224,7 +224,7 @@ function publicationTitle(post) {
                                     'poem' &&
                                 post.poem_genres?.length
                             "
-                            class="max-w-24 truncate rounded-full bg-black/30 px-2 py-0.5 text-[10px] text-white/85"
+                            class="max-w-20 truncate rounded-full bg-black/30 px-1.5 py-0.5 text-[9px] text-white/85 sm:max-w-24 sm:px-2 sm:text-[10px]"
                         >
                             {{
                                 post.poem_genres[0]
@@ -256,8 +256,8 @@ function publicationTitle(post) {
                                 ? 'text-white'
                                 : 'text-[var(--poet-text)]',
                             post.type === 'poem'
-                                ? 'font-serif text-sm sm:text-base'
-                                : 'text-xs sm:text-sm'
+                                ? 'font-serif text-[13px] sm:text-base'
+                                : 'text-[11px] sm:text-sm'
                         ]"
                     >
                         {{
@@ -274,7 +274,7 @@ function publicationTitle(post) {
                             post.poem_form
                         "
                         :class="[
-                            'mt-1 truncate text-[11px] italic',
+                            'mt-0.5 truncate text-[10px] italic sm:mt-1 sm:text-[11px]',
                             firstVisual(post)
                                 ? 'text-white/70'
                                 : 'text-[var(--poet-muted)]'
@@ -289,7 +289,7 @@ function publicationTitle(post) {
 
                     <div
                         :class="[
-                            'mt-2 flex items-center gap-3 text-[10px]',
+                            'mt-1.5 flex items-center gap-2 text-[9px] sm:mt-2 sm:gap-3 sm:text-[10px]',
                             firstVisual(post)
                                 ? 'text-white/75'
                                 : 'text-[var(--poet-muted)]'
@@ -299,7 +299,7 @@ function publicationTitle(post) {
                             class="flex items-center gap-1"
                         >
                             <HeartIcon
-                                class="h-3.5 w-3.5"
+                                class="h-3 w-3 sm:h-3.5 sm:w-3.5"
                             />
                             {{
                                 post.num_of_reactions
@@ -311,7 +311,7 @@ function publicationTitle(post) {
                             class="flex items-center gap-1"
                         >
                             <ChatBubbleOvalLeftIcon
-                                class="h-3.5 w-3.5"
+                                class="h-3 w-3 sm:h-3.5 sm:w-3.5"
                             />
                             {{
                                 post.num_of_comments

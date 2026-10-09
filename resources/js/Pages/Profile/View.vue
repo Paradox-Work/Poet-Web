@@ -4,24 +4,24 @@
             class="h-full overflow-y-auto bg-[var(--poet-bg)]"
         >
             <div
-                class="mx-auto w-full max-w-5xl px-0 pb-6 sm:px-4 sm:pb-10 lg:px-6"
+                class="mx-auto w-full max-w-5xl px-3 pb-6 sm:px-4 sm:pb-10 lg:px-6"
             >
                 <div
                     v-show="showNotification && success"
-                    class="mx-4 my-3 rounded-xl bg-emerald-500 px-4 py-3 text-sm font-medium text-white sm:mx-0"
+                    class="my-3 rounded-xl bg-emerald-500 px-4 py-3 text-sm font-medium text-white"
                 >
                     {{ success }}
                 </div>
 
                 <div
                     v-if="errors.cover"
-                    class="mx-4 my-3 rounded-xl bg-red-500 px-4 py-3 text-sm font-medium text-white sm:mx-0"
+                    class="my-3 rounded-xl bg-red-500 px-4 py-3 text-sm font-medium text-white"
                 >
                     {{ errors.cover }}
                 </div>
 
                 <section
-                    class="overflow-hidden border-b border-[var(--poet-border)] bg-[var(--poet-surface)] sm:mt-5 sm:rounded-2xl sm:border"
+                    class="mt-3 overflow-hidden rounded-xl border border-[var(--poet-border)] bg-[var(--poet-surface)] sm:mt-5 sm:rounded-2xl"
                 >
                     <div
                         class="group relative h-36 bg-[var(--poet-surface-soft)] sm:h-56"
@@ -298,7 +298,7 @@
                         <template v-if="posts">
                             <div
                                 v-if="posts.meta?.total"
-                                class="flex items-center justify-between gap-3 py-3 text-xs text-[var(--poet-muted)]"
+                                class="flex items-center justify-between gap-2 py-2.5 text-[11px] text-[var(--poet-muted)] sm:py-3 sm:text-xs"
                             >
                                 <span>
                                     {{ posts.meta.total }}
