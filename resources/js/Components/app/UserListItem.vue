@@ -32,6 +32,11 @@ defineProps({
     roleProcessing: {
         type: Boolean,
         default: false
+    },
+
+    cardMode: {
+        type: Boolean,
+        default: false
     }
 });
 
@@ -46,7 +51,12 @@ defineEmits([
 
 <template>
     <div
-        class="flex items-center gap-3 border-b border-gray-100 px-3 py-3 last:border-b-0 dark:border-gray-700 dark:text-gray-100"
+        :class="[
+            'flex items-center gap-3 px-3 py-3 dark:text-gray-100',
+            cardMode
+                ? 'rounded-xl border border-[var(--poet-border)] bg-[var(--poet-surface)] transition hover:border-[var(--poet-border-strong)] hover:bg-[var(--poet-surface-soft)]'
+                : 'border-b border-gray-100 last:border-b-0 dark:border-gray-700'
+        ]"
     >
         <Link
             :href="

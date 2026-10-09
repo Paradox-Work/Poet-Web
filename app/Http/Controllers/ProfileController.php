@@ -51,6 +51,62 @@ class ProfileController extends Controller
                 )
                 ->count();
 
+        $followingCount =
+            Follower::query()
+                ->where(
+                    'follower_id',
+                    $user->id
+                )
+                ->count();
+
+        $profileTab =
+            $request
+                ->string('tab')
+                ->toString();
+
+        $allowedTabs = [
+            'posts',
+            'followers',
+            'following',
+            'photos',
+            'my_profile',
+        ];
+
+        if (
+            !in_array(
+                $profileTab,
+                $allowedTabs,
+                true
+            )
+        ) {
+            $profileTab = 'posts';
+        }
+
+        if (
+            $profileTab === 'my_profile' &&
+            $currentUserId !== $user->id
+        ) {
+            $profileTab = 'posts';
+        }
+
+        $peopleSearch =
+            trim(
+                $request
+                    ->string('people_search')
+                    ->toString()
+            );
+
+        if (
+            mb_strlen($peopleSearch) > 80
+        ) {
+            $peopleSearch =
+                mb_substr(
+                    $peopleSearch,
+                    0,
+                    80
+                );
+        }
+
         $posts = null;
 
         if ($currentUserId) {
@@ -94,18 +150,93 @@ class ProfileController extends Controller
         }
 
 
-        $followers =
+        $followersQuery =
             $user
                 ->followers()
+                ->when(
+                    $peopleSearch !== '',
+                    function ($query) use (
+                        $peopleSearch
+                    ) {
+                        $like =
+                            '%' .
+                            $peopleSearch .
+                            '%';
+
+                        $query->where(
+                            function ($query) use (
+                                $like
+                            ) {
+                                $query
+                                    ->where(
+                                        'users.name',
+                                        'like',
+                                        $like
+                                    )
+                                    ->orWhere(
+                                        'users.username',
+                                        'like',
+                                        $like
+                                    );
+                            }
+                        );
+                    }
+                )
                 ->orderBy('users.name')
-                ->get();
+                ->orderBy('users.id');
 
+        $followers =
+            $followersQuery
+                ->paginate(
+                    24,
+                    ['users.*'],
+                    'followers_page'
+                )
+                ->withQueryString();
 
-        $followings =
+        $followingsQuery =
             $user
                 ->followings()
+                ->when(
+                    $peopleSearch !== '',
+                    function ($query) use (
+                        $peopleSearch
+                    ) {
+                        $like =
+                            '%' .
+                            $peopleSearch .
+                            '%';
+
+                        $query->where(
+                            function ($query) use (
+                                $like
+                            ) {
+                                $query
+                                    ->where(
+                                        'users.name',
+                                        'like',
+                                        $like
+                                    )
+                                    ->orWhere(
+                                        'users.username',
+                                        'like',
+                                        $like
+                                    );
+                            }
+                        );
+                    }
+                )
                 ->orderBy('users.name')
-                ->get();
+                ->orderBy('users.id');
+
+        $followings =
+            $followingsQuery
+                ->paginate(
+                    24,
+                    ['users.*'],
+                    'following_page'
+                )
+                ->withQueryString();
         
         $photos = null;
 
@@ -160,6 +291,15 @@ class ProfileController extends Controller
 
                 'followerCount' =>
                     $followerCount,
+
+                'followingCount' =>
+                    $followingCount,
+
+                'profileTab' =>
+                    $profileTab,
+
+                'peopleSearch' =>
+                    $peopleSearch,
 
                 'posts' =>
                     $posts,
