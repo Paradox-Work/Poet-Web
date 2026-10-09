@@ -7,6 +7,11 @@ const props = defineProps({
     meta: {
         type: Object,
         default: null
+    },
+
+    label: {
+        type: String,
+        default: 'Pages'
     }
 });
 
@@ -96,7 +101,7 @@ const lastPage =
     <nav
         v-if="meta && lastPage > 1"
         class="flex flex-wrap items-center justify-center gap-1"
-        aria-label="People pages"
+        :aria-label="label"
     >
         <button
             type="button"

@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Http\Resources\UserResource;
-use App\Http\Resources\PostResource;
+use App\Http\Resources\ProfilePublicationResource;
 use App\Http\Resources\PostAttachmentResource;
 use App\Models\PostAttachment;
 use App\Models\Post;
@@ -112,16 +112,24 @@ class ProfileController extends Controller
         if ($currentUserId) {
 
             $postsQuery =
-                Post::postsForTimeline(
-                    $currentUserId
-                )
+                Post::query()
+                    ->where(
+                        'posts.status',
+                        'published'
+                    )
                     ->where(
                         'posts.user_id',
                         $user->id
                     )
                     ->whereNull(
                         'posts.group_id'
-                    );
+                    )
+                    ->with('attachments')
+                    ->withCount([
+                        'reactions',
+                        'comments',
+                    ])
+                    ->latest();
 
             if ($user->pinned_post_id) {
                 $postsQuery
@@ -130,23 +138,21 @@ class ProfileController extends Controller
                         'CASE WHEN posts.id = ? THEN 0 ELSE 1 END',
                         [$user->pinned_post_id]
                     )
-                    ->orderByDesc('posts.created_at');
+                    ->orderByDesc(
+                        'posts.created_at'
+                    );
             }
 
             $posts =
-                PostResource::collection(
+                ProfilePublicationResource::collection(
                     $postsQuery
-                        ->paginate(10)
+                        ->paginate(
+                            12,
+                            ['posts.*'],
+                            'posts_page'
+                        )
                         ->withQueryString()
                 );
-
-            /*
-            * PostList infinite scrolling requests
-            * the next profile page as JSON.
-            */
-            if ($request->wantsJson()) {
-                return $posts;
-            }
         }
 
 
@@ -188,7 +194,7 @@ class ProfileController extends Controller
         $followers =
             $followersQuery
                 ->paginate(
-                    24,
+                    12,
                     ['users.*'],
                     'followers_page'
                 )
@@ -232,7 +238,7 @@ class ProfileController extends Controller
         $followings =
             $followingsQuery
                 ->paginate(
-                    24,
+                    12,
                     ['users.*'],
                     'following_page'
                 )

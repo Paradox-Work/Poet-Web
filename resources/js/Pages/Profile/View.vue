@@ -294,16 +294,43 @@
 
                     <div v-if="selectedTab === 'posts'">
                         <template v-if="posts">
-                            <PostList
+                            <div
+                                v-if="posts.meta?.total"
+                                class="flex items-center justify-between gap-3 py-3 text-xs text-[var(--poet-muted)]"
+                            >
+                                <span>
+                                    {{ posts.meta.total }}
+                                    publication{{ posts.meta.total === 1 ? '' : 's' }}
+                                </span>
+
+                                <span>
+                                    Showing
+                                    {{ posts.meta.from }}–{{ posts.meta.to }}
+                                    of {{ posts.meta.total }}
+                                </span>
+                            </div>
+
+                            <ProfilePublicationGrid
                                 v-if="posts.data?.length"
-                                :posts="posts"
+                                :posts="posts.data"
+                                :pinned-post-id="
+                                    user.pinned_post_id
+                                "
                             />
 
                             <div
                                 v-else
                                 class="rounded-2xl border border-[var(--poet-border)] bg-[var(--poet-surface)] py-12 text-center text-sm text-[var(--poet-muted)]"
                             >
-                                No posts yet.
+                                No publications yet.
+                            </div>
+
+                            <div class="mt-5">
+                                <CompactPaginator
+                                    :meta="posts.meta"
+                                    label="Publication pages"
+                                    @page="goToPostPage"
+                                />
                             </div>
                         </template>
 
@@ -311,14 +338,14 @@
                             v-else
                             class="rounded-2xl border border-[var(--poet-border)] bg-[var(--poet-surface)] py-12 text-center text-sm text-[var(--poet-muted)]"
                         >
-                            Log in to view posts.
+                            Log in to view publications.
                         </div>
                     </div>
 
                     <div v-else-if="selectedTab === 'followers'">
                         <div
                             v-if="followers.data?.length"
-                            class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3"
+                            class="grid gap-2 sm:grid-cols-2 lg:grid-cols-4"
                         >
                             <UserListItem
                                 v-for="follower in followers.data"
@@ -342,6 +369,7 @@
                         <div class="mt-5">
                             <CompactPaginator
                                 :meta="followers.meta"
+                                label="Follower pages"
                                 @page="goToPeoplePage"
                             />
                         </div>
@@ -350,7 +378,7 @@
                     <div v-else-if="selectedTab === 'following'">
                         <div
                             v-if="followings.data?.length"
-                            class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3"
+                            class="grid gap-2 sm:grid-cols-2 lg:grid-cols-4"
                         >
                             <UserListItem
                                 v-for="following in followings.data"
@@ -374,6 +402,7 @@
                         <div class="mt-5">
                             <CompactPaginator
                                 :meta="followings.meta"
+                                label="Following pages"
                                 @page="goToPeoplePage"
                             />
                         </div>
@@ -444,8 +473,8 @@ import AuthenticatedLayout
 import CompactPaginator
     from '@/Components/app/CompactPaginator.vue';
 
-import PostList
-    from '@/Components/app/PostList.vue';
+import ProfilePublicationGrid
+    from '@/Components/app/ProfilePublicationGrid.vue';
 
 import UserListItem
     from '@/Components/app/UserListItem.vue';
@@ -693,6 +722,27 @@ function clearPeopleSearch() {
         ),
         {
             tab: selectedTab.value
+        },
+        {
+            preserveScroll: true,
+            preserveState: true,
+            replace: true
+        }
+    );
+}
+
+function goToPostPage(page) {
+    router.get(
+        route(
+            'profile',
+            {
+                username:
+                    props.user.username
+            }
+        ),
+        {
+            tab: 'posts',
+            posts_page: page
         },
         {
             preserveScroll: true,
