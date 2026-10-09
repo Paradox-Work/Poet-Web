@@ -73,6 +73,11 @@ const props = defineProps({
     canGoNext: {
         type: Boolean,
         default: false
+    },
+
+    commentsOpen: {
+        type: Boolean,
+        default: false
     }
 });
 
@@ -323,6 +328,7 @@ function returnFromPost() {
 }
 
 const reactionPending = ref(false);
+const reactionAnimating = ref(false);
 const showAllGenres = ref(false);
 
 const visibleGenres = computed(() => {
@@ -371,6 +377,21 @@ async function sendReaction() {
 
         props.post.num_of_reactions =
             data.num_of_reactions;
+
+        reactionAnimating.value = false;
+
+        window.requestAnimationFrame(
+            () => {
+                reactionAnimating.value = true;
+
+                window.setTimeout(
+                    () => {
+                        reactionAnimating.value = false;
+                    },
+                    280
+                );
+            }
+        );
 
     } catch (error) {
 
@@ -627,6 +648,9 @@ async function sendReaction() {
                 <span
                     :class="[
                         'flex h-11 w-11 items-center justify-center rounded-full border transition',
+                        reactionAnimating
+                            ? 'reaction-pop'
+                            : '',
                         post.current_user_has_reaction
                             ? 'border-sky-300 bg-sky-100 text-sky-700 dark:border-sky-800 dark:bg-sky-900/60 dark:text-sky-300'
                             : 'border-gray-200 bg-white text-gray-700 hover:-translate-y-0.5 hover:shadow-md dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100'
@@ -685,11 +709,26 @@ async function sendReaction() {
                 v-if="deckNavigation"
                 type="button"
                 @click="emit('comments')"
-                class="group flex flex-col items-center gap-1 text-xs text-gray-500 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--poet-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--poet-surface)] dark:text-gray-400"
-                aria-label="Open comments"
+                :class="[
+                    'group flex flex-col items-center gap-1 text-xs transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--poet-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--poet-surface)]',
+                    commentsOpen
+                        ? 'text-[var(--poet-accent)]'
+                        : 'text-gray-500 dark:text-gray-400'
+                ]"
+                :aria-label="
+                    commentsOpen
+                        ? 'Close comments'
+                        : 'Open comments'
+                "
+                :aria-pressed="commentsOpen"
             >
                 <span
-                    class="flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 transition group-hover:-translate-y-0.5 group-hover:shadow-md dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                    :class="[
+                        'flex h-11 w-11 items-center justify-center rounded-full border transition group-hover:-translate-y-0.5 group-hover:shadow-md',
+                        commentsOpen
+                            ? 'border-[var(--poet-accent)] bg-[var(--poet-accent-soft)] text-[var(--poet-accent)]'
+                            : 'border-gray-200 bg-white text-gray-700 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100'
+                    ]"
                 >
                     <ChatBubbleOvalLeftIcon
                         class="h-5 w-5"
@@ -753,4 +792,21 @@ async function sendReaction() {
 </template>
 
 <style scoped>
+@keyframes reaction-pop {
+    0% {
+        transform: scale(1);
+    }
+
+    45% {
+        transform: scale(1.2);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.reaction-pop {
+    animation: reaction-pop 280ms ease-out;
+}
 </style>

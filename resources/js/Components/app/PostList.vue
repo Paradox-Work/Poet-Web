@@ -249,8 +249,9 @@ watch(
     }
 );
 
-function openComments() {
-    commentsOpen.value = true;
+function toggleComments() {
+    commentsOpen.value =
+        !commentsOpen.value;
 }
 
 function closeComments() {
@@ -636,6 +637,9 @@ function removePost(postId) {
                                 :can-go-next="
                                     canGoNext
                                 "
+                                :comments-open="
+                                    commentsOpen
+                                "
                                 @previous="
                                     previousPost
                                 "
@@ -655,7 +659,7 @@ function removePost(postId) {
                                     handlePinChanged
                                 "
                                 @comments="
-                                    openComments
+                                    toggleComments
                                 "
                             />
                         </div>
