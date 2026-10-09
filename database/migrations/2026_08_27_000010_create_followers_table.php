@@ -15,6 +15,15 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users'); // user who is being followed
             $table->foreignId('follower_id')->constrained('users'); // user who is following
+
+            $table->unique(
+                [
+                    'user_id',
+                    'follower_id',
+                ],
+                'followers_user_follower_unique'
+            );
+
             $table->timestamp('created_at')->nullable();
         });
     }

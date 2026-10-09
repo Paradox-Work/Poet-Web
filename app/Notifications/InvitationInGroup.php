@@ -41,9 +41,9 @@ class InvitationInGroup extends Notification
                 '".'
             )
             ->action(
-                'Accept invitation',
+                'Review invitation',
                 route(
-                    'group.approveInvitation',
+                    'group.invitation',
                     [
                         'token' =>
                             $this->token,
@@ -93,6 +93,15 @@ class InvitationInGroup extends Notification
                 'Accept',
 
             'action_url' =>
+                route(
+                    'group.invitation',
+                    [
+                        'token' =>
+                            $this->token,
+                    ]
+                ),
+
+            'accept_url' =>
                 route(
                     'group.approveInvitation',
                     [

@@ -92,6 +92,11 @@ class HandleInertiaRequests extends Middleware
                                                 ->data['action_label']
                                                 ?? null,
 
+                                        'accept_url' =>
+                                            $notification
+                                                ->data['accept_url']
+                                                ?? null,
+
                                         'decline_url' =>
                                             $notification
                                                 ->data['decline_url']

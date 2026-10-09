@@ -148,6 +148,11 @@ Route::middleware('auth')->group(function () {
         ->name('group.inviteUsers');
 
     Route::get(
+        '/groups/invitations/{token}',
+        [GroupController::class, 'showInvitation']
+    )->name('group.invitation');
+
+    Route::post(
         '/groups/invitations/{token}/accept',
         [GroupController::class, 'approveInvitation']
     )->name('group.approveInvitation');

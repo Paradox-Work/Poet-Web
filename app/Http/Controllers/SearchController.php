@@ -16,80 +16,133 @@ class SearchController extends Controller
         Request $request,
         ?string $search = null
     ) {
-        if (!$search) {
+        $search =
+            trim(
+                (string) $search
+            );
+
+        if ($search === '') {
             return redirect(
                 route('dashboard')
             );
         }
 
-        $users = User::query()
-            ->where(function ($query) use ($search) {
-                $query
-                    ->where(
-                        'name',
-                        'like',
-                        "%{$search}%"
-                    )
-                    ->orWhere(
-                        'username',
-                        'like',
-                        "%{$search}%"
-                    );
-            })
-            ->latest()
-            ->get();
+        if (
+            mb_strlen($search) > 100
+        ) {
+            $search =
+                mb_substr(
+                    $search,
+                    0,
+                    100
+                );
+        }
 
-        $groups = Group::query()
-            ->where(function ($query) use ($search) {
-                $query
-                    ->where(
-                        'name',
-                        'like',
-                        "%{$search}%"
-                    )
-                    ->orWhere(
-                        'about',
-                        'like',
-                        "%{$search}%"
-                    );
-            })
-            ->latest()
-            ->get();
-
-        $posts = Post::postsForTimeline(
-            $request->user()->id
-        )
-            ->where(
-                'body',
-                'like',
-                "%{$search}%"
-            )
-            ->paginate(20);
+        $like =
+            '%' .
+            $search .
+            '%';
 
         $posts =
             PostResource::collection(
-                $posts
+                Post::postsForTimeline(
+                    $request->user()->id
+                )
+                    ->where(
+                        'body',
+                        'like',
+                        $like
+                    )
+                    ->paginate(
+                        20,
+                        ['posts.*'],
+                        'posts_page'
+                    )
+                    ->withQueryString()
             );
 
+        /*
+         * Infinite-scroll requests from
+         * PostList only need publication
+         * results, so avoid also loading
+         * user/group result sets.
+         */
         if ($request->wantsJson()) {
             return $posts;
         }
 
+        $users =
+            UserResource::collection(
+                User::query()
+                    ->where(
+                        function (
+                            $query
+                        ) use ($like) {
+                            $query
+                                ->where(
+                                    'name',
+                                    'like',
+                                    $like
+                                )
+                                ->orWhere(
+                                    'username',
+                                    'like',
+                                    $like
+                                );
+                        }
+                    )
+                    ->latest()
+                    ->paginate(
+                        12,
+                        ['*'],
+                        'users_page'
+                    )
+                    ->withQueryString()
+            );
+
+        $groups =
+            GroupResource::collection(
+                Group::query()
+                    ->where(
+                        function (
+                            $query
+                        ) use ($like) {
+                            $query
+                                ->where(
+                                    'name',
+                                    'like',
+                                    $like
+                                )
+                                ->orWhere(
+                                    'about',
+                                    'like',
+                                    $like
+                                );
+                        }
+                    )
+                    ->latest()
+                    ->paginate(
+                        12,
+                        ['*'],
+                        'groups_page'
+                    )
+                    ->withQueryString()
+            );
+
         return inertia(
             'Search',
             [
-                'posts' => $posts,
-                'search' => $search,
+                'posts' =>
+                    $posts,
+
+                'search' =>
+                    $search,
 
                 'users' =>
-                    UserResource::collection(
-                        $users
-                    ),
+                    $users,
 
                 'groups' =>
-                    GroupResource::collection(
-                        $groups
-                    ),
+                    $groups,
             ]
         );
     }

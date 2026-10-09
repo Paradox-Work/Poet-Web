@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 use App\Models\User;
@@ -354,8 +355,19 @@ class ProfileController extends Controller
 
         $request->user()->save();
 
-        return to_route('profile', $request->user())
-            ->with('success', 'Your profile details were updated.');
+        return to_route(
+            'profile',
+            [
+                'user' =>
+                    $request
+                        ->user()
+                        ->username,
+            ]
+        )
+            ->with(
+                'success',
+                'Your profile details were updated.'
+            );
     }
 
     /**
@@ -379,37 +391,131 @@ class ProfileController extends Controller
         return Redirect::to('/');
     }
 
-    public function updateImage(Request $request)
-    {
-        $data = $request->validate([
-            'cover' => ['nullable', 'image', 'max:4096'],
-            'avatar' => ['nullable', 'image', 'max:2048']
-        ]);
+    public function updateImage(
+        Request $request
+    ) {
+        $data =
+            $request->validate([
+                'cover' => [
+                    'nullable',
+                    'image',
+                    'mimes:jpg,jpeg,png,webp',
+                    'max:4096',
+                ],
 
-        $user = $request->user();
-        $cover  = $data['cover']  ?? null;
-        $avatar = $data['avatar'] ?? null;
+                'avatar' => [
+                    'nullable',
+                    'image',
+                    'mimes:jpg,jpeg,png,webp',
+                    'max:2048',
+                ],
+            ]);
 
-        $success = '';
+        $user =
+            $request->user();
 
-        if ($cover) {
-            if ($user->cover_path) {
-                Storage::disk('public')->delete($user->cover_path);
+        $newPaths = [];
+        $updates = [];
+        $oldPaths = [];
+
+        try {
+            if (
+                $cover =
+                    $data['cover']
+                    ?? null
+            ) {
+                $path =
+                    $cover->store(
+                        'user-' .
+                            $user->id,
+                        'public'
+                    );
+
+                if (!$path) {
+                    throw new \RuntimeException(
+                        'Failed to store the new cover image.'
+                    );
+                }
+
+                $newPaths[] = $path;
+                $updates['cover_path'] =
+                    $path;
+
+                if ($user->cover_path) {
+                    $oldPaths[] =
+                        $user->cover_path;
+                }
             }
-            $path = $cover->store('user-'.$user->id, 'public');
-            $user->update(['cover_path' => $path]);
-            $success = 'Your cover image was updated';
+
+            if (
+                $avatar =
+                    $data['avatar']
+                    ?? null
+            ) {
+                $path =
+                    $avatar->store(
+                        'user-' .
+                            $user->id,
+                        'public'
+                    );
+
+                if (!$path) {
+                    throw new \RuntimeException(
+                        'Failed to store the new avatar image.'
+                    );
+                }
+
+                $newPaths[] = $path;
+                $updates['avatar_path'] =
+                    $path;
+
+                if ($user->avatar_path) {
+                    $oldPaths[] =
+                        $user->avatar_path;
+                }
+            }
+
+            if ($updates !== []) {
+                DB::transaction(
+                    fn () =>
+                        $user->update(
+                            $updates
+                        )
+                );
+            }
+
+        } catch (\Throwable $exception) {
+            foreach (
+                $newPaths
+                as $path
+            ) {
+                Storage::disk('public')
+                    ->delete($path);
+            }
+
+            throw $exception;
         }
 
-        if ($avatar) {
-            if ($user->avatar_path) {
-                Storage::disk('public')->delete($user->avatar_path);
-            }
-            $path = $avatar->store('user-'.$user->id, 'public');
-            $user->update(['avatar_path' => $path]);
-            $success = 'Your avatar image was updated';
+        /*
+         * Delete old files only after the
+         * new files are safely stored and
+         * the database points to them.
+         */
+        foreach (
+            array_unique(
+                $oldPaths
+            )
+            as $path
+        ) {
+            Storage::disk('public')
+                ->delete($path);
         }
 
-         return back()->with('success', $success);
+        return back()->with(
+            'success',
+            $updates === []
+                ? 'No profile image changes were submitted.'
+                : 'Your profile images were updated.'
+        );
     }
 }

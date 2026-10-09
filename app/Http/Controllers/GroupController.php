@@ -517,6 +517,97 @@ if ($isApprovedMember) {
         );
     }
 
+    public function showInvitation(
+        Request $request,
+        string $token
+    ) {
+        $groupUser =
+            GroupUser::query()
+                ->with('group')
+                ->where(
+                    'token',
+                    $token
+                )
+                ->firstOrFail();
+
+        if (
+            $groupUser->user_id !==
+            $request->user()->id
+        ) {
+            abort(
+                403,
+                'This invitation belongs to another user.'
+            );
+        }
+
+        if (
+            $groupUser->token_used ||
+            $groupUser->status !==
+                GroupUserStatus::PENDING->value
+        ) {
+            return redirect()
+                ->route('group.index')
+                ->with(
+                    'success',
+                    'This invitation has already been resolved.'
+                );
+        }
+
+        if (
+            !$groupUser->token_expire_date ||
+            $groupUser
+                ->token_expire_date
+                ->isPast()
+        ) {
+            abort(
+                410,
+                'This invitation has expired.'
+            );
+        }
+
+        return Inertia::render(
+            'Group/Invitation',
+            [
+                'invitation' => [
+                    'group' => [
+                        'name' =>
+                            $groupUser
+                                ->group
+                                ->name,
+
+                        'slug' =>
+                            $groupUser
+                                ->group
+                                ->slug,
+                    ],
+
+                    'expires_at' =>
+                        $groupUser
+                            ->token_expire_date
+                            ->toISOString(),
+
+                    'accept_url' =>
+                        route(
+                            'group.approveInvitation',
+                            [
+                                'token' =>
+                                    $token,
+                            ]
+                        ),
+
+                    'decline_url' =>
+                        route(
+                            'group.declineInvitation',
+                            [
+                                'token' =>
+                                    $token,
+                            ]
+                        ),
+                ],
+            ]
+        );
+    }
+
     public function approveInvitation(
         Request $request,
         string $token

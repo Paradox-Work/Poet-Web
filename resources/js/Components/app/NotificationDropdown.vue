@@ -177,12 +177,17 @@ function markAllRead() {
 function acceptInvitation(
     notification
 ) {
-    if (!notification.action_url) {
+    if (!notification.accept_url) {
         return;
     }
 
-    router.visit(
-        notification.action_url
+    router.post(
+        notification.accept_url,
+        {},
+        {
+            preserveScroll: true,
+            preserveState: true
+        }
     );
 }
 

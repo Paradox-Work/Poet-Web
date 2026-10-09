@@ -31,16 +31,20 @@ class UserController extends Controller
 
         if ($data['follow']) {
 
-            $follower =
-                Follower::firstOrCreate([
-                    'user_id' =>
-                        $user->id,
+            $inserted =
+                Follower::query()
+                    ->insertOrIgnore([
+                        'user_id' =>
+                            $user->id,
 
-                    'follower_id' =>
-                        $currentUser->id,
-                ]);
+                        'follower_id' =>
+                            $currentUser->id,
 
-            if ($follower->wasRecentlyCreated) {
+                        'created_at' =>
+                            now(),
+                    ]);
+
+            if ($inserted === 1) {
                 $user->notify(
                     new FollowUser(
                         $currentUser,
