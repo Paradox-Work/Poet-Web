@@ -3,61 +3,236 @@
 @tailwind utilities;
 
 :root {
-    --poet-bg: #f5f1ea;
-    --poet-nav: #fbf8f2;
-    --poet-surface: #fffdf8;
-    --poet-surface-soft: #f1ebe1;
-    --poet-border: #ddd5c8;
-    --poet-border-strong: #c9bdaa;
-    --poet-text: #211d1a;
-    --poet-muted: #756d65;
-    --poet-accent: #7a334d;
-    --poet-accent-strong: #5f243b;
-    --poet-accent-soft: #f2e4e9;
+    /* Poet-Web brand palette */
+    --poet-ink: #0f1b2d;
+    --poet-charcoal: #1e2936;
+    --poet-paper: #f4ede4;
+    --poet-rose: #b77a7e;
+    --poet-plum: #6b3f56;
+    --poet-gold: #c9a96b;
+
+    /* Light reading-room theme */
+    --poet-bg: #f4ede4;
+    --poet-nav: #fbf7f1;
+    --poet-surface: #fffaf4;
+    --poet-surface-soft: #eee5dc;
+    --poet-border: #d8c9bf;
+    --poet-border-strong: #bea99d;
+    --poet-text: #0f1b2d;
+    --poet-muted: #746f6b;
+    --poet-accent: #b77a7e;
+    --poet-accent-strong: #6b3f56;
+    --poet-accent-soft: #ead6da;
+    --poet-danger: #b94f5f;
+    --poet-shadow:
+        0 18px 45px rgba(54, 35, 41, 0.08);
 }
 
 html.dark {
-    --poet-bg: #11151f;
-    --poet-nav: #181d29;
-    --poet-surface: #1c2230;
-    --poet-surface-soft: #232a3a;
-    --poet-border: #323a4a;
-    --poet-border-strong: #475165;
-    --poet-text: #eee7dc;
-    --poet-muted: #9e9a94;
-    --poet-accent: #d08aa5;
-    --poet-accent-strong: #e6adc0;
-    --poet-accent-soft: #352432;
+    /* Dark literary reading-room theme */
+    --poet-bg: #0f1b2d;
+    --poet-nav: #111d2b;
+    --poet-surface: #1e2936;
+    --poet-surface-soft: #253240;
+    --poet-border: #344452;
+    --poet-border-strong: #4b5e6f;
+    --poet-text: #f4ede4;
+    --poet-muted: #a9a39d;
+    --poet-accent: #b77a7e;
+    --poet-accent-strong: #d39aa0;
+    --poet-accent-soft: #3a2831;
+    --poet-danger: #db6b79;
+    --poet-shadow:
+        0 20px 50px rgba(0, 0, 0, 0.24);
 }
 
+html {
+    background:
+        var(--poet-bg);
+}
+
+body {
+    margin: 0;
+
+    background:
+        var(--poet-bg);
+
+    color:
+        var(--poet-text);
+}
+
+::selection {
+    background:
+        color-mix(
+            in srgb,
+            var(--poet-accent) 52%,
+            transparent
+        );
+
+    color:
+        var(--poet-text);
+}
 
 #app {
     @apply h-full;
+}
+
+@layer components {
+    .poet-card {
+        border: 1px solid var(--poet-border);
+        border-radius: 1rem;
+        background: var(--poet-surface);
+        box-shadow: var(--poet-shadow);
+    }
+
+    .poet-kicker {
+        color: var(--poet-gold);
+
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+    }
+
+    .poet-title {
+        color: var(--poet-text);
+
+        font-family:
+            "Playfair Display",
+            Georgia,
+            Cambria,
+            "Times New Roman",
+            serif;
+
+        font-weight: 600;
+        letter-spacing: -0.02em;
+    }
+
+    .poet-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+
+        border: 1px solid var(--poet-border);
+        border-radius: 9999px;
+
+        padding: 0.25rem 0.65rem;
+
+        background:
+            color-mix(
+                in srgb,
+                var(--poet-surface) 86%,
+                transparent
+            );
+
+        color: var(--poet-muted);
+
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .poet-pill-accent {
+        border-color:
+            color-mix(
+                in srgb,
+                var(--poet-accent) 56%,
+                var(--poet-border)
+            );
+
+        background:
+            var(--poet-accent-soft);
+
+        color:
+            var(--poet-accent-strong);
+    }
+
+    .poet-divider {
+        height: 1px;
+
+        background:
+            linear-gradient(
+                90deg,
+                transparent,
+                var(--poet-border),
+                color-mix(
+                    in srgb,
+                    var(--poet-gold) 48%,
+                    var(--poet-border)
+                ),
+                var(--poet-border),
+                transparent
+            );
+    }
+
+    .poet-margin-rule {
+        position: relative;
+
+        padding-left: 1rem;
+    }
+
+    .poet-margin-rule::before {
+        content: "";
+
+        position: absolute;
+        top: 0.15rem;
+        bottom: 0.15rem;
+        left: 0;
+
+        width: 2px;
+        border-radius: 9999px;
+
+        background:
+            linear-gradient(
+                180deg,
+                var(--poet-gold),
+                var(--poet-accent)
+            );
+
+        opacity: 0.75;
+    }
+
+    .poet-focus {
+        outline: none;
+    }
+
+    .poet-focus:focus-visible {
+        box-shadow:
+            0 0 0 2px var(--poet-bg),
+            0 0 0 4px var(--poet-accent);
+    }
 }
 
 .rich-text-output p {
     margin: 0.5rem 0;
 }
 
-.rich-text-output h1 {
-    margin: 0.6rem 0;
-
-    font-size: 2rem;
-    font-weight: 700;
-}
-
-.rich-text-output h2 {
-    margin: 0.6rem 0;
-
-    font-size: 1.5rem;
-    font-weight: 700;
-}
-
+.rich-text-output h1,
+.rich-text-output h2,
 .rich-text-output h3 {
     margin: 0.6rem 0;
 
+    color: var(--poet-text);
+
+    font-family:
+        "Playfair Display",
+        Georgia,
+        Cambria,
+        "Times New Roman",
+        serif;
+
+    font-weight: 600;
+}
+
+.rich-text-output h1 {
+    font-size: 2rem;
+}
+
+.rich-text-output h2 {
+    font-size: 1.5rem;
+}
+
+.rich-text-output h3 {
     font-size: 1.25rem;
-    font-weight: 700;
 }
 
 .rich-text-output ul {
@@ -77,84 +252,120 @@ html.dark {
 }
 
 .rich-text-output blockquote {
-    margin: 0.75rem 0;
+    margin: 0.9rem 0;
 
     padding-left: 1rem;
 
-    border-left: 4px solid #d1d5db;
+    border-left:
+        2px solid
+        var(--poet-gold);
+
+    color:
+        var(--poet-muted);
+
+    font-family:
+        "Playfair Display",
+        Georgia,
+        Cambria,
+        "Times New Roman",
+        serif;
 
     font-style: italic;
 }
 
 .rich-text-output a {
-    color: #2563eb;
+    color:
+        var(--poet-accent-strong);
 
-    text-decoration: underline;
+    text-decoration:
+        underline;
+
+    text-decoration-color:
+        color-mix(
+            in srgb,
+            var(--poet-accent) 55%,
+            transparent
+        );
+
+    text-underline-offset:
+        0.18em;
 }
 
 .rich-text-output a.hashtag {
-    padding: 0.1rem 0.25rem;
+    padding:
+        0.12rem
+        0.35rem;
 
-    border-radius: 0.25rem;
+    border:
+        1px solid
+        color-mix(
+            in srgb,
+            var(--poet-accent) 42%,
+            var(--poet-border)
+        );
 
-    background-color: #eaf4ff;
+    border-radius:
+        9999px;
 
-    color: #4156e2;
+    background:
+        var(--poet-accent-soft);
 
-    text-decoration: none;
+    color:
+        var(--poet-accent-strong);
+
+    text-decoration:
+        none;
 }
-
-.comment-list::-webkit-scrollbar {
-    width: 8px;
-}
-
-.comment-list::-webkit-scrollbar-thumb {
-    background-color: #cbd5e1;
-    border-radius: 9999px;
-}
-
-.comment-list::-webkit-scrollbar-track {
-    background-color: transparent;
-}
-
-.scrollbar-hidden {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-}
-
-.scrollbar-hidden::-webkit-scrollbar {
-    display: none;
-}
-
-html.dark .rich-text-output blockquote {
-    border-left-color: #475569;
-}
-
-html.dark .rich-text-output a {
-    color: #60a5fa;
-}
-
-html.dark .rich-text-output a.hashtag {
-    background-color: #1e293b;
-    color: #93c5fd;
-}
-
-html.dark ::-webkit-scrollbar-thumb {
-    background-color: #475569;
-}
-
-html.dark ::-webkit-scrollbar-track {
-    background-color: #0f172a;
-}
-
 
 .rich-text-output.poem-output {
-    font-family: Georgia, Cambria, "Times New Roman", serif;
+    font-family:
+        "Playfair Display",
+        Georgia,
+        Cambria,
+        "Times New Roman",
+        serif;
+
     font-size: 1.05rem;
-    line-height: 1.75;
+    line-height: 1.78;
 }
 
 .rich-text-output.poem-output p {
-    min-height: 1.75em;
+    min-height: 1.78em;
     margin: 0;
+}
+
+.comment-list::-webkit-scrollbar {
+    width: 7px;
+}
+
+.comment-list::-webkit-scrollbar-thumb,
+::-webkit-scrollbar-thumb {
+    border-radius:
+        9999px;
+
+    background:
+        color-mix(
+            in srgb,
+            var(--poet-border-strong) 82%,
+            transparent
+        );
+}
+
+.comment-list::-webkit-scrollbar-track,
+::-webkit-scrollbar-track {
+    background:
+        transparent;
+}
+
+.scrollbar-hidden {
+    scrollbar-width:
+        none;
+
+    -ms-overflow-style:
+        none;
+}
+
+.scrollbar-hidden::-webkit-scrollbar {
+    display:
+        none;
 }

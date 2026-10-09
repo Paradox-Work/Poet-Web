@@ -1,5 +1,8 @@
 <script setup>
-import { onMounted, ref } from 'vue';
+import {
+    onMounted,
+    ref
+} from 'vue';
 
 const model = defineModel({
     type: String,
@@ -10,19 +13,26 @@ const model = defineModel({
 const input = ref(null);
 
 onMounted(() => {
-    if (input.value.hasAttribute('autofocus')) {
+    if (
+        input.value.hasAttribute(
+            'autofocus'
+        )
+    ) {
         input.value.focus();
     }
 });
 
-defineExpose({ focus: () => input.value.focus() });
+defineExpose({
+    focus: () =>
+        input.value.focus()
+});
 </script>
 
 <template>
     <input
-        class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-indigo-600 dark:focus:ring-indigo-600"
         v-model="model"
         ref="input"
         :placeholder="placeholder"
+        class="rounded-xl border border-[var(--poet-border)] bg-[var(--poet-surface)] text-[var(--poet-text)] shadow-sm placeholder:text-[var(--poet-muted)] focus:border-[var(--poet-accent)] focus:ring-[var(--poet-accent)]"
     />
 </template>

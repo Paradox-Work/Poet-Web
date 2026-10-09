@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        <title inertia>{{ config('app.name', 'Poet-Web') }}</title>
 
         <script>
             (() => {
@@ -26,16 +26,27 @@
             })();
         </script>
 
-        <!-- Fonts -->
+        <!-- Poet-Web typography -->
         <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        <link
+            href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap"
+            rel="stylesheet"
+        >
+        <link
+            href="https://fonts.bunny.net/css?family=playfair-display:500,600,700,700i&display=swap"
+            rel="stylesheet"
+        >
+        <meta
+            name="theme-color"
+            content="#0f1b2d"
+        >
 
         <!-- Scripts -->
         @routes
         @vite(['resources/js/app.js', "resources/js/Pages/{$page['component']}.vue"])
         @inertiaHead
     </head>
-    <body class="font-sans antialiased bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100 lg:overflow-hidden lg:h-full">
+    <body class="bg-[var(--poet-bg)] font-sans text-[var(--poet-text)] antialiased lg:h-full lg:overflow-hidden">
         @inertia
     </body>
 </html>

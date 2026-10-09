@@ -119,7 +119,7 @@ function search() {
     <div>
         <div class="h-screen flex flex-col bg-[var(--poet-bg)] text-[var(--poet-text)]">
             <nav
-                class="border-b border-[var(--poet-border)] bg-[var(--poet-nav)]"
+                class="border-b border-[var(--poet-border)] bg-[var(--poet-nav)]/95 backdrop-blur-md"
             >
                 <!-- Primary Navigation Menu -->
                 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -129,23 +129,33 @@ function search() {
                             <div class="flex shrink-0 items-center">
                                 <Link
                                     :href="route('dashboard')"
-                                    class="flex items-center gap-2"
+                                    class="group flex items-center gap-2.5"
                                 >
                                     <ApplicationLogo
-                                        class="block h-8 w-auto fill-current text-[var(--poet-text)]"
+                                        class="block h-10 w-10 text-[var(--poet-text)] transition duration-200 group-hover:-rotate-2 group-hover:scale-105"
                                     />
 
                                     <span
-                                        class="hidden font-serif text-lg font-semibold tracking-tight text-[var(--poet-text)] lg:inline"
+                                        class="hidden lg:block"
                                     >
-                                        Poet-Web
+                                        <span
+                                            class="block font-serif text-xl font-semibold tracking-tight text-[var(--poet-text)]"
+                                        >
+                                            Poet-Web
+                                        </span>
+
+                                        <span
+                                            class="hidden text-[8px] font-semibold uppercase tracking-[0.22em] text-[var(--poet-gold)] xl:block"
+                                        >
+                                            Read · Write · Belong
+                                        </span>
                                     </span>
                                 </Link>
                             </div>
 
                             <!-- Navigation Links -->
                             <div
-                                class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex"
+                                class="hidden space-x-7 sm:-my-px sm:ms-10 sm:flex"
                             >
                                 <NavLink
                                     :href="route('dashboard')"
@@ -181,7 +191,7 @@ function search() {
                                         <template #trigger>
                                             <button
                                                 type="button"
-                                                class="inline-flex items-center gap-1.5 rounded-full bg-[var(--poet-accent-soft)] px-3 py-2 text-sm font-semibold text-[var(--poet-accent-strong)] transition hover:-translate-y-0.5 hover:shadow-sm focus:outline-none"
+                                                class="poet-focus inline-flex items-center gap-1.5 rounded-full bg-[var(--poet-accent)] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-[var(--poet-accent-strong)] hover:shadow-md"
                                             >
                                                 Create
 
@@ -244,8 +254,8 @@ function search() {
                             >
                                 <TextInput
                                     v-model="keywords"
-                                    placeholder="Search users, groups and posts"
-                                    class="w-full"
+                                    placeholder="Search poems, people, or groups..."
+                                    class="w-full !rounded-full"
                                     @keyup.enter="search"
                                 />
                             </div>
@@ -253,7 +263,7 @@ function search() {
                             <button
                                 type="button"
                                 @click="toggleTheme"
-                                class="mr-2 inline-flex h-9 w-9 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white"
+                                class="poet-focus mr-2 inline-flex h-9 w-9 items-center justify-center rounded-full text-[var(--poet-muted)] transition hover:bg-[var(--poet-surface-soft)] hover:text-[var(--poet-gold)]"
                                 :aria-label="
                                     isDark
                                         ? 'Switch to light mode'
@@ -278,7 +288,7 @@ function search() {
                                         <span class="inline-flex rounded-md">
                                             <button
                                                 type="button"
-                                                class="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out hover:text-gray-700 focus:outline-none dark:bg-gray-800 dark:text-gray-400 dark:hover:text-gray-300"
+                                                class="poet-focus inline-flex items-center rounded-full border border-[var(--poet-border)] bg-[var(--poet-surface)] px-3 py-2 text-sm font-medium leading-4 text-[var(--poet-muted)] transition hover:border-[var(--poet-border-strong)] hover:bg-[var(--poet-surface-soft)] hover:text-[var(--poet-text)]"
                                             >
                                                 {{ authUser.name }}
 
@@ -337,7 +347,7 @@ function search() {
                                     showingNavigationDropdown =
                                         !showingNavigationDropdown
                                 "
-                                class="inline-flex items-center justify-center rounded-md p-2 text-gray-400 transition duration-150 ease-in-out hover:bg-gray-100 hover:text-gray-500 focus:bg-gray-100 focus:text-gray-500 focus:outline-none dark:text-gray-500 dark:hover:bg-gray-900 dark:hover:text-gray-400 dark:focus:bg-gray-900 dark:focus:text-gray-400"
+                                class="poet-focus inline-flex items-center justify-center rounded-full p-2 text-[var(--poet-muted)] transition hover:bg-[var(--poet-surface-soft)] hover:text-[var(--poet-text)]"
                             >
                                 <svg
                                     class="h-6 w-6"
@@ -385,7 +395,7 @@ function search() {
                         <button
                             type="button"
                             @click="toggleTheme"
-                            class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"
+                            class="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-[var(--poet-muted)] transition hover:bg-[var(--poet-surface-soft)] hover:text-[var(--poet-text)]"
                         >
                             <SunIcon
                                 v-if="isDark"
@@ -418,7 +428,7 @@ function search() {
                                 openCreatePost();
                                 showingNavigationDropdown = false;
                             "
-                            class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"
+                            class="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-[var(--poet-muted)] transition hover:bg-[var(--poet-surface-soft)] hover:text-[var(--poet-text)]"
                         >
                             <DocumentTextIcon
                                 class="h-5 w-5"
@@ -454,15 +464,15 @@ function search() {
                     <!-- Responsive Settings Options -->
                     <div
                         v-if="authUser"
-                        class="border-t border-gray-200 pb-1 pt-4 dark:border-gray-600"
+                        class="border-t border-[var(--poet-border)] pb-1 pt-4"
                     >
                         <div class="px-4">
                             <div
-                                class="text-base font-medium text-gray-800 dark:text-gray-200"
+                                class="text-base font-medium text-[var(--poet-text)]"
                             >
                                 {{ authUser.name }}
                             </div>
-                            <div class="text-sm font-medium text-gray-500">
+                            <div class="text-sm font-medium text-[var(--poet-muted)]">
                                 {{ authUser.email }}
                             </div>
                         </div>
@@ -485,7 +495,7 @@ function search() {
 
             <!-- Page Heading -->
             <header
-                class="bg-white shadow dark:bg-gray-800"
+                class="border-b border-[var(--poet-border)] bg-[var(--poet-surface)] shadow-sm"
                 v-if="$slots.header"
             >
                 <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
