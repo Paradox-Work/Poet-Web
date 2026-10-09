@@ -16,9 +16,7 @@ use Illuminate\Support\Facades\Storage;
 
 class PostController extends Controller
 {
-    
-    
-        public function view(
+    public function view(
             Request $request,
             Post $post
         ) {
@@ -49,7 +47,7 @@ class PostController extends Controller
             );
         }
 
-        public function store(StorePostRequest $request)
+    public function store(StorePostRequest $request)
         {
             $data = $request->validated();
     
@@ -138,7 +136,7 @@ class PostController extends Controller
             return back();
         }
 
-        public function update(UpdatePostRequest $request, Post $post){
+    public function update(UpdatePostRequest $request, Post $post){
     
             $data = $request->validated();
     
@@ -273,7 +271,7 @@ class PostController extends Controller
             return back();
         }
 
-        public function destroy(
+    public function destroy(
             Request $request,
             Post $post
         ) {
@@ -327,8 +325,7 @@ class PostController extends Controller
             return back();
         }
 
-    
-        private function notifyPostPublished(
+    private function notifyPostPublished(
             Post $post,
             $user
         ): void {
