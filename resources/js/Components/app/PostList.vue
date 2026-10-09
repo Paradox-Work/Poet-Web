@@ -335,7 +335,7 @@ function onDeckWheel(event) {
 
     if (
         target?.closest(
-            'textarea, input, select, [contenteditable="true"], .comment-list'
+            'textarea, input, select, [contenteditable="true"], .comment-list, .deck-card-scroll'
         )
     ) {
         return;
@@ -578,7 +578,7 @@ function removePost(postId) {
     >
         <div
             v-if="feedState.posts.length"
-            class="flex min-h-0 flex-1 items-center"
+            class="flex min-h-0 flex-1 items-stretch lg:items-center"
             tabindex="0"
             @wheel="onDeckWheel"
             @pointerdown="onPointerDown"
@@ -587,7 +587,7 @@ function removePost(postId) {
             @pointercancel="onPointerUp"
         >
             <div
-                class="mx-auto grid w-full max-w-[1480px] items-center gap-5 px-2 lg:grid-cols-[minmax(190px,0.72fr)_minmax(480px,1.45fr)_minmax(190px,0.72fr)] xl:gap-8"
+                class="mx-auto grid h-full min-h-0 w-full max-w-[1480px] items-stretch gap-5 px-2 lg:h-auto lg:items-center lg:grid-cols-[minmax(190px,0.72fr)_minmax(480px,1.45fr)_minmax(190px,0.72fr)] xl:gap-8"
             >
                 <div
                     class="hidden min-w-0 lg:block"
@@ -617,7 +617,7 @@ function removePost(postId) {
                 </div>
 
                 <div
-                    class="min-w-0"
+                    class="h-full min-h-0 min-w-0 lg:h-auto"
                 >
                     <Transition
                         :name="deckTransitionName"
@@ -626,7 +626,7 @@ function removePost(postId) {
                         <div
                             v-if="activePost"
                             :key="activePost.id"
-                            class="mx-auto max-h-[calc(100vh-185px)] w-full overflow-y-auto rounded-2xl scrollbar-hidden"
+                            class="mx-auto h-full min-h-0 w-full overflow-hidden rounded-2xl lg:h-auto lg:max-h-[calc(100vh-185px)] lg:overflow-y-auto lg:scrollbar-hidden"
                         >
                             <PostItem
                                 :post="activePost"

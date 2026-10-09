@@ -414,11 +414,18 @@ async function sendReaction() {
             deckPreview
                 ? 'h-[min(46vh,430px)] overflow-hidden px-4 py-4'
                 : deckNavigation
-                    ? 'mb-5 flex min-h-[clamp(380px,48vh,560px)] flex-col px-5 py-5'
+                    ? 'flex h-full min-h-0 flex-col px-5 py-5 lg:mb-5 lg:h-auto lg:min-h-[clamp(380px,48vh,560px)]'
                     : 'mb-5 px-5 py-5'
         ]"
     >
-        <div class="flex items-center justify-between mb-3">
+        <div
+            :class="[
+                'mb-3 flex items-center justify-between',
+                deckNavigation
+                    ? 'shrink-0'
+                    : ''
+            ]"
+        >
 
             <PostUserHeader :post="post" />
 
@@ -457,7 +464,9 @@ async function sendReaction() {
                 'mb-3',
                 deckPreview
                     ? 'max-h-[300px] overflow-hidden'
-                    : ''
+                    : deckNavigation
+                        ? 'deck-card-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1'
+                        : ''
             ]"
         >
 
@@ -589,33 +598,39 @@ async function sendReaction() {
                 </a>
             </div>
 
-        </div>
-        <div
-            v-if="post.attachments?.length"
-            class="grid gap-3 mb-3"
-            :class="
-                post.attachments.length === 1
-                    ? 'grid-cols-1'
-                    : 'grid-cols-2'
-            "
-        >
+            <div
+                v-if="post.attachments?.length"
+                class="mb-3 mt-3 grid gap-3"
+                :class="
+                    post.attachments.length === 1
+                        ? 'grid-cols-1'
+                        : 'grid-cols-2'
+                "
+            >
+                <PostAttachments
+                    :attachments="post.attachments"
+                    @attachmentClick="openAttachment"
+                />
+            </div>
 
-            <PostAttachments
-                :attachments="post.attachments"
-                @attachmentClick="openAttachment"
-            />
-
         </div>
+
         <Disclosure
             v-if="!deckPreview"
+            as="div"
             v-slot="{ open }"
+            :class="
+                deckNavigation
+                    ? 'shrink-0'
+                    : ''
+            "
         >
 
     <div
         :class="[
             'grid items-end',
             deckNavigation
-                ? 'mt-auto grid-cols-[40px_1fr_40px] gap-2 pt-5'
+                ? 'grid-cols-[40px_1fr_40px] gap-2 pt-4'
                 : 'mt-5 grid-cols-1'
         ]"
     >

@@ -183,10 +183,10 @@ function changeSource(source) {
             class="h-full overflow-hidden bg-[var(--poet-bg)]"
         >
             <section
-                class="mx-auto flex h-full max-w-[1560px] flex-col px-4 pb-3 pt-6 sm:px-6 lg:px-8"
+                class="mx-auto flex h-full min-h-0 max-w-[1560px] flex-col px-4 pb-3 pt-5 sm:px-6 sm:pt-6 lg:px-8"
             >
                 <div
-                    class="flex shrink-0 items-end justify-between gap-6 px-[2%] lg:px-[7%]"
+                    class="flex shrink-0 flex-col gap-4 px-[2%] md:flex-row md:items-end md:justify-between md:gap-6 lg:px-[7%]"
                 >
                     <div class="min-w-0">
                         <div
@@ -205,7 +205,7 @@ function changeSource(source) {
                     </div>
 
                     <div
-                        class="flex shrink-0 items-center gap-2"
+                        class="grid w-full shrink-0 grid-cols-1 gap-2 md:flex md:w-auto md:items-center"
                     >
                         <label
                             class="sr-only"
@@ -218,7 +218,7 @@ function changeSource(source) {
                             id="feed-type"
                             :value="feedFilters.feed"
                             @change="changeFeed"
-                            class="w-32 rounded-full border border-[var(--poet-border)] bg-[var(--poet-surface)] py-2 pl-3 pr-9 text-sm font-medium text-[var(--poet-text)] shadow-sm transition hover:border-[var(--poet-border-strong)] focus:border-[var(--poet-accent)] focus:ring-[var(--poet-accent)]"
+                            class="w-full rounded-full border border-[var(--poet-border)] bg-[var(--poet-surface)] py-2 pl-3 pr-9 text-sm font-medium text-[var(--poet-text)] shadow-sm transition hover:border-[var(--poet-border-strong)] focus:border-[var(--poet-accent)] focus:ring-[var(--poet-accent)] md:w-32"
                         >
                             <option value="poems">
                                 Poems
@@ -251,7 +251,7 @@ function changeSource(source) {
                                 'posts'
                             "
                             @change="changeGenre"
-                            class="w-44 rounded-full border border-[var(--poet-border)] bg-[var(--poet-surface)] py-2 pl-3 pr-9 text-sm text-[var(--poet-text)] shadow-sm transition hover:border-[var(--poet-border-strong)] focus:border-[var(--poet-accent)] focus:ring-[var(--poet-accent)] disabled:cursor-not-allowed disabled:opacity-40"
+                            class="w-full rounded-full border border-[var(--poet-border)] bg-[var(--poet-surface)] py-2 pl-3 pr-9 text-sm text-[var(--poet-text)] shadow-sm transition hover:border-[var(--poet-border-strong)] focus:border-[var(--poet-accent)] focus:ring-[var(--poet-accent)] disabled:cursor-not-allowed disabled:opacity-40 md:w-44"
                         >
                             <option value="">
                                 All genres
@@ -271,7 +271,7 @@ function changeSource(source) {
                 </div>
 
                 <nav
-                    class="flex shrink-0 justify-center pt-5"
+                    class="flex shrink-0 justify-center pb-3 pt-4 sm:pb-2 sm:pt-5"
                     aria-label="Feed source"
                 >
                     <div
@@ -287,7 +287,7 @@ function changeSource(source) {
                                 )
                             "
                             :class="[
-                                'pb-2 text-sm font-medium transition-colors duration-200',
+                                'min-w-0 px-1 pb-2 text-xs font-medium transition-colors duration-200 sm:text-sm',
                                 feedFilters.source === source.value
                                     ? 'text-[var(--poet-text)]'
                                     : 'text-[var(--poet-muted)] hover:text-[var(--poet-text)]'
