@@ -4,7 +4,7 @@
             class="h-full overflow-y-auto bg-[var(--poet-bg)]"
         >
             <div
-                class="mx-auto w-full max-w-5xl px-0 pb-10 sm:px-4 lg:px-6"
+                class="mx-auto w-full max-w-5xl px-0 pb-6 sm:px-4 sm:pb-10 lg:px-6"
             >
                 <div
                     v-show="showNotification && success"
@@ -24,7 +24,7 @@
                     class="overflow-hidden border-b border-[var(--poet-border)] bg-[var(--poet-surface)] sm:mt-5 sm:rounded-2xl sm:border"
                 >
                     <div
-                        class="group relative h-44 bg-[var(--poet-surface-soft)] sm:h-56"
+                        class="group relative h-36 bg-[var(--poet-surface-soft)] sm:h-56"
                     >
                         <img
                             :src="
@@ -42,7 +42,7 @@
                         >
                             <label
                                 v-if="!coverImageSrc"
-                                class="relative flex cursor-pointer items-center gap-2 rounded-full bg-black/55 px-3 py-2 text-xs font-medium text-white opacity-0 backdrop-blur transition group-hover:opacity-100"
+                                class="relative flex cursor-pointer items-center gap-2 rounded-full bg-black/55 px-3 py-2 text-xs font-medium text-white opacity-100 backdrop-blur transition sm:opacity-0 sm:group-hover:opacity-100"
                             >
                                 <CameraIcon class="h-4 w-4" />
                                 Change cover
@@ -80,10 +80,10 @@
                     </div>
 
                     <div
-                        class="relative flex flex-col gap-4 px-5 pb-5 sm:flex-row sm:items-end sm:px-7"
+                        class="relative flex flex-col gap-3 px-4 pb-4 sm:flex-row sm:items-end sm:gap-4 sm:px-7 sm:pb-5"
                     >
                         <div
-                            class="group/avatar relative -mt-12 h-24 w-24 shrink-0 rounded-full ring-4 ring-[var(--poet-surface)] sm:-mt-14 sm:h-28 sm:w-28"
+                            class="group/avatar relative -mt-10 h-20 w-20 shrink-0 rounded-full ring-4 ring-[var(--poet-surface)] sm:-mt-14 sm:h-28 sm:w-28"
                         >
                             <img
                                 :src="
@@ -100,7 +100,7 @@
                                     isMyProfile &&
                                     !avatarImageSrc
                                 "
-                                class="absolute inset-0 flex cursor-pointer items-center justify-center rounded-full bg-black/50 text-white opacity-0 transition group-hover/avatar:opacity-100"
+                                class="absolute inset-0 flex cursor-pointer items-center justify-center rounded-full bg-black/50 text-white opacity-100 transition sm:opacity-0 sm:group-hover/avatar:opacity-100"
                             >
                                 <CameraIcon class="h-7 w-7" />
 
@@ -142,13 +142,13 @@
                             class="min-w-0 flex-1 sm:pb-1"
                         >
                             <h1
-                                class="truncate font-serif text-2xl font-semibold text-[var(--poet-text)]"
+                                class="truncate font-serif text-xl font-semibold text-[var(--poet-text)] sm:text-2xl"
                             >
                                 {{ user.name }}
                             </h1>
 
                             <div
-                                class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-[var(--poet-muted)]"
+                                class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[var(--poet-muted)] sm:gap-x-3 sm:text-sm"
                             >
                                 <span>
                                     @{{ user.username }}
@@ -187,12 +187,12 @@
                     </div>
                 </section>
 
-                <section class="mt-4">
+                <section class="mt-3 sm:mt-4">
                     <div
                         class="flex flex-col gap-3 border-b border-[var(--poet-border)] pb-3 md:flex-row md:items-end md:justify-between"
                     >
                         <nav
-                            class="scrollbar-hidden flex min-w-0 overflow-x-auto"
+                            class="scrollbar-hidden -mx-1 flex min-w-0 snap-x overflow-x-auto px-1"
                             aria-label="Profile sections"
                         >
                             <button
@@ -201,7 +201,7 @@
                                 type="button"
                                 @click="selectTab(tab.value)"
                                 :class="[
-                                    'relative shrink-0 px-3 py-2.5 text-sm font-medium transition',
+                                    'relative shrink-0 snap-start px-3 py-2.5 text-sm font-medium transition',
                                     selectedTab === tab.value
                                         ? 'text-[var(--poet-text)]'
                                         : 'text-[var(--poet-muted)] hover:text-[var(--poet-text)]'
@@ -221,10 +221,10 @@
 
                         <form
                             v-if="isPeopleTab"
-                            class="flex w-full items-center gap-2 md:w-auto"
+                            class="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-2 md:flex md:w-auto"
                             @submit.prevent="searchPeople"
                         >
-                            <div class="relative min-w-0 flex-1 md:w-72">
+                            <div class="relative min-w-0 md:w-72">
                                 <MagnifyingGlassIcon
                                     class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--poet-muted)]"
                                 />
@@ -239,16 +239,18 @@
 
                             <button
                                 type="submit"
-                                class="rounded-full bg-[var(--poet-accent)] px-4 py-2 text-sm font-medium text-white transition hover:-translate-y-0.5 hover:shadow"
+                                class="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--poet-accent)] text-white transition hover:-translate-y-0.5 hover:shadow md:h-auto md:w-auto md:px-4 md:py-2 md:text-sm md:font-medium"
+                                aria-label="Search people"
                             >
-                                Search
+                                <MagnifyingGlassIcon class="h-4 w-4 md:hidden" />
+                                <span class="hidden md:inline">Search</span>
                             </button>
 
                             <button
                                 v-if="peopleSearchInput"
                                 type="button"
                                 @click="clearPeopleSearch"
-                                class="rounded-full border border-[var(--poet-border)] px-3 py-2 text-sm text-[var(--poet-muted)] transition hover:bg-[var(--poet-surface-soft)] hover:text-[var(--poet-text)]"
+                                class="col-span-2 justify-self-start rounded-full border border-[var(--poet-border)] px-3 py-1.5 text-xs text-[var(--poet-muted)] transition hover:bg-[var(--poet-surface-soft)] hover:text-[var(--poet-text)] md:col-span-1 md:px-3 md:py-2 md:text-sm"
                             >
                                 Clear
                             </button>
@@ -345,7 +347,7 @@
                     <div v-else-if="selectedTab === 'followers'">
                         <div
                             v-if="followers.data?.length"
-                            class="grid gap-2 sm:grid-cols-2 lg:grid-cols-4"
+                            class="grid grid-cols-2 gap-2 sm:grid-cols-2 lg:grid-cols-4"
                         >
                             <UserListItem
                                 v-for="follower in followers.data"
@@ -378,7 +380,7 @@
                     <div v-else-if="selectedTab === 'following'">
                         <div
                             v-if="followings.data?.length"
-                            class="grid gap-2 sm:grid-cols-2 lg:grid-cols-4"
+                            class="grid grid-cols-2 gap-2 sm:grid-cols-2 lg:grid-cols-4"
                         >
                             <UserListItem
                                 v-for="following in followings.data"
@@ -431,7 +433,7 @@
                                 'my_profile' &&
                             isMyProfile
                         "
-                        class="rounded-2xl border border-[var(--poet-border)] bg-[var(--poet-surface)] p-4 sm:p-6"
+                        class="border-y border-[var(--poet-border)] bg-[var(--poet-surface)] px-3 py-4 sm:rounded-2xl sm:border sm:p-6"
                     >
                         <Edit
                             :must-verify-email="mustVerifyEmail"

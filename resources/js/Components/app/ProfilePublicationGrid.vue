@@ -120,7 +120,7 @@ function publicationTitle(post) {
 
 <template>
     <div
-        class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4"
+        class="grid grid-cols-2 gap-1.5 sm:grid-cols-3 sm:gap-2 lg:grid-cols-4"
     >
         <Link
             v-for="post in posts"
@@ -131,7 +131,7 @@ function publicationTitle(post) {
                     post.id
                 )
             "
-            class="group relative h-36 overflow-hidden rounded-xl border border-[var(--poet-border)] bg-[var(--poet-surface)] transition duration-200 hover:-translate-y-0.5 hover:border-[var(--poet-border-strong)] hover:shadow-lg sm:h-40"
+            class="group relative h-32 overflow-hidden rounded-lg border border-[var(--poet-border)] bg-[var(--poet-surface)] transition duration-200 hover:-translate-y-0.5 hover:border-[var(--poet-border-strong)] hover:shadow-lg sm:h-40 sm:rounded-xl"
         >
             <template
                 v-if="firstVisual(post)"
@@ -194,7 +194,7 @@ function publicationTitle(post) {
             />
 
             <div
-                class="absolute inset-0 flex flex-col p-3"
+                class="absolute inset-0 flex flex-col p-2.5 sm:p-3"
             >
                 <div
                     class="flex items-start justify-between gap-2"
@@ -256,8 +256,8 @@ function publicationTitle(post) {
                                 ? 'text-white'
                                 : 'text-[var(--poet-text)]',
                             post.type === 'poem'
-                                ? 'font-serif text-base'
-                                : 'text-sm'
+                                ? 'font-serif text-sm sm:text-base'
+                                : 'text-xs sm:text-sm'
                         ]"
                     >
                         {{

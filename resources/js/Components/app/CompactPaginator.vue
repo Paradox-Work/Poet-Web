@@ -100,14 +100,14 @@ const lastPage =
 <template>
     <nav
         v-if="meta && lastPage > 1"
-        class="flex flex-wrap items-center justify-center gap-1"
+        class="flex flex-wrap items-center justify-center gap-1 px-2 sm:px-0"
         :aria-label="label"
     >
         <button
             type="button"
             :disabled="currentPage <= 1"
             @click="$emit('page', currentPage - 1)"
-            class="flex h-9 min-w-9 items-center justify-center rounded-lg border border-[var(--poet-border)] px-2 text-sm text-[var(--poet-muted)] transition hover:border-[var(--poet-border-strong)] hover:bg-[var(--poet-surface-soft)] hover:text-[var(--poet-text)] disabled:pointer-events-none disabled:opacity-30"
+            class="flex h-10 min-w-10 items-center justify-center rounded-lg border border-[var(--poet-border)] px-2 text-sm text-[var(--poet-muted)] transition hover:border-[var(--poet-border-strong)] hover:bg-[var(--poet-surface-soft)] hover:text-[var(--poet-text)] disabled:pointer-events-none disabled:opacity-30"
             aria-label="Previous page"
         >
             ‹
@@ -132,7 +132,7 @@ const lastPage =
                 type="button"
                 @click="$emit('page', page)"
                 :class="[
-                    'flex h-9 min-w-9 items-center justify-center rounded-lg border px-2 text-sm font-medium transition',
+                    'flex h-10 min-w-10 items-center justify-center rounded-lg border px-2 text-sm font-medium transition',
                     page === currentPage
                         ? 'border-[var(--poet-accent)] bg-[var(--poet-accent-soft)] text-[var(--poet-accent)]'
                         : 'border-[var(--poet-border)] text-[var(--poet-muted)] hover:border-[var(--poet-border-strong)] hover:bg-[var(--poet-surface-soft)] hover:text-[var(--poet-text)]'
@@ -153,7 +153,7 @@ const lastPage =
                 currentPage >= lastPage
             "
             @click="$emit('page', currentPage + 1)"
-            class="flex h-9 min-w-9 items-center justify-center rounded-lg border border-[var(--poet-border)] px-2 text-sm text-[var(--poet-muted)] transition hover:border-[var(--poet-border-strong)] hover:bg-[var(--poet-surface-soft)] hover:text-[var(--poet-text)] disabled:pointer-events-none disabled:opacity-30"
+            class="flex h-10 min-w-10 items-center justify-center rounded-lg border border-[var(--poet-border)] px-2 text-sm text-[var(--poet-muted)] transition hover:border-[var(--poet-border-strong)] hover:bg-[var(--poet-surface-soft)] hover:text-[var(--poet-text)] disabled:pointer-events-none disabled:opacity-30"
             aria-label="Next page"
         >
             ›
