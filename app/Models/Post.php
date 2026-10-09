@@ -20,6 +20,7 @@ class Post extends Model
         'body',
         'group_id',
         'type',
+        'content_rating',
         'poem_form',
         'poem_genres',
         'title',

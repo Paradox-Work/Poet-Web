@@ -49,6 +49,9 @@ class PostController extends Controller
                     'id' => $draft->id,
                     'status' => 'draft',
                     'type' => 'poem',
+                    'content_rating' =>
+                        $draft->content_rating
+                            ?? 'general',
                     'poem_form' =>
                         $draft->poem_form
                             ?? 'free_verse',
@@ -90,6 +93,9 @@ class PostController extends Controller
                 'id' => $post->id,
                 'status' => 'published',
                 'type' => 'poem',
+                'content_rating' =>
+                    $post->content_rating
+                        ?? 'general',
                 'poem_form' =>
                     $post->poem_form
                         ?? 'free_verse',
@@ -153,6 +159,9 @@ class PostController extends Controller
                         'status' => 'draft',
                         'type' =>
                             $draft->type ?? 'poem',
+                        'content_rating' =>
+                            $draft->content_rating
+                                ?? 'general',
                         'poem_form' =>
                             $draft->poem_form
                                 ?? 'free_verse',
@@ -251,6 +260,9 @@ class PostController extends Controller
                     ? [
                         'id' => $draft->id,
                         'type' => $draft->type,
+                        'content_rating' =>
+                            $draft->content_rating
+                                ?? 'general',
                         'poem_form' =>
                             $draft->poem_form
                                 ?? 'free_verse',
@@ -341,6 +353,13 @@ class PostController extends Controller
                 Rule::in([
                     'post',
                     'poem',
+                ]),
+            ],
+            'content_rating' => [
+                'required',
+                Rule::in([
+                    'general',
+                    'mature',
                 ]),
             ],
             'poem_form' => [
@@ -750,6 +769,8 @@ class PostController extends Controller
 
             $post->update([
                 'type' => $data['type'],
+                'content_rating' =>
+                    $data['content_rating'],
                 'poem_form' =>
                     $data['type'] === 'poem'
                         ? ($data['poem_form'] ?? 'free_verse')

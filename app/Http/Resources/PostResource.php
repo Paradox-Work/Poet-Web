@@ -56,6 +56,9 @@ class PostResource extends JsonResource
             'id' => $this->id,
             'status' => $this->status ?? 'published',
             'type' => $this->type ?? 'post',
+            'content_rating' =>
+                $this->content_rating
+                    ?? 'general',
             'poem_form' => $this->poem_form,
             'poem_genres' => $this->poem_genres ?? [],
             'title' => $this->title,

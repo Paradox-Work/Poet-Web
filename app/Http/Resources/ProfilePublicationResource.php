@@ -20,6 +20,9 @@ class ProfilePublicationResource extends JsonResource
             'id' => $this->id,
             'type' =>
                 $this->type ?? 'post',
+            'content_rating' =>
+                $this->content_rating
+                    ?? 'general',
             'title' =>
                 $this->title,
             'body' =>

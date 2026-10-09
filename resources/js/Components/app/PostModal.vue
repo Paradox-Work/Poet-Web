@@ -120,6 +120,72 @@
                                     </div>
 
                                     <div
+                                        class="mb-4 rounded-xl border border-[var(--poet-border)] bg-[var(--poet-surface-soft)] p-3"
+                                    >
+                                        <div
+                                            class="mb-2"
+                                        >
+                                            <div
+                                                class="text-sm font-semibold text-[var(--poet-text)]"
+                                            >
+                                                Content rating
+                                            </div>
+
+                                            <p
+                                                class="mt-0.5 text-xs text-[var(--poet-muted)]"
+                                            >
+                                                Mature publications show a warning before opening.
+                                            </p>
+                                        </div>
+
+                                        <div
+                                            class="grid grid-cols-2 gap-2"
+                                        >
+                                            <button
+                                                type="button"
+                                                @click="
+                                                    form.content_rating =
+                                                        'general'
+                                                "
+                                                :class="[
+                                                    'rounded-lg border px-3 py-2 text-sm font-medium transition',
+                                                    form.content_rating === 'general'
+                                                        ? 'border-[var(--poet-accent)] bg-[var(--poet-accent-soft)] text-[var(--poet-accent-strong)]'
+                                                        : 'border-[var(--poet-border)] bg-[var(--poet-surface)] text-[var(--poet-muted)] hover:border-[var(--poet-border-strong)]'
+                                                ]"
+                                            >
+                                                General
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                @click="
+                                                    form.content_rating =
+                                                        'mature'
+                                                "
+                                                :class="[
+                                                    'rounded-lg border px-3 py-2 text-sm font-medium transition',
+                                                    form.content_rating === 'mature'
+                                                        ? 'border-[var(--poet-gold)] bg-amber-500/10 text-[var(--poet-gold)]'
+                                                        : 'border-[var(--poet-border)] bg-[var(--poet-surface)] text-[var(--poet-muted)] hover:border-[var(--poet-border-strong)]'
+                                                ]"
+                                            >
+                                                Mature
+                                            </button>
+                                        </div>
+
+                                        <p
+                                            v-if="form.errors.content_rating"
+                                            class="mt-2 text-xs text-red-500"
+                                        >
+                                            {{
+                                                form.errors
+                                                    .content_rating
+                                            }}
+                                        </p>
+                                    </div>
+
+                                    <div
                                         v-if="
                                             form.type === 'poem' &&
                                             !form.id
@@ -521,6 +587,7 @@ const computedAttachments = computed(() => {
 const form = useForm({
     id: null,
     type: 'post',
+    content_rating: 'general',
     title: '',
     caption: '',
     hashtags: [],
@@ -563,6 +630,10 @@ watch(
                 : (post.id ?? null);
 
         form.type = post.type ?? 'post';
+
+        form.content_rating =
+            post.content_rating
+            ?? 'general';
 
         draftId.value =
             isDraft
@@ -635,6 +706,7 @@ function closeModal() {
 
     form.reset();
     form.type = 'post';
+    form.content_rating = 'general';
     draftId.value = null;
     draftState.value = 'idle';
     draftSavedAt.value = null;
@@ -763,6 +835,8 @@ function hasDraftContent() {
 function draftPayload() {
     return {
         type: form.type,
+        content_rating:
+            form.content_rating,
         title:
             form.type === 'poem'
                 ? form.title
@@ -832,6 +906,10 @@ function resumeLatestDraft() {
 
     draftId.value =
         draft.id;
+
+    form.content_rating =
+        draft.content_rating
+        ?? 'general';
 
     form.title =
         draft.title ?? '';
@@ -955,6 +1033,7 @@ async function chooseType(type) {
 watch(
     [
         () => form.type,
+        () => form.content_rating,
         () => form.title,
         () => form.caption,
         () => form.body,

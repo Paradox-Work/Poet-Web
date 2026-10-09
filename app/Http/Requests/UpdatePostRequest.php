@@ -34,6 +34,12 @@ class UpdatePostRequest extends FormRequest
                 'in:post,poem',
             ],
 
+            'content_rating' => [
+                'required',
+                'string',
+                'in:general,mature',
+            ],
+
             'poem_form' => [
                 'nullable',
                 'string',

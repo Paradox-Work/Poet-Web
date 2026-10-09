@@ -220,6 +220,16 @@ function publicationTitle(post) {
 
                         <span
                             v-if="
+                                post.content_rating ===
+                                'mature'
+                            "
+                            class="rounded-full border border-[var(--poet-gold)]/50 bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-medium text-[var(--poet-gold)] sm:px-2 sm:text-[10px]"
+                        >
+                            Mature
+                        </span>
+
+                        <span
+                            v-if="
                                 post.type ===
                                     'poem' &&
                                 post.poem_genres?.length

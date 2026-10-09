@@ -63,6 +63,7 @@ let saveTimer = null;
 
 const form = useForm({
     type: 'poem',
+    content_rating: 'general',
     poem_form: 'free_verse',
     poem_genres: [],
     title: '',
@@ -157,6 +158,8 @@ function hasContent() {
 function draftPayload() {
     return {
         type: 'poem',
+        content_rating:
+            form.content_rating,
         poem_form: form.poem_form,
         poem_genres: form.poem_genres,
         title: form.title,
@@ -217,6 +220,11 @@ function scheduleSave() {
 
 function openDraft(draft) {
     draftId.value = draft.id;
+
+    form.content_rating =
+        draft.content_rating
+        ?? 'general';
+
     form.poem_form =
         draft.poem_form ?? 'free_verse';
     form.poem_genres =
@@ -248,6 +256,7 @@ function newPoem() {
 
     form.reset();
     form.type = 'poem';
+    form.content_rating = 'general';
     form.poem_form = 'free_verse';
     form.poem_genres = [];
     form.group_id = props.groupId;
@@ -339,6 +348,7 @@ function publish() {
 watch(
     [
         () => form.poem_form,
+        () => form.content_rating,
         () => form.poem_genres,
         () => form.title,
         () => form.caption,
@@ -359,6 +369,10 @@ if (props.editPoem) {
 
     editingPostId.value =
         poem.id;
+
+    form.content_rating =
+        poem.content_rating
+            ?? 'general';
 
     form.poem_form =
         poem.poem_form
@@ -534,6 +548,27 @@ if (props.editPoem) {
                                     :value="item.id"
                                 >
                                     {{ item.name }}
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="h-5 w-px bg-stone-200 dark:bg-gray-700"></div>
+
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">
+                                Rating
+                            </span>
+
+                            <select
+                                v-model="form.content_rating"
+                                class="rounded-lg border border-[var(--poet-border)] bg-[var(--poet-surface)] py-1.5 pl-3 pr-8 text-sm text-[var(--poet-text)] shadow-sm focus:border-[var(--poet-accent)] focus:ring-[var(--poet-accent)]"
+                            >
+                                <option value="general">
+                                    General
+                                </option>
+
+                                <option value="mature">
+                                    Mature
                                 </option>
                             </select>
                         </div>

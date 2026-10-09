@@ -476,9 +476,19 @@ async function sendReaction() {
             >
                 <div class="mb-2 flex flex-wrap items-center gap-1.5">
                     <span
-                        class="rounded-full bg-[var(--poet-accent-soft)] px-2 py-1 text-xs font-medium text-[var(--poet-accent)] dark:bg-indigo-950/50 dark:text-[var(--poet-accent)]"
+                        class="rounded-full bg-[var(--poet-accent-soft)] px-2 py-1 text-xs font-medium text-[var(--poet-accent-strong)]"
                     >
                         Poem
+                    </span>
+
+                    <span
+                        v-if="
+                            post.content_rating ===
+                            'mature'
+                        "
+                        class="rounded-full border border-[var(--poet-gold)]/50 bg-amber-500/10 px-2 py-1 text-xs font-medium text-[var(--poet-gold)]"
+                    >
+                        Mature
                     </span>
 
                     <span
@@ -533,11 +543,25 @@ async function sendReaction() {
                 v-else
                 class="mb-3"
             >
-                <span
-                    class="inline-flex rounded-full border border-sky-200 bg-sky-50 px-2 py-1 text-xs font-medium text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-300"
+                <div
+                    class="flex flex-wrap items-center gap-2"
                 >
-                    Post
-                </span>
+                    <span
+                        class="inline-flex rounded-full border border-sky-300/40 bg-sky-500/10 px-2 py-1 text-xs font-medium text-sky-300"
+                    >
+                        Post
+                    </span>
+
+                    <span
+                        v-if="
+                            post.content_rating ===
+                            'mature'
+                        "
+                        class="rounded-full border border-[var(--poet-gold)]/50 bg-amber-500/10 px-2 py-1 text-xs font-medium text-[var(--poet-gold)]"
+                    >
+                        Mature
+                    </span>
+                </div>
             </div>
 
             <Disclosure
