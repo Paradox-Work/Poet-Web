@@ -21,6 +21,7 @@ use App\Enums\GroupUserStatus;
 use App\Http\Requests\StoreGroupRequest;
 use App\Http\Requests\UpdateGroupRequest;
 use App\Http\Resources\GroupResource;
+use App\Http\Resources\GroupSummaryResource;
 use App\Models\Group;
 use App\Models\GroupUser;
 use Illuminate\Support\Facades\DB;
@@ -32,6 +33,146 @@ use App\Models\Post;
 
 class GroupController extends Controller
 {
+    public function index(
+        Request $request
+    ) {
+        $user =
+            $request->user();
+
+        $search =
+            trim(
+                $request
+                    ->string('search')
+                    ->toString()
+            );
+
+        if (
+            mb_strlen($search) > 80
+        ) {
+            $search =
+                mb_substr(
+                    $search,
+                    0,
+                    80
+                );
+        }
+
+        $joinedGroups =
+            Group::query()
+                ->whereHas(
+                    'groupUsers',
+                    function ($query) use (
+                        $user
+                    ) {
+                        $query
+                            ->where(
+                                'user_id',
+                                $user->id
+                            )
+                            ->where(
+                                'status',
+                                GroupUserStatus::APPROVED->value
+                            );
+                    }
+                )
+                ->with(
+                    'currentUserGroup'
+                )
+                ->withCount(
+                    'approvedUsers'
+                )
+                ->orderBy('name')
+                ->get();
+
+        $discoverGroups =
+            Group::query()
+                ->whereDoesntHave(
+                    'groupUsers',
+                    function ($query) use (
+                        $user
+                    ) {
+                        $query
+                            ->where(
+                                'user_id',
+                                $user->id
+                            )
+                            ->where(
+                                'status',
+                                GroupUserStatus::APPROVED->value
+                            );
+                    }
+                )
+                ->with(
+                    'currentUserGroup'
+                )
+                ->withCount(
+                    'approvedUsers'
+                )
+                ->when(
+                    $search !== '',
+                    function ($query) use (
+                        $search
+                    ) {
+                        $like =
+                            '%' .
+                            $search .
+                            '%';
+
+                        $query->where(
+                            function ($query) use (
+                                $like
+                            ) {
+                                $query
+                                    ->where(
+                                        'name',
+                                        'like',
+                                        $like
+                                    )
+                                    ->orWhere(
+                                        'about',
+                                        'like',
+                                        $like
+                                    );
+                            }
+                        );
+                    }
+                )
+                ->latest()
+                ->paginate(
+                    12,
+                    ['*'],
+                    'groups_page'
+                )
+                ->withQueryString();
+
+        return Inertia::render(
+            'Group/Index',
+            [
+                'joinedGroups' =>
+                    GroupSummaryResource::collection(
+                        $joinedGroups
+                    )
+                        ->resolve(
+                            $request
+                        ),
+
+                'discoverGroups' =>
+                    GroupSummaryResource::collection(
+                        $discoverGroups
+                    ),
+
+                'joinedCount' =>
+                    $joinedGroups->count(),
+
+                'search' =>
+                    $search,
+
+                'success' =>
+                    session('success'),
+            ]
+        );
+    }
+
     public function store(StoreGroupRequest $request)
     {
         $data = $request->validated();

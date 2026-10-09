@@ -107,6 +107,11 @@ Route::middleware('auth')->group(function () {
         [\App\Http\Controllers\PostController::class, 'commentReaction']
     )->name('post.comment.reaction');
     
+    Route::get(
+        '/groups',
+        [GroupController::class, 'index']
+    )->name('group.index');
+
     Route::post(
         '/groups',
         [GroupController::class, 'store']

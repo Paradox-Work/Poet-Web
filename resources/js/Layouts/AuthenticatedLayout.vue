@@ -155,6 +155,16 @@ function search() {
                                 </NavLink>
 
                                 <NavLink
+                                    :href="route('group.index')"
+                                    :active="
+                                        route().current('group.index') ||
+                                        route().current('group.profile')
+                                    "
+                                >
+                                    Groups
+                                </NavLink>
+
+                                <NavLink
                                     :href="route('draft.index')"
                                     :active="route().current('draft.index')"
                                 >
@@ -421,6 +431,16 @@ function search() {
                             :href="route('poem.write')"
                         >
                             Write poem
+                        </ResponsiveNavLink>
+
+                        <ResponsiveNavLink
+                            :href="route('group.index')"
+                            :active="
+                                route().current('group.index') ||
+                                route().current('group.profile')
+                            "
+                        >
+                            Groups
                         </ResponsiveNavLink>
 
                         <ResponsiveNavLink
