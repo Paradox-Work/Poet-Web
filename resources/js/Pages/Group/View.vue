@@ -1,19 +1,4 @@
 <script setup>
-import TabPhotos
-    from '@/Pages/Profile/TabPhotos.vue';
-
-import UserListItem
-    from '@/Components/app/UserListItem.vue';
-    
-import InviteUserModal
-    from '@/Pages/Group/InviteUserModal.vue';
-
-import CreatePost
-    from '@/Components/app/CreatePost.vue';
-
-import PostList
-    from '@/Components/app/PostList.vue';
-
 import {
     computed,
     ref
@@ -27,12 +12,6 @@ import {
 } from '@inertiajs/vue3';
 
 import {
-    CameraIcon,
-    CheckCircleIcon,
-    XMarkIcon
-} from '@heroicons/vue/24/solid';
-
-import {
     Tab,
     TabGroup,
     TabList,
@@ -40,9 +19,40 @@ import {
     TabPanels
 } from '@headlessui/vue';
 
+import {
+    CameraIcon,
+    CheckCircleIcon,
+    XMarkIcon
+} from '@heroicons/vue/24/solid';
+
+import {
+    ChevronDownIcon,
+    DocumentTextIcon,
+    MagnifyingGlassIcon,
+    PencilSquareIcon,
+    UserPlusIcon
+} from '@heroicons/vue/24/outline';
+
 import AuthenticatedLayout
     from '@/Layouts/AuthenticatedLayout.vue';
 
+import Dropdown
+    from '@/Components/Dropdown.vue';
+
+import InviteUserModal
+    from '@/Pages/Group/InviteUserModal.vue';
+
+import PostList
+    from '@/Components/app/PostList.vue';
+
+import PostModal
+    from '@/Components/app/PostModal.vue';
+
+import TabPhotos
+    from '@/Pages/Profile/TabPhotos.vue';
+
+import UserListItem
+    from '@/Components/app/UserListItem.vue';
 
 const props = defineProps({
     group: Object,
@@ -56,7 +66,7 @@ const props = defineProps({
         type: Object,
         default: () => ({})
     },
-    
+
     users: {
         type: Array,
         default: () => []
@@ -75,14 +85,107 @@ const props = defineProps({
     photos: {
         type: Array,
         default: () => []
-    },
-
+    }
 });
+
+const page = usePage();
+
+const authUser = computed(
+    () => page.props.auth.user
+);
+
+const isAdmin = computed(
+    () => props.group.role === 'admin'
+);
+
+const isApprovedMember = computed(
+    () =>
+        props.group.status ===
+        'approved'
+);
+
+const memberCount = computed(
+    () => props.users.length
+);
+
+const memberSearch = ref('');
+
+const filteredUsers = computed(() => {
+    const value =
+        memberSearch.value
+            .trim()
+            .toLocaleLowerCase();
+
+    if (!value) {
+        return props.users;
+    }
+
+    return props.users.filter(
+        user =>
+            user.name
+                ?.toLocaleLowerCase()
+                .includes(value) ||
+            user.username
+                ?.toLocaleLowerCase()
+                .includes(
+                    value.replace(
+                        /^@/,
+                        ''
+                    )
+                )
+    );
+});
+
+const showInviteUserModal = ref(false);
+const showCreatePostModal = ref(false);
+const editingGroupSettings = ref(false);
+
+const coverPreview = ref(null);
+const thumbnailPreview = ref(null);
+
+const coverForm = useForm({
+    cover: null
+});
+
+const thumbnailForm = useForm({
+    thumbnail: null
+});
+
+const roleForm = useForm({
+    user_id: null,
+    role: null
+});
+
+const removeMemberForm =
+    useForm({
+        user_id: null
+    });
 
 const requestForm = useForm({
     user_id: null,
     action: null
 });
+
+const joinForm = useForm({});
+
+const groupSettingsForm = useForm({
+    name: props.group.name,
+
+    auto_approval:
+        Boolean(props.group.auto_approval),
+
+    about:
+        props.group.about ?? ''
+});
+
+const newGroupPost = computed(() => ({
+    id: null,
+    type: 'post',
+    body: '',
+    user: authUser.value,
+    group: props.group,
+    updated_at: null
+}));
 
 function resolveRequest(
     user,
@@ -106,51 +209,6 @@ function resolveRequest(
     );
 }
 
-const isAdmin = computed(
-    () => props.group.role === 'admin'
-);
-
-const isApprovedMember = computed(
-    () =>
-        props.group.status ===
-        'approved'
-);
-
-const showInviteUserModal = ref(false);
-
-const coverPreview = ref(null);
-
-const thumbnailPreview = ref(null);
-
-
-const coverForm = useForm({
-    cover: null
-});
-
-const thumbnailForm = useForm({
-    thumbnail: null
-});
-
-const roleForm = useForm({
-    user_id: null,
-    role: null
-});
-
-const removeMemberForm =
-    useForm({
-        user_id: null
-    });
-
-const groupSettingsForm = useForm({
-    name: props.group.name,
-
-    auto_approval:
-        Boolean(props.group.auto_approval),
-
-    about:
-        props.group.about ?? ''
-});
-
 function updateGroup() {
     groupSettingsForm.put(
         route(
@@ -158,9 +216,31 @@ function updateGroup() {
             props.group.slug
         ),
         {
-            preserveScroll: true
+            preserveScroll: true,
+
+            onSuccess: () => {
+                editingGroupSettings.value =
+                    false;
+            }
         }
     );
+}
+
+function cancelGroupEdit() {
+    groupSettingsForm.name =
+        props.group.name;
+
+    groupSettingsForm.auto_approval =
+        Boolean(
+            props.group.auto_approval
+        );
+
+    groupSettingsForm.about =
+        props.group.about ?? '';
+
+    groupSettingsForm.clearErrors();
+
+    editingGroupSettings.value = false;
 }
 
 function changeMemberRole(
@@ -219,7 +299,6 @@ function removeMember(
 }
 
 function onCoverChange(event) {
-
     const file =
         event.target.files?.[0];
 
@@ -233,9 +312,7 @@ function onCoverChange(event) {
         URL.createObjectURL(file);
 }
 
-
 function onThumbnailChange(event) {
-
     const file =
         event.target.files?.[0];
 
@@ -249,25 +326,17 @@ function onThumbnailChange(event) {
         URL.createObjectURL(file);
 }
 
-
 function cancelCover() {
-
     coverForm.reset();
-
     coverPreview.value = null;
 }
 
-
 function cancelThumbnail() {
-
     thumbnailForm.reset();
-
     thumbnailPreview.value = null;
 }
 
-
 function submitCover() {
-
     coverForm.post(
         route(
             'group.updateImages',
@@ -275,21 +344,17 @@ function submitCover() {
         ),
         {
             forceFormData: true,
-
             preserveScroll: true,
 
             onSuccess: () => {
                 coverPreview.value = null;
-
                 coverForm.reset();
             }
         }
     );
 }
 
-
 function submitThumbnail() {
-
     thumbnailForm.post(
         route(
             'group.updateImages',
@@ -297,25 +362,17 @@ function submitThumbnail() {
         ),
         {
             forceFormData: true,
-
             preserveScroll: true,
 
             onSuccess: () => {
-                thumbnailPreview.value = null;
+                thumbnailPreview.value =
+                    null;
 
                 thumbnailForm.reset();
             }
         }
     );
 }
-
-const page = usePage();
-
-const authUser = computed(
-    () => page.props.auth.user
-);
-
-const joinForm = useForm({});
 
 function joinToGroup() {
     joinForm.post(
@@ -330,718 +387,813 @@ function joinToGroup() {
 }
 </script>
 
-
 <template>
-
     <Head :title="group.name" />
 
     <AuthenticatedLayout>
-
         <div
-            class="max-w-4xl mx-auto p-4"
+            class="h-full overflow-y-auto bg-[var(--poet-bg)]"
         >
-
-            <!-- Success -->
             <div
-                v-if="success"
-                class="mb-4 rounded-md bg-emerald-100 px-4 py-3 text-emerald-800"
+                class="mx-auto w-full max-w-5xl px-3 pb-10 pt-4 sm:px-5 sm:pt-5 lg:px-6"
             >
-                {{ success }}
-            </div>
-
-
-            <!-- Group card -->
-            <div
-                class="overflow-hidden rounded-xl bg-white shadow dark:bg-gray-800 dark:text-gray-100"
-            >
-
-                <!-- COVER -->
                 <div
-                    class="group relative h-56 bg-gradient-to-br from-indigo-200 via-slate-200 to-purple-200"
+                    v-if="success"
+                    class="mb-4 rounded-xl bg-emerald-500 px-4 py-3 text-sm font-medium text-white"
                 >
-
-                    <img
-                        v-if="
-                            coverPreview ||
-                            group.cover_url
-                        "
-                        :src="
-                            coverPreview ||
-                            group.cover_url
-                        "
-                        class="w-full h-full object-cover"
-                        alt="Group cover"
-                    />
-
-
-                    <!-- Admin cover control -->
-                    <div
-                        v-if="isAdmin"
-                        class="absolute right-3 top-3"
-                    >
-
-                        <label
-                            v-if="!coverPreview"
-                            class="relative cursor-pointer flex items-center gap-2 rounded-md bg-white/90 px-3 py-2 text-sm shadow hover:bg-white"
-                        >
-                            <CameraIcon
-                                class="w-4 h-4"
-                            />
-
-                            Change cover
-
-                            <input
-                                type="file"
-                                accept="image/jpeg,image/png,image/webp"
-                                class="absolute inset-0 opacity-0 cursor-pointer"
-                                @change="onCoverChange"
-                            />
-                        </label>
-
-
-                        <div
-                            v-else
-                            class="flex gap-2"
-                        >
-
-                            <button
-                                type="button"
-                                @click="cancelCover"
-                                class="flex items-center gap-1 rounded-md bg-white px-3 py-2 text-sm"
-                            >
-                                <XMarkIcon
-                                    class="w-4 h-4"
-                                />
-
-                                Cancel
-                            </button>
-
-
-                            <button
-                                type="button"
-                                @click="submitCover"
-                                :disabled="
-                                    coverForm.processing
-                                "
-                                class="flex items-center gap-1 rounded-md bg-indigo-600 px-3 py-2 text-sm text-white disabled:opacity-50"
-                            >
-                                <CheckCircleIcon
-                                    class="w-4 h-4"
-                                />
-
-                                Save
-                            </button>
-
-                        </div>
-
-                    </div>
-
+                    {{ success }}
                 </div>
 
-
-                <!-- HEADER -->
-                <div
-                    class="relative px-6 pb-6"
+                <section
+                    class="overflow-hidden rounded-2xl border border-[var(--poet-border)] bg-[var(--poet-surface)]"
                 >
-
-                    <!-- THUMBNAIL -->
                     <div
-                        class="relative -mt-16 w-32 h-32"
+                        class="group relative h-40 bg-gradient-to-br from-indigo-200 via-slate-200 to-purple-200 sm:h-48"
                     >
-
                         <img
                             v-if="
-                                thumbnailPreview ||
-                                group.thumbnail_url
+                                coverPreview ||
+                                group.cover_url
                             "
                             :src="
-                                thumbnailPreview ||
-                                group.thumbnail_url
+                                coverPreview ||
+                                group.cover_url
                             "
-                            class="w-full h-full rounded-full border-4 border-white object-cover bg-white dark:border-gray-700 dark:bg-gray-700"
-                            alt="Group thumbnail"
+                            class="h-full w-full object-cover"
+                            alt="Group cover"
                         />
 
-
                         <div
-                            v-else
-                            class="w-full h-full rounded-full border-4 border-white bg-indigo-100 text-indigo-700 flex items-center justify-center text-5xl font-bold dark:border-gray-700 dark:bg-indigo-900/50 dark:text-indigo-300"
-                        >
-                            {{
-                                group.name
-                                    ?.charAt(0)
-                                    .toUpperCase()
-                            }}
-                        </div>
-
-
-                        <label
-                            v-if="
-                                isAdmin &&
-                                !thumbnailPreview
-                            "
-                            class="absolute inset-0 flex cursor-pointer items-center justify-center rounded-full bg-black/0 text-white opacity-0 hover:bg-black/40 hover:opacity-100 transition"
-                        >
-                            <CameraIcon
-                                class="w-8 h-8"
-                            />
-
-                            <input
-                                type="file"
-                                accept="image/jpeg,image/png,image/webp"
-                                class="absolute inset-0 opacity-0 cursor-pointer"
-                                @change="onThumbnailChange"
-                            />
-                        </label>
-
-
-                        <div
-                            v-if="
-                                isAdmin &&
-                                thumbnailPreview
-                            "
-                            class="absolute -right-2 top-1 flex flex-col gap-2"
-                        >
-
-                            <button
-                                type="button"
-                                @click="cancelThumbnail"
-                                class="w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center"
-                            >
-                                <XMarkIcon
-                                    class="w-5 h-5"
-                                />
-                            </button>
-
-                            <button
-                                type="button"
-                                @click="submitThumbnail"
-                                :disabled="
-                                    thumbnailForm.processing
-                                "
-                                class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center disabled:opacity-50"
-                            >
-                                <CheckCircleIcon
-                                    class="w-5 h-5"
-                                />
-                            </button>
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- Name -->
-                    <div
-                        class="mt-4 flex items-start justify-between gap-4"
-                    >
-
-                        <button
                             v-if="isAdmin"
-                            type="button"
-                            @click="showInviteUserModal = true"
-                            class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500"
+                            class="absolute right-3 top-3"
                         >
-                            Invite user
-                        </button>
+                            <label
+                                v-if="!coverPreview"
+                                class="relative flex cursor-pointer items-center gap-2 rounded-full bg-black/55 px-3 py-2 text-xs font-medium text-white opacity-100 backdrop-blur transition sm:opacity-0 sm:group-hover:opacity-100"
+                            >
+                                <CameraIcon
+                                    class="h-4 w-4"
+                                />
+                                Change cover
 
-
-                        <Link
-                            v-else-if="!authUser"
-                            :href="route('login')"
-                            class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500"
-                        >
-                            Login to join
-                        </Link>
-
-
-                        <button
-                            v-else-if="
-                                !group.role &&
-                                group.auto_approval
-                            "
-                            type="button"
-                            :disabled="joinForm.processing"
-                            @click="joinToGroup"
-                            class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
-                        >
-                            {{
-                                joinForm.processing
-                                    ? 'Joining...'
-                                    : 'Join group'
-                            }}
-                        </button>
-
-
-                        <button
-                            v-else-if="
-                                !group.role &&
-                                !group.auto_approval
-                            "
-                            type="button"
-                            :disabled="joinForm.processing"
-                            @click="joinToGroup"
-                            class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
-                        >
-                            {{
-                                joinForm.processing
-                                    ? 'Sending...'
-                                    : 'Request to join'
-                            }}
-                        </button>
-
-
-                        <span
-                            v-else-if="
-                                group.status === 'pending'
-                            "
-                            class="rounded-md bg-amber-100 px-4 py-2 text-sm font-medium text-amber-700"
-                        >
-                            Membership pending
-                        </span>
-
-                                
-
-                        <div>
+                                <input
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/webp"
+                                    class="absolute inset-0 cursor-pointer opacity-0"
+                                    @change="onCoverChange"
+                                />
+                            </label>
 
                             <div
-                                class="flex items-center gap-3"
+                                v-else
+                                class="flex gap-2 rounded-full bg-black/55 p-1.5 backdrop-blur"
                             >
+                                <button
+                                    type="button"
+                                    @click="cancelCover"
+                                    class="flex h-8 w-8 items-center justify-center rounded-full text-white transition hover:bg-white/15"
+                                    aria-label="Cancel cover change"
+                                >
+                                    <XMarkIcon
+                                        class="h-4 w-4"
+                                    />
+                                </button>
 
+                                <button
+                                    type="button"
+                                    @click="submitCover"
+                                    :disabled="
+                                        coverForm.processing
+                                    "
+                                    class="flex h-8 w-8 items-center justify-center rounded-full text-white transition hover:bg-white/15 disabled:opacity-50"
+                                    aria-label="Save cover"
+                                >
+                                    <CheckCircleIcon
+                                        class="h-4 w-4"
+                                    />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        class="relative flex flex-col gap-4 px-4 pb-5 sm:flex-row sm:items-end sm:px-6"
+                    >
+                        <div
+                            class="group/avatar relative -mt-10 h-20 w-20 shrink-0 rounded-full ring-4 ring-[var(--poet-surface)] sm:-mt-12 sm:h-24 sm:w-24"
+                        >
+                            <img
+                                v-if="
+                                    thumbnailPreview ||
+                                    group.thumbnail_url
+                                "
+                                :src="
+                                    thumbnailPreview ||
+                                    group.thumbnail_url
+                                "
+                                class="h-full w-full rounded-full object-cover"
+                                alt="Group thumbnail"
+                            />
+
+                            <div
+                                v-else
+                                class="flex h-full w-full items-center justify-center rounded-full bg-[var(--poet-accent-soft)] font-serif text-3xl font-semibold text-[var(--poet-accent)]"
+                            >
+                                {{
+                                    group.name
+                                        ?.charAt(0)
+                                        .toUpperCase()
+                                }}
+                            </div>
+
+                            <label
+                                v-if="
+                                    isAdmin &&
+                                    !thumbnailPreview
+                                "
+                                class="absolute inset-0 flex cursor-pointer items-center justify-center rounded-full bg-black/45 text-white opacity-100 transition sm:opacity-0 sm:group-hover/avatar:opacity-100"
+                            >
+                                <CameraIcon
+                                    class="h-6 w-6"
+                                />
+
+                                <input
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/webp"
+                                    class="absolute inset-0 cursor-pointer opacity-0"
+                                    @change="onThumbnailChange"
+                                />
+                            </label>
+
+                            <div
+                                v-if="
+                                    isAdmin &&
+                                    thumbnailPreview
+                                "
+                                class="absolute -right-2 top-1 flex flex-col gap-1"
+                            >
+                                <button
+                                    type="button"
+                                    @click="cancelThumbnail"
+                                    class="flex h-8 w-8 items-center justify-center rounded-full bg-red-500 text-white shadow"
+                                    aria-label="Cancel thumbnail change"
+                                >
+                                    <XMarkIcon
+                                        class="h-4 w-4"
+                                    />
+                                </button>
+
+                                <button
+                                    type="button"
+                                    @click="submitThumbnail"
+                                    :disabled="
+                                        thumbnailForm.processing
+                                    "
+                                    class="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500 text-white shadow disabled:opacity-50"
+                                    aria-label="Save thumbnail"
+                                >
+                                    <CheckCircleIcon
+                                        class="h-4 w-4"
+                                    />
+                                </button>
+                            </div>
+                        </div>
+
+                        <div
+                            class="min-w-0 flex-1 sm:pb-1"
+                        >
+                            <div
+                                class="flex flex-wrap items-center gap-2"
+                            >
                                 <h1
-                                    class="text-2xl font-bold text-gray-900 dark:text-gray-100"
+                                    class="truncate font-serif text-2xl font-semibold text-[var(--poet-text)]"
                                 >
                                     {{ group.name }}
                                 </h1>
 
-
                                 <span
                                     v-if="
-                                        group.role === 'admin'
+                                        group.role ===
+                                        'admin'
                                     "
-                                    class="rounded-full bg-indigo-100 px-2 py-1 text-xs font-medium text-indigo-700"
+                                    class="rounded-full bg-[var(--poet-accent-soft)] px-2.5 py-1 text-[11px] font-medium text-[var(--poet-accent)]"
                                 >
                                     Admin
                                 </span>
-
                             </div>
 
+                            <div
+                                class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--poet-muted)] sm:text-sm"
+                            >
+                                <span>
+                                    {{ memberCount }}
+                                    member{{ memberCount === 1 ? '' : 's' }}
+                                </span>
+
+                                <span>
+                                    {{
+                                        group.auto_approval
+                                            ? 'Open membership'
+                                            : 'Approval required'
+                                    }}
+                                </span>
+                            </div>
 
                             <p
                                 v-if="group.about"
-                                class="mt-2 text-gray-600 dark:text-gray-300"
+                                class="mt-2 line-clamp-2 max-w-2xl text-sm leading-relaxed text-[var(--poet-muted)]"
                             >
                                 {{ group.about }}
                             </p>
-
                         </div>
 
-                    </div>
+                        <div
+                            class="flex shrink-0 flex-wrap gap-2 sm:pb-1"
+                        >
+                            <button
+                                v-if="isAdmin"
+                                type="button"
+                                @click="
+                                    showInviteUserModal = true
+                                "
+                                class="inline-flex items-center gap-2 rounded-full border border-[var(--poet-border)] px-3 py-2 text-sm font-medium text-[var(--poet-text)] transition hover:bg-[var(--poet-surface-soft)]"
+                            >
+                                <UserPlusIcon
+                                    class="h-4 w-4"
+                                />
+                                Invite
+                            </button>
 
+                            <Link
+                                v-else-if="!authUser"
+                                :href="route('login')"
+                                class="rounded-full bg-[var(--poet-accent)] px-4 py-2 text-sm font-medium text-white"
+                            >
+                                Login to join
+                            </Link>
+
+                            <button
+                                v-else-if="
+                                    !group.role &&
+                                    group.auto_approval
+                                "
+                                type="button"
+                                :disabled="joinForm.processing"
+                                @click="joinToGroup"
+                                class="rounded-full bg-[var(--poet-accent)] px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                            >
+                                {{
+                                    joinForm.processing
+                                        ? 'Joining...'
+                                        : 'Join group'
+                                }}
+                            </button>
+
+                            <button
+                                v-else-if="
+                                    !group.role &&
+                                    !group.auto_approval
+                                "
+                                type="button"
+                                :disabled="joinForm.processing"
+                                @click="joinToGroup"
+                                class="rounded-full bg-[var(--poet-accent)] px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                            >
+                                {{
+                                    joinForm.processing
+                                        ? 'Sending...'
+                                        : 'Request to join'
+                                }}
+                            </button>
+
+                            <span
+                                v-else-if="
+                                    group.status ===
+                                    'pending'
+                                "
+                                class="rounded-full bg-amber-500/10 px-3 py-2 text-sm font-medium text-amber-500"
+                            >
+                                Membership pending
+                            </span>
+                        </div>
+                    </div>
+                </section>
+
+                <div
+                    v-if="
+                        coverForm.errors.cover ||
+                        thumbnailForm.errors.thumbnail
+                    "
+                    class="mt-3 rounded-xl bg-red-500 px-4 py-3 text-sm text-white"
+                >
+                    {{
+                        coverForm.errors.cover ||
+                        thumbnailForm.errors.thumbnail
+                    }}
                 </div>
 
-            </div>
-
-
-            <!-- VALIDATION -->
-            <div
-                v-if="
-                    coverForm.errors.cover ||
-                    thumbnailForm.errors.thumbnail
-                "
-                class="mt-3 rounded-md bg-red-100 px-4 py-3 text-red-700"
-            >
-                {{
-                    coverForm.errors.cover ||
-                    thumbnailForm.errors.thumbnail
-                }}
-            </div>
-
-
-            <!-- TABS -->
-            <div
-                class="mt-4 rounded-xl bg-white shadow dark:bg-gray-800 dark:text-gray-100"
-            >
-
-                <TabGroup>
-
-                    <TabList
-                        class="flex border-b border-gray-200 dark:border-gray-700"
-                    >
-
-                        <Tab
-                            v-slot="{ selected }"
-                            as="template"
+                <section
+                    class="mt-4 overflow-hidden rounded-2xl border border-[var(--poet-border)] bg-[var(--poet-surface)]"
+                >
+                    <TabGroup>
+                        <TabList
+                            class="scrollbar-hidden flex overflow-x-auto border-b border-[var(--poet-border)] px-2"
                         >
-                            <button
-                                :class="[
-                                    'px-5 py-3 text-sm font-medium',
-
-                                    selected
-                                        ? 'border-b-2 border-indigo-600 text-indigo-600'
-                                        : 'text-gray-500'
+                            <Tab
+                                v-for="tab in [
+                                    'Posts',
+                                    'Members',
+                                    'Photos',
+                                    'About'
                                 ]"
+                                :key="tab"
+                                v-slot="{ selected }"
+                                as="template"
                             >
-                                Posts
-                            </button>
-                        </Tab>
-
-
-                        <Tab
-                            v-slot="{ selected }"
-                            as="template"
-                        >
-                            <button
-                                :class="[
-                                    'px-5 py-3 text-sm font-medium',
-
-                                    selected
-                                        ? 'border-b-2 border-indigo-600 text-indigo-600'
-                                        : 'text-gray-500'
-                                ]"
-                            >
-                                Members
-                            </button>
-                        </Tab>
-
-                        <Tab
-                            v-slot="{ selected }"
-                            as="template"
-                        >
-                            <button
-                                :class="[
-                                    'px-5 py-3 text-sm font-medium',
-
-                                    selected
-                                        ? 'border-b-2 border-indigo-600 text-indigo-600'
-                                        : 'text-gray-500'
-                                ]"
-                            >
-                                Photos
-                            </button>
-                        </Tab>
-
-                        <Tab
-                            v-slot="{ selected }"
-                            as="template"
-                        >
-                            <button
-                                :class="[
-                                    'px-5 py-3 text-sm font-medium',
-
-                                    selected
-                                        ? 'border-b-2 border-indigo-600 text-indigo-600'
-                                        : 'text-gray-500'
-                                ]"
-                            >
-                                About
-                            </button>
-                        </Tab>
-
-                    </TabList>
-
-
-                    <TabPanels>
-
-                        <TabPanel class="p-3">
-
-                            <template v-if="posts">
-
-                                <CreatePost
-                                    v-if="isApprovedMember"
-                                    :group="group"
-                                />
-
-                                <PostList
-                                    :posts="posts"
-                                />
-
-                            </template>
-
-
-                            <div
-                                v-else
-                                class="py-8 text-center text-gray-500 dark:text-gray-300"
-                            >
-                                Only approved group members can view group posts.
-                            </div>
-
-                        </TabPanel>
-
-
-                        <TabPanel class="p-6">
-
-                            <!-- Pending requests -->
-                            <div
-                                v-if="
-                                    isAdmin &&
-                                    requests.length
-                                "
-                                class="mb-6"
-                            >
-                                <h3
-                                    class="mb-3 font-semibold text-gray-900 dark:text-gray-100"
+                                <button
+                                    :class="[
+                                        'relative shrink-0 px-4 py-3 text-sm font-medium transition',
+                                        selected
+                                            ? 'text-[var(--poet-text)]'
+                                            : 'text-[var(--poet-muted)] hover:text-[var(--poet-text)]'
+                                    ]"
                                 >
-                                    Pending requests
-                                </h3>
+                                    {{ tab }}
+
+                                    <span
+                                        v-if="selected"
+                                        class="absolute inset-x-4 bottom-0 h-0.5 rounded-full bg-[var(--poet-accent)]"
+                                    />
+                                </button>
+                            </Tab>
+                        </TabList>
+
+                        <TabPanels>
+                            <TabPanel class="p-3 sm:p-4">
+                                <template v-if="posts">
+                                    <div
+                                        v-if="isApprovedMember"
+                                        class="mb-4 flex items-center justify-between gap-3 rounded-xl border border-[var(--poet-border)] bg-[var(--poet-surface-soft)] px-4 py-3"
+                                    >
+                                        <div>
+                                            <div
+                                                class="text-sm font-semibold text-[var(--poet-text)]"
+                                            >
+                                                Write in {{ group.name }}
+                                            </div>
+
+                                            <div
+                                                class="mt-0.5 text-xs text-[var(--poet-muted)]"
+                                            >
+                                                Share something with this group.
+                                            </div>
+                                        </div>
+
+                                        <Dropdown
+                                            align="right"
+                                            width="48"
+                                            content-classes="py-1 bg-[var(--poet-surface)]"
+                                        >
+                                            <template #trigger>
+                                                <button
+                                                    type="button"
+                                                    class="inline-flex items-center gap-1.5 rounded-full bg-[var(--poet-accent)] px-3 py-2 text-sm font-medium text-white transition hover:-translate-y-0.5 hover:shadow"
+                                                >
+                                                    Write
+                                                    <ChevronDownIcon
+                                                        class="h-4 w-4"
+                                                    />
+                                                </button>
+                                            </template>
+
+                                            <template #content>
+                                                <button
+                                                    type="button"
+                                                    @click="
+                                                        showCreatePostModal = true
+                                                    "
+                                                    class="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-[var(--poet-text)] transition hover:bg-[var(--poet-surface-soft)]"
+                                                >
+                                                    <DocumentTextIcon
+                                                        class="h-5 w-5 text-[var(--poet-muted)]"
+                                                    />
+
+                                                    <span>
+                                                        Post
+                                                    </span>
+                                                </button>
+
+                                                <Link
+                                                    :href="
+                                                        route(
+                                                            'poem.write',
+                                                            {
+                                                                group:
+                                                                    group.id
+                                                            }
+                                                        )
+                                                    "
+                                                    class="flex items-center gap-3 px-4 py-2.5 text-sm text-[var(--poet-text)] transition hover:bg-[var(--poet-surface-soft)]"
+                                                >
+                                                    <PencilSquareIcon
+                                                        class="h-5 w-5 text-[var(--poet-accent)]"
+                                                    />
+
+                                                    <span>
+                                                        Poem
+                                                    </span>
+                                                </Link>
+                                            </template>
+                                        </Dropdown>
+                                    </div>
+
+                                    <PostList
+                                        :posts="posts"
+                                    />
+                                </template>
 
                                 <div
-                                    class="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700"
+                                    v-else
+                                    class="py-10 text-center text-sm text-[var(--poet-muted)]"
                                 >
-                                    <UserListItem
-                                        v-for="user in requests"
-                                        :key="user.id"
-                                        :user="user"
-                                        show-actions
-                                        :processing="
-                                            requestForm.processing
-                                        "
-                                        @approve="
-                                            resolveRequest(
-                                                $event,
-                                                'approve'
-                                            )
-                                        "
-                                        @reject="
-                                            resolveRequest(
-                                                $event,
-                                                'reject'
-                                            )
-                                        "
-                                    />
+                                    Only approved group members can view group posts.
                                 </div>
-                            </div>
+                            </TabPanel>
 
-
-                            <!-- Approved members -->
-                            <h3
-                                class="mb-3 font-semibold text-gray-900 dark:text-gray-100"
-                            >
-                                Members
-                            </h3>
-
-                            <div
-                                v-if="users.length"
-                                class="overflow-hidden rounded-lg border"
-                            >
-                                <UserListItem
-                                    v-for="user in users"
-                                    :key="user.id"
-                                    :user="user"
-                                    :show-role-control="isAdmin"
-                                    :is-owner="
-                                        user.id === group.user_id
+                            <TabPanel class="p-3 sm:p-4">
+                                <div
+                                    v-if="
+                                        isAdmin &&
+                                        requests.length
                                     "
-                                    :role-processing="
-                                        roleForm.processing ||
-                                        removeMemberForm.processing
-                                    "
-                                    @role-change="
-                                        changeMemberRole
-                                    "
-                                    @remove="
-                                        removeMember
-                                    "
-                                />
-                            </div>
-
-                            <p
-                                v-else
-                                class="text-gray-500 dark:text-gray-300"
-                            >
-                                No members yet.
-                            </p>
-
-                        </TabPanel>
-
-                        <TabPanel class="p-6">
-
-                            <TabPhotos
-                                v-if="isApprovedMember"
-                                :photos="photos"
-                            />
-
-                            <div
-                                v-else
-                                class="py-8 text-center text-gray-500"
-                            >
-                                Join the group to view photos.
-                            </div>
-
-                        </TabPanel>
-
-                        <TabPanel class="p-6">
-
-                            <!-- Admin settings -->
-                            <form
-                                v-if="isAdmin"
-                                @submit.prevent="updateGroup"
-                            >
-                                <h3
-                                    class="mb-5 text-lg font-semibold text-gray-900 dark:text-gray-100"
+                                    class="mb-6"
                                 >
-                                    Group settings
-                                </h3>
-
-
-                                <!-- Name -->
-                                <div class="mb-5">
-                                    <label
-                                        for="group-name"
-                                        class="block text-sm font-medium text-gray-700 dark:text-gray-200"
+                                    <div
+                                        class="mb-3 flex items-center justify-between gap-3"
                                     >
-                                        Group name
-                                    </label>
+                                        <div>
+                                            <h3
+                                                class="font-serif text-lg font-semibold text-[var(--poet-text)]"
+                                            >
+                                                Pending requests
+                                            </h3>
 
-                                    <input
-                                        id="group-name"
-                                        v-model="groupSettingsForm.name"
-                                        type="text"
-                                        maxlength="255"
-                                        class="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-                                    />
+                                            <p
+                                                class="text-xs text-[var(--poet-muted)]"
+                                            >
+                                                {{
+                                                    requests.length
+                                                }}
+                                                waiting for review
+                                            </p>
+                                        </div>
+                                    </div>
 
-                                    <p
-                                        v-if="groupSettingsForm.errors.name"
-                                        class="mt-1 text-sm text-red-600"
+                                    <div
+                                        class="grid gap-2 sm:grid-cols-2"
                                     >
-                                        {{ groupSettingsForm.errors.name }}
-                                    </p>
-                                </div>
-
-
-                                <!-- Auto approval -->
-                                <div class="mb-5">
-                                    <label
-                                        class="flex items-center gap-2"
-                                    >
-                                        <input
-                                            v-model="
-                                                groupSettingsForm.auto_approval
+                                        <UserListItem
+                                            v-for="user in requests"
+                                            :key="user.id"
+                                            :user="user"
+                                            card-mode
+                                            show-actions
+                                            :processing="
+                                                requestForm.processing
                                             "
-                                            type="checkbox"
-                                            class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                            @approve="
+                                                resolveRequest(
+                                                    $event,
+                                                    'approve'
+                                                )
+                                            "
+                                            @reject="
+                                                resolveRequest(
+                                                    $event,
+                                                    'reject'
+                                                )
+                                            "
+                                        />
+                                    </div>
+                                </div>
+
+                                <div
+                                    class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
+                                >
+                                    <div>
+                                        <h3
+                                            class="font-serif text-lg font-semibold text-[var(--poet-text)]"
+                                        >
+                                            Members
+                                        </h3>
+
+                                        <p
+                                            class="text-xs text-[var(--poet-muted)]"
+                                        >
+                                            {{ memberCount }}
+                                            member{{ memberCount === 1 ? '' : 's' }}
+                                        </p>
+                                    </div>
+
+                                    <div
+                                        class="relative w-full sm:w-72"
+                                    >
+                                        <MagnifyingGlassIcon
+                                            class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--poet-muted)]"
                                         />
 
-                                        <span
-                                            class="text-sm text-gray-700 dark:text-gray-200"
-                                        >
-                                            Automatically approve new members
-                                        </span>
-                                    </label>
-
-                                    <p
-                                        class="mt-1 text-xs text-gray-500 dark:text-gray-400"
-                                    >
-                                        When disabled, new members must be approved by a group administrator.
-                                    </p>
-
-                                    <p
-                                        v-if="
-                                            groupSettingsForm.errors.auto_approval
-                                        "
-                                        class="mt-1 text-sm text-red-600"
-                                    >
-                                        {{
-                                            groupSettingsForm.errors
-                                                .auto_approval
-                                        }}
-                                    </p>
+                                        <input
+                                            v-model="memberSearch"
+                                            type="search"
+                                            placeholder="Search members..."
+                                            class="w-full rounded-full border border-[var(--poet-border)] bg-[var(--poet-bg)] py-2 pl-9 pr-4 text-sm text-[var(--poet-text)] placeholder:text-[var(--poet-muted)] focus:border-[var(--poet-accent)] focus:ring-[var(--poet-accent)]"
+                                        />
+                                    </div>
                                 </div>
-
-
-                                <!-- About -->
-                                <div class="mb-5">
-                                    <label
-                                        for="group-about"
-                                        class="block text-sm font-medium text-gray-700"
-                                    >
-                                        About group
-                                    </label>
-
-                                    <textarea
-                                        id="group-about"
-                                        v-model="groupSettingsForm.about"
-                                        rows="6"
-                                        maxlength="5000"
-                                        class="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                    />
-
-                                    <p
-                                        v-if="groupSettingsForm.errors.about"
-                                        class="mt-1 text-sm text-red-600"
-                                    >
-                                        {{ groupSettingsForm.errors.about }}
-                                    </p>
-                                </div>
-
-
-                                <button
-                                    type="submit"
-                                    :disabled="
-                                        groupSettingsForm.processing
-                                    "
-                                    class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
-                                >
-                                    {{
-                                        groupSettingsForm.processing
-                                            ? 'Saving...'
-                                            : 'Save changes'
-                                    }}
-                                </button>
-
-                            </form>
-
-
-                            <!-- Normal visitor view -->
-                            <div v-else>
-
-                                <h3
-                                    class="font-semibold text-lg"
-                                >
-                                    About this group
-                                </h3>
-
-                                <p
-                                    class="mt-2 whitespace-pre-wrap text-gray-600 dark:text-gray-300"
-                                >
-                                    {{
-                                        group.about ||
-                                        'No description has been added yet.'
-                                    }}
-                                </p>
 
                                 <div
-                                    class="mt-4 text-sm text-gray-500 dark:text-gray-400"
+                                    v-if="filteredUsers.length"
+                                    class="grid gap-2 sm:grid-cols-2"
                                 >
-                                    Auto approval:
-
-                                    <strong>
-                                        {{
-                                            group.auto_approval
-                                                ? 'Enabled'
-                                                : 'Disabled'
-                                        }}
-                                    </strong>
+                                    <UserListItem
+                                        v-for="user in filteredUsers"
+                                        :key="user.id"
+                                        :user="user"
+                                        card-mode
+                                        :show-role-control="
+                                            isAdmin
+                                        "
+                                        :is-owner="
+                                            user.id ===
+                                            group.user_id
+                                        "
+                                        :role-processing="
+                                            roleForm.processing ||
+                                            removeMemberForm.processing
+                                        "
+                                        @role-change="
+                                            changeMemberRole
+                                        "
+                                        @remove="
+                                            removeMember
+                                        "
+                                    />
                                 </div>
 
-                            </div>
+                                <div
+                                    v-else
+                                    class="rounded-xl border border-dashed border-[var(--poet-border)] py-10 text-center text-sm text-[var(--poet-muted)]"
+                                >
+                                    No members match that search.
+                                </div>
+                            </TabPanel>
 
-                        </TabPanel>
+                            <TabPanel class="p-3 sm:p-4">
+                                <TabPhotos
+                                    v-if="isApprovedMember"
+                                    :photos="photos"
+                                />
 
-                    </TabPanels>
+                                <div
+                                    v-else
+                                    class="py-10 text-center text-sm text-[var(--poet-muted)]"
+                                >
+                                    Join the group to view photos.
+                                </div>
+                            </TabPanel>
 
-                </TabGroup>
+                            <TabPanel class="p-4 sm:p-5">
+                                <div
+                                    v-if="
+                                        !editingGroupSettings
+                                    "
+                                >
+                                    <div
+                                        class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
+                                    >
+                                        <div class="max-w-2xl">
+                                            <div
+                                                class="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--poet-muted)]"
+                                            >
+                                                About
+                                            </div>
 
+                                            <h3
+                                                class="mt-1 font-serif text-xl font-semibold text-[var(--poet-text)]"
+                                            >
+                                                About this group
+                                            </h3>
+
+                                            <p
+                                                class="mt-3 whitespace-pre-wrap text-sm leading-6 text-[var(--poet-muted)]"
+                                            >
+                                                {{
+                                                    group.about ||
+                                                    'No description has been added yet.'
+                                                }}
+                                            </p>
+                                        </div>
+
+                                        <button
+                                            v-if="isAdmin"
+                                            type="button"
+                                            @click="
+                                                editingGroupSettings = true
+                                            "
+                                            class="shrink-0 rounded-full border border-[var(--poet-border)] px-4 py-2 text-sm font-medium text-[var(--poet-text)] transition hover:bg-[var(--poet-surface-soft)]"
+                                        >
+                                            Edit group
+                                        </button>
+                                    </div>
+
+                                    <div
+                                        class="mt-6 grid gap-3 sm:grid-cols-2"
+                                    >
+                                        <div
+                                            class="rounded-xl border border-[var(--poet-border)] bg-[var(--poet-surface-soft)] p-4"
+                                        >
+                                            <div
+                                                class="text-xs uppercase tracking-wide text-[var(--poet-muted)]"
+                                            >
+                                                Membership
+                                            </div>
+
+                                            <div
+                                                class="mt-1 font-medium text-[var(--poet-text)]"
+                                            >
+                                                {{
+                                                    group.auto_approval
+                                                        ? 'Automatically approved'
+                                                        : 'Administrator approval required'
+                                                }}
+                                            </div>
+                                        </div>
+
+                                        <div
+                                            class="rounded-xl border border-[var(--poet-border)] bg-[var(--poet-surface-soft)] p-4"
+                                        >
+                                            <div
+                                                class="text-xs uppercase tracking-wide text-[var(--poet-muted)]"
+                                            >
+                                                Members
+                                            </div>
+
+                                            <div
+                                                class="mt-1 font-medium text-[var(--poet-text)]"
+                                            >
+                                                {{ memberCount }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <form
+                                    v-else-if="isAdmin"
+                                    @submit.prevent="updateGroup"
+                                    class="space-y-5"
+                                >
+                                    <div
+                                        class="flex items-center justify-between gap-3"
+                                    >
+                                        <div>
+                                            <div
+                                                class="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--poet-muted)]"
+                                            >
+                                                Settings
+                                            </div>
+
+                                            <h3
+                                                class="mt-1 font-serif text-xl font-semibold text-[var(--poet-text)]"
+                                            >
+                                                Edit group
+                                            </h3>
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            @click="cancelGroupEdit"
+                                            class="rounded-full border border-[var(--poet-border)] px-3 py-2 text-sm text-[var(--poet-muted)] transition hover:bg-[var(--poet-surface-soft)] hover:text-[var(--poet-text)]"
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+
+                                    <div>
+                                        <label
+                                            for="group-name"
+                                            class="block text-sm font-medium text-[var(--poet-text)]"
+                                        >
+                                            Group name
+                                        </label>
+
+                                        <input
+                                            id="group-name"
+                                            v-model="groupSettingsForm.name"
+                                            type="text"
+                                            maxlength="255"
+                                            class="mt-2 block w-full rounded-xl border border-[var(--poet-border)] bg-[var(--poet-bg)] text-[var(--poet-text)] placeholder:text-[var(--poet-muted)] focus:border-[var(--poet-accent)] focus:ring-[var(--poet-accent)]"
+                                        />
+
+                                        <p
+                                            v-if="
+                                                groupSettingsForm.errors.name
+                                            "
+                                            class="mt-1 text-sm text-red-500"
+                                        >
+                                            {{
+                                                groupSettingsForm.errors.name
+                                            }}
+                                        </p>
+                                    </div>
+
+                                    <div
+                                        class="rounded-xl border border-[var(--poet-border)] bg-[var(--poet-surface-soft)] p-4"
+                                    >
+                                        <label
+                                            class="flex items-center gap-2"
+                                        >
+                                            <input
+                                                v-model="
+                                                    groupSettingsForm.auto_approval
+                                                "
+                                                type="checkbox"
+                                                class="rounded border-[var(--poet-border)] text-[var(--poet-accent)] focus:ring-[var(--poet-accent)]"
+                                            />
+
+                                            <span
+                                                class="text-sm font-medium text-[var(--poet-text)]"
+                                            >
+                                                Automatically approve new members
+                                            </span>
+                                        </label>
+
+                                        <p
+                                            class="mt-1 text-xs text-[var(--poet-muted)]"
+                                        >
+                                            When disabled, new members must be approved by a group administrator.
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <label
+                                            for="group-about"
+                                            class="block text-sm font-medium text-[var(--poet-text)]"
+                                        >
+                                            About group
+                                        </label>
+
+                                        <textarea
+                                            id="group-about"
+                                            v-model="groupSettingsForm.about"
+                                            rows="6"
+                                            maxlength="5000"
+                                            class="mt-2 block w-full resize-y rounded-xl border border-[var(--poet-border)] bg-[var(--poet-bg)] text-[var(--poet-text)] placeholder:text-[var(--poet-muted)] focus:border-[var(--poet-accent)] focus:ring-[var(--poet-accent)]"
+                                        />
+
+                                        <p
+                                            v-if="
+                                                groupSettingsForm.errors.about
+                                            "
+                                            class="mt-1 text-sm text-red-500"
+                                        >
+                                            {{
+                                                groupSettingsForm.errors.about
+                                            }}
+                                        </p>
+                                    </div>
+
+                                    <button
+                                        type="submit"
+                                        :disabled="
+                                            groupSettingsForm.processing
+                                        "
+                                        class="rounded-full bg-[var(--poet-accent)] px-4 py-2.5 text-sm font-medium text-white transition hover:-translate-y-0.5 hover:shadow disabled:pointer-events-none disabled:opacity-50"
+                                    >
+                                        {{
+                                            groupSettingsForm.processing
+                                                ? 'Saving...'
+                                                : 'Save changes'
+                                        }}
+                                    </button>
+                                </form>
+                            </TabPanel>
+                        </TabPanels>
+                    </TabGroup>
+                </section>
             </div>
-
         </div>
 
+        <PostModal
+            v-if="authUser"
+            :post="newGroupPost"
+            :group="group"
+            :allow-poem-mode="false"
+            v-model="showCreatePostModal"
+        />
     </AuthenticatedLayout>
 
     <InviteUserModal
         v-model="showInviteUserModal"
         :group="group"
     />
-
 </template>
