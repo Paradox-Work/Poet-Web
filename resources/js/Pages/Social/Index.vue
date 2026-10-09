@@ -30,13 +30,38 @@ const props = defineProps({
 });
 
 const activeTab =
-    ref('followers');
+    ref('following');
+
+const followerRail = ref(null);
+
+function scrollFollowerRail(event) {
+    const rail =
+        followerRail.value;
+
+    if (!rail) {
+        return;
+    }
+
+    if (
+        Math.abs(event.deltaY) <=
+        Math.abs(event.deltaX)
+    ) {
+        return;
+    }
+
+    event.preventDefault();
+
+    rail.scrollBy({
+        left: event.deltaY,
+        behavior: 'smooth'
+    });
+}
 
 const tabs = computed(() => [
     {
-        value: 'followers',
-        label: 'Followers',
-        count: props.followers.length
+        value: 'following',
+        label: 'Following',
+        count: props.followings.length
     },
     {
         value: 'groups',
@@ -109,29 +134,31 @@ const tabs = computed(() => [
                             <h2
                                 class="font-serif text-lg font-semibold text-[var(--poet-text)]"
                             >
-                                Following
+                                Followers
                             </h2>
 
                             <p
                                 class="text-xs text-[var(--poet-muted)]"
                             >
-                                Writers you keep close.
+                                People who follow your writing.
                             </p>
                         </div>
 
                         <span
                             class="rounded-full bg-[var(--poet-surface-soft)] px-2.5 py-1 text-xs text-[var(--poet-muted)]"
                         >
-                            {{ followings.length }}
+                            {{ followers.length }}
                         </span>
                     </div>
 
                     <div
-                        v-if="followings.length"
+                        v-if="followers.length"
+                        ref="followerRail"
                         class="scrollbar-hidden flex snap-x gap-4 overflow-x-auto pb-1"
+                        @wheel="scrollFollowerRail"
                     >
                         <Link
-                            v-for="user in followings"
+                            v-for="user in followers"
                             :key="user.id"
                             :href="
                                 route(
@@ -172,7 +199,7 @@ const tabs = computed(() => [
                         v-else
                         class="rounded-xl bg-[var(--poet-surface-soft)] px-4 py-5 text-sm text-[var(--poet-muted)]"
                     >
-                        You are not following anyone yet.
+                        No followers yet.
                     </div>
                 </section>
 
@@ -221,13 +248,13 @@ const tabs = computed(() => [
                         <div
                             v-if="
                                 activeTab ===
-                                    'followers' &&
-                                followers.length
+                                    'following' &&
+                                followings.length
                             "
                             class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3"
                         >
                             <Link
-                                v-for="user in followers"
+                                v-for="user in followings"
                                 :key="user.id"
                                 :href="
                                     route(
@@ -332,8 +359,8 @@ const tabs = computed(() => [
                                 >
                                     {{
                                         activeTab ===
-                                            'followers'
-                                            ? 'No followers yet.'
+                                            'following'
+                                            ? 'Not following anyone yet.'
                                             : 'No groups yet.'
                                     }}
                                 </div>
@@ -343,8 +370,8 @@ const tabs = computed(() => [
                                 >
                                     {{
                                         activeTab ===
-                                            'followers'
-                                            ? 'People who follow your writing will appear here.'
+                                            'following'
+                                            ? 'Writers you choose to follow will appear here.'
                                             : 'Groups you join will appear here.'
                                     }}
                                 </p>
