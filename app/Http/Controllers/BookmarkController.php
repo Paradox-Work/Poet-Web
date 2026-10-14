@@ -26,6 +26,10 @@ class BookmarkController extends Controller
                 ->withQueryString()
         );
 
+        if ($request->wantsJson()) {
+            return $posts;
+        }
+
         return Inertia::render('Saved/Index', [
             'posts' => $posts,
         ]);
