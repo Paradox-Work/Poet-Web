@@ -12,7 +12,7 @@ Use the dedicated local-only seeder:
 ./vendor/bin/sail artisan db:seed --class=PresentationDemoSeeder
 ```
 
-The seeder creates Latvian demo users, publications, comments, reactions, follows, public/private groups, approved memberships, and a pending join request.
+The seeder creates Latvian demo users, publications, comments, reactions, follows, public/private groups, approved memberships, a pending join request, bookmarks/reading-list data, a direct-message conversation, an accepted poem collaboration, and a pending site-moderation report. Elza is the demo site administrator.
 
 Local demo accounts:
 
@@ -119,7 +119,28 @@ Show:
 
 Mention that the backend checks visibility before protected interactions.
 
-### 6. Testing evidence
+### 6. Production-style extras (optional 60–90 seconds)
+
+If presentation time allows, show only a few of these rather than turning the demo into a feature list:
+
+- Library → bookmarked poem + reading list;
+- Messages → existing Elza/Marta conversation;
+- Collaborations → shared poem;
+- report action → admin moderation queue;
+- Home sorting → Newest / Trending / Most liked / Most discussed;
+- Community Guidelines or Copyright page.
+
+Presentation point:
+
+> The core qualification features are supported by practical platform features such as personal collections, messaging, shared editing, and site-wide moderation.
+
+For messaging, describe the current implementation accurately:
+
+> The active conversation refreshes automatically through short polling.
+
+Do not claim WebSockets when presenting this version.
+
+### 7. Testing evidence
 
 Run:
 
@@ -169,6 +190,6 @@ A compact presentation can use:
 10. Security and validation
 11. Testing evidence
 12. Live demonstration
-13. Conclusions
+13. Conclusions / future work
 
 The live demo should carry more weight than additional filler slides.
