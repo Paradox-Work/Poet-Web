@@ -13,11 +13,13 @@ import {
         } from '@headlessui/vue'
         
 import {
+    BookmarkIcon as BookmarkSolidIcon,
     HandThumbUpIcon
 } from '@heroicons/vue/20/solid';
 
 import {
     ArrowUturnLeftIcon,
+    BookmarkIcon,
     ChatBubbleOvalLeftIcon,
     ChevronLeftIcon,
     ChevronRightIcon,
@@ -331,6 +333,7 @@ function returnFromPost() {
 }
 
 const reactionPending = ref(false);
+const bookmarkPending = ref(false);
 const reactionAnimating = ref(false);
 const showAllGenres = ref(false);
 
@@ -354,6 +357,35 @@ const hiddenGenreCount = computed(() =>
             visibleGenres.value.length
     )
 );
+
+async function toggleBookmark() {
+    if (!authUser.value) {
+        router.visit(route('login'));
+        return;
+    }
+
+    if (bookmarkPending.value) {
+        return;
+    }
+
+    bookmarkPending.value = true;
+
+    try {
+        const { data } = await axios.post(
+            route('bookmarks.toggle', props.post.id)
+        );
+
+        props.post.current_user_has_bookmark =
+            data.bookmarked;
+    } catch (error) {
+        console.error(
+            'Failed to update bookmark:',
+            error
+        );
+    } finally {
+        bookmarkPending.value = false;
+    }
+}
 
 async function sendReaction() {
 
@@ -727,6 +759,40 @@ async function sendReaction() {
 
                 <span class="font-medium">
                     {{ post.num_of_reactions ?? 0 }}
+                </span>
+            </button>
+
+            <button
+                type="button"
+                @click="toggleBookmark"
+                :disabled="bookmarkPending"
+                class="group flex flex-col items-center gap-1 text-xs text-gray-500 transition dark:text-gray-400 disabled:opacity-50"
+                :aria-label="
+                    post.current_user_has_bookmark
+                        ? (locale === 'lv' ? 'Noņemt grāmatzīmi' : 'Remove bookmark')
+                        : (locale === 'lv' ? 'Saglabāt grāmatzīmēs' : 'Bookmark')
+                "
+            >
+                <span
+                    :class="[
+                        'flex h-11 w-11 items-center justify-center rounded-full border transition group-hover:-translate-y-0.5 group-hover:shadow-md',
+                        post.current_user_has_bookmark
+                            ? 'border-[var(--poet-accent)] bg-[var(--poet-accent-soft)] text-[var(--poet-accent)]'
+                            : 'border-gray-200 bg-white text-gray-700 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100'
+                    ]"
+                >
+                    <BookmarkSolidIcon
+                        v-if="post.current_user_has_bookmark"
+                        class="h-5 w-5"
+                    />
+                    <BookmarkIcon
+                        v-else
+                        class="h-5 w-5"
+                    />
+                </span>
+
+                <span class="font-medium">
+                    {{ locale === 'lv' ? 'Saglabāt' : 'Save' }}
                 </span>
             </button>
 
