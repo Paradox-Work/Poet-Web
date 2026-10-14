@@ -108,11 +108,7 @@ class ProfileController extends Controller
                 );
         }
 
-        $posts = null;
-
-        if ($currentUserId) {
-
-            $postsQuery =
+        $postsQuery =
                 Post::query()
                     ->where(
                         'posts.status',
@@ -144,17 +140,16 @@ class ProfileController extends Controller
                     );
             }
 
-            $posts =
-                ProfilePublicationResource::collection(
-                    $postsQuery
-                        ->paginate(
-                            12,
-                            ['posts.*'],
-                            'posts_page'
-                        )
-                        ->withQueryString()
-                );
-        }
+        $posts =
+            ProfilePublicationResource::collection(
+                $postsQuery
+                    ->paginate(
+                        12,
+                        ['posts.*'],
+                        'posts_page'
+                    )
+                    ->withQueryString()
+            );
 
 
         $followersQuery =
@@ -245,11 +240,7 @@ class ProfileController extends Controller
                 )
                 ->withQueryString();
         
-        $photos = null;
-
-        if ($currentUserId) {
-
-            $visiblePostIds =
+        $visiblePostIds =
                 Post::postsForTimeline(
                     $currentUserId
                 )
@@ -266,20 +257,19 @@ class ProfileController extends Controller
                     );
 
 
-            $photos =
-                PostAttachment::query()
-                    ->where(
-                        'mime',
-                        'like',
-                        'image/%'
-                    )
-                    ->whereIn(
-                        'post_id',
-                        $visiblePostIds
-                    )
-                    ->latest()
-                    ->get();
-        }
+        $photos =
+            PostAttachment::query()
+                ->where(
+                    'mime',
+                    'like',
+                    'image/%'
+                )
+                ->whereIn(
+                    'post_id',
+                    $visiblePostIds
+                )
+                ->latest()
+                ->get();
 
         return Inertia::render(
             'Profile/View',
@@ -322,11 +312,9 @@ class ProfileController extends Controller
                     ),
 
                 'photos' =>
-                    $photos
-                        ? PostAttachmentResource::collection(
-                            $photos
-                        )
-                        : null,
+                    PostAttachmentResource::collection(
+                        $photos
+                    ),
 
                 'user' =>
                     new UserResource($user),
@@ -381,9 +369,64 @@ class ProfileController extends Controller
 
         $user = $request->user();
 
-        Auth::logout();
+        $profileImagePaths = array_filter([
+            $user->cover_path,
+            $user->avatar_path,
+        ]);
 
-        $user->delete();
+        DB::transaction(function () use ($user) {
+            Follower::query()
+                ->where('user_id', $user->id)
+                ->orWhere('follower_id', $user->id)
+                ->delete();
+
+            DB::table('group_users')
+                ->where('user_id', $user->id)
+                ->delete();
+
+            DB::table('reactions')
+                ->where('user_id', $user->id)
+                ->delete();
+
+            DB::table('notifications')
+                ->where('notifiable_type', User::class)
+                ->where('notifiable_id', $user->id)
+                ->delete();
+
+            Post::query()
+                ->where('user_id', $user->id)
+                ->each(function (Post $post) use ($user) {
+                    $post->deleted_by = $user->id;
+                    $post->save();
+                    $post->delete();
+                });
+
+            \App\Models\Group::query()
+                ->where('user_id', $user->id)
+                ->each(function ($group) use ($user) {
+                    $group->deleted_by = $user->id;
+                    $group->save();
+                    $group->delete();
+                });
+
+            $user->forceFill([
+                'name' => 'Deleted user',
+                'email' => 'deleted-' . $user->id . '-' . \Illuminate\Support\Str::random(16) . '@example.invalid',
+                'username' => 'deleted' . $user->id . \Illuminate\Support\Str::lower(\Illuminate\Support\Str::random(8)),
+                'password' => \Illuminate\Support\Str::random(64),
+                'cover_path' => null,
+                'avatar_path' => null,
+                'email_verified_at' => null,
+            ])->save();
+
+            $user->delete();
+        });
+
+        foreach ($profileImagePaths as $path) {
+            Storage::disk('public')->delete($path);
+        }
+
+        Auth::logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

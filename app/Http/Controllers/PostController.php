@@ -21,7 +21,7 @@ class PostController extends Controller
             Post $post
         ) {
             $userId =
-                $request->user()->id;
+                $request->user()?->id;
     
             /*
             * Re-query through the same visibility
@@ -78,7 +78,7 @@ class PostController extends Controller
     
                     $path = $file->store(
                         'attachments/' . $post->id,
-                        'public'
+                        'local'
                     );
     
     
@@ -94,7 +94,7 @@ class PostController extends Controller
                         'path' => $path,
     
                         'url' =>
-                            Storage::disk('public')->url($path),
+                            '',
     
                         'mime' =>
                             $file->getMimeType(),
@@ -115,7 +115,7 @@ class PostController extends Controller
     
                 foreach ($storedPaths as $path) {
     
-                    Storage::disk('public')->delete(
+                    Storage::disk('local')->delete(
                         $path
                     );
     
@@ -202,7 +202,7 @@ class PostController extends Controller
     
                     $path = $file->store(
                         'attachments/' . $post->id,
-                        'public'
+                        'local'
                     );
     
     
@@ -218,8 +218,7 @@ class PostController extends Controller
                         'path' => $path,
     
                         'url' =>
-                            Storage::disk('public')
-                                ->url($path),
+                            '',
     
                         'mime' =>
                             $file->getMimeType(),
@@ -243,8 +242,9 @@ class PostController extends Controller
     
     
                 foreach ($attachmentsToDelete as $attachment) {
-                    Storage::disk('public')
-                        ->delete($attachment->path);
+                    $this->deleteAttachmentFile(
+                        $attachment->path
+                    );
                 }
     
             } catch (\Throwable $exception) {
@@ -253,7 +253,7 @@ class PostController extends Controller
     
     
                 foreach ($storedPaths as $path) {
-                    Storage::disk('public')
+                    Storage::disk('local')
                         ->delete($path);
                 }
     
@@ -324,6 +324,12 @@ class PostController extends Controller
     
             return back();
         }
+
+    private function deleteAttachmentFile(string $path): void
+    {
+        Storage::disk('local')->delete($path);
+        Storage::disk('public')->delete($path);
+    }
 
     private function notifyPostPublished(
             Post $post,

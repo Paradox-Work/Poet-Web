@@ -9,7 +9,7 @@ This project is being developed as a qualification project.
 ## Tech Stack
 
 - Laravel 13
-- PHP 8.3
+- PHP 8.3+ (Sail currently uses PHP 8.5)
 - Vue.js 3
 - Inertia.js
 - Tailwind CSS
@@ -59,7 +59,7 @@ docker run --rm \
     -u "$(id -u):$(id -g)" \
     -v "$(pwd):/var/www/html" \
     -w /var/www/html \
-    laravelsail/php83-composer:latest \
+    laravelsail/php84-composer:latest \
     composer install --ignore-platform-reqs
 ```
 
@@ -96,7 +96,7 @@ cp .env.example .env
 ### 7. Install frontend dependencies
 
 ```bash
-./vendor/bin/sail npm install
+./vendor/bin/sail npm ci
 ```
 
 ### 8. Start the frontend development server
@@ -138,6 +138,18 @@ Build frontend assets:
 ```bash
 ./vendor/bin/sail npm run build
 ```
+
+## Production Docker image
+
+The root `Dockerfile` builds the application without creating a `.env`, generating an application key, or running database migrations during the image build. Production secrets and connection settings must be provided by the deployment environment.
+
+At minimum, configure `APP_KEY`, `APP_URL`, and the production database variables. Run migrations as a release/deployment step:
+
+```bash
+php artisan migrate --force
+```
+
+The standard local development setup uses the MySQL service defined in `compose.yaml`. Tests may still use SQLite for isolation and speed.
 
 ## Repository
 

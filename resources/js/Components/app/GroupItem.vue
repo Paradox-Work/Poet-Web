@@ -59,7 +59,7 @@ defineProps({
 
                     <span
                         v-else-if="
-                            group.status !== 'approved'
+                            group.status === 'pending'
                         "
                         class="text-xs text-gray-400"
                     >

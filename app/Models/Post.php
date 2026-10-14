@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Enums\GroupUserStatus;
+use App\Support\RichTextSanitizer;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
-use App\Support\RichTextSanitizer;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -17,7 +17,7 @@ class Post extends Model
 {
     use HasFactory, SoftDeletes;
 
-     protected $fillable = [
+    protected $fillable = [
         'user_id',
         'body',
         'group_id',
@@ -46,21 +46,14 @@ class Post extends Model
     protected function body(): Attribute
     {
         return Attribute::make(
-            get: fn ($value) =>
-                RichTextSanitizer::sanitize(
-                    $value
-                ),
-
-            set: fn ($value) =>
-                RichTextSanitizer::sanitize(
-                    $value
-                ),
+            get: fn ($value) => RichTextSanitizer::sanitize($value),
+            set: fn ($value) => RichTextSanitizer::sanitize($value),
         );
     }
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class)->withTrashed();
     }
 
     public function group(): BelongsTo
@@ -75,105 +68,92 @@ class Post extends Model
 
     public function reactions(): MorphMany
     {
-        return $this->morphMany(
-            Reaction::class,
-            'object'
-        );
+        return $this->morphMany(Reaction::class, 'object');
     }
 
     public function comments(): HasMany
     {
-        return $this->hasMany(Comment::class)
-            ->latest();
+        return $this->hasMany(Comment::class)->latest();
     }
 
-    public static function postsForTimeline(
-        int $userId
-    ): Builder {
-        return static::query()
-            ->where(
-                'posts.status',
-                'published'
-            )
+    public function isVisibleTo(?int $userId): bool
+    {
+        if ($this->status !== 'published') {
+            return false;
+        }
 
-            /*
-            * Normal posts are visible.
-            *
-            * Group posts are only visible if
-            * the current user is an approved
-            * member of that group.
-            */
-            ->where(
-                function (Builder $query) use (
-                    $userId
-                ) {
+        if ($this->group_id === null) {
+            return true;
+        }
+
+        if (!$userId) {
+            return false;
+        }
+
+        return $this->group()
+            ->whereHas(
+                'groupUsers',
+                fn (Builder $query) =>
                     $query
-                        ->whereNull('group_id')
-
-                        ->orWhereHas(
-                            'group.groupUsers',
-                            function (
-                                Builder $membershipQuery
-                            ) use ($userId) {
-                                $membershipQuery
-                                    ->where(
-                                        'user_id',
-                                        $userId
-                                    )
-                                    ->where(
-                                        'status',
-                                        GroupUserStatus::APPROVED->value
-                                    );
-                            }
-                        );
-                }
+                        ->where('user_id', $userId)
+                        ->where(
+                            'status',
+                            GroupUserStatus::APPROVED->value
+                        )
             )
+            ->exists();
+    }
 
+    public static function postsForTimeline(?int $userId): Builder
+    {
+        return static::query()
+            ->where('posts.status', 'published')
+            ->where(function (Builder $query) use ($userId) {
+                $query->whereNull('posts.group_id');
+
+                if ($userId) {
+                    $query->orWhereHas(
+                        'group.groupUsers',
+                        fn (Builder $membershipQuery) =>
+                            $membershipQuery
+                                ->where('user_id', $userId)
+                                ->where(
+                                    'status',
+                                    GroupUserStatus::APPROVED->value
+                                )
+                    );
+                }
+            })
             ->with([
                 'user',
                 'group',
                 'group.currentUserGroup',
                 'attachments',
             ])
-
             ->withCount('reactions')
-
             ->with([
-                'comments' =>
-                    function ($query) use (
-                        $userId
-                    ) {
-                        $query
-                            ->with('user')
-                            ->withCount(
-                                'reactions'
-                            )
-                            ->with([
-                                'reactions' =>
-                                    function (
-                                        $query
-                                    ) use (
-                                        $userId
-                                    ) {
-                                        $query->where(
-                                            'user_id',
-                                            $userId
-                                        );
-                                    },
-                            ]);
-                    },
-
-                'reactions' =>
-                    function ($query) use (
-                        $userId
-                    ) {
-                        $query->where(
-                            'user_id',
-                            $userId
-                        );
-                    },
+                'comments' => function ($query) use ($userId) {
+                    $query
+                        ->with('user')
+                        ->withCount('reactions')
+                        ->with([
+                            'reactions' => function ($query) use ($userId) {
+                                if ($userId) {
+                                    $query->where('user_id', $userId);
+                                } else {
+                                    $query->whereRaw('1 = 0');
+                                }
+                            },
+                        ]);
+                },
+                'reactions' => function ($query) use ($userId) {
+                    if ($userId) {
+                        $query->where('user_id', $userId);
+                    } else {
+                        $query->whereRaw('1 = 0');
+                    }
+                },
             ])
-
             ->latest();
     }
 }

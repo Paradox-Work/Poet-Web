@@ -5,7 +5,8 @@ import {
 
 import {
     Head,
-    router
+    router,
+    usePage
 } from '@inertiajs/vue3';
 
 import AuthenticatedLayout
@@ -32,7 +33,9 @@ const props = defineProps({
     }
 });
 
-const sourceOptions = [
+const authUser = usePage().props.auth.user;
+
+const allSourceOptions = [
     {
         value: 'for_you',
         label: 'For You'
@@ -51,11 +54,22 @@ const sourceOptions = [
     }
 ];
 
+const sourceOptions = computed(() =>
+    authUser
+        ? allSourceOptions
+        : [
+            {
+                value: 'for_you',
+                label: 'Explore'
+            }
+        ]
+);
+
 const activeSourceIndex =
     computed(() =>
         Math.max(
             0,
-            sourceOptions.findIndex(
+            sourceOptions.value.findIndex(
                 source =>
                     source.value ===
                     props.feedFilters.source
@@ -66,7 +80,7 @@ const activeSourceIndex =
 const sourceIndicatorStyle =
     computed(() => ({
         left:
-            `calc(${activeSourceIndex.value * 25}% + 12.5% - 1.25rem)`
+            `calc(${activeSourceIndex.value * (100 / sourceOptions.value.length)}% + ${50 / sourceOptions.value.length}% - 1.25rem)`
     }));
 
 const publicationWord =
@@ -275,7 +289,10 @@ function changeSource(source) {
                     aria-label="Feed source"
                 >
                     <div
-                        class="relative grid w-full max-w-sm grid-cols-4"
+                        :class="[
+                            'relative grid w-full max-w-sm',
+                            authUser ? 'grid-cols-4' : 'grid-cols-1'
+                        ]"
                     >
                         <button
                             v-for="source in sourceOptions"

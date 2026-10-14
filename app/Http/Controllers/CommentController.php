@@ -19,6 +19,11 @@ class CommentController extends Controller
             Request $request,
             Comment $comment
         ) {
+            $this->ensureVisible(
+                $comment->post,
+                $request->user()->id
+            );
+
             $data = $request->validate([
                 'reaction' => [
                     'required',
@@ -86,8 +91,9 @@ class CommentController extends Controller
             Request $request,
             Post $post
         ) {
-            $this->ensurePublished(
-                $post
+            $this->ensureVisible(
+                $post,
+                $request->user()->id
             );
     
             $data = $request->validate([
@@ -183,6 +189,11 @@ class CommentController extends Controller
     
         $post =
             $comment->post;
+
+        $this->ensureVisible(
+            $post,
+            $userId
+        );
     
         $isCommentOwner =
             $comment->user_id ===
@@ -222,13 +233,11 @@ class CommentController extends Controller
         ]);
     }
 
-    private function ensurePublished(
-            Post $post
+    private function ensureVisible(
+            Post $post,
+            int $userId
         ): void {
-            if (
-                $post->status !==
-                    'published'
-            ) {
+            if (!$post->isVisibleTo($userId)) {
                 abort(404);
             }
         }

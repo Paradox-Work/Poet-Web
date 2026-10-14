@@ -14,8 +14,9 @@ class PostInteractionController extends Controller
             Request $request,
             Post $post
         ) {
-            $this->ensurePublished(
-                $post
+            $this->ensureVisible(
+                $post,
+                $request->user()->id
             );
     
             $user = $request->user();
@@ -91,8 +92,9 @@ class PostInteractionController extends Controller
             Request $request,
             Post $post
         ) {
-            $this->ensurePublished(
-                $post
+            $this->ensureVisible(
+                $post,
+                $request->user()->id
             );
     
             $data = $request->validate([
@@ -155,13 +157,11 @@ class PostInteractionController extends Controller
             ]);
         }
 
-    private function ensurePublished(
-            Post $post
+    private function ensureVisible(
+            Post $post,
+            int $userId
         ): void {
-            if (
-                $post->status !==
-                    'published'
-            ) {
+            if (!$post->isVisibleTo($userId)) {
                 abort(404);
             }
         }

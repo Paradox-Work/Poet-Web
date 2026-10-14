@@ -354,6 +354,11 @@ const hiddenGenreCount = computed(() =>
 
 async function sendReaction() {
 
+    if (!authUser.value) {
+        router.visit(route('login'));
+        return;
+    }
+
     if (reactionPending.value) {
         return;
     }

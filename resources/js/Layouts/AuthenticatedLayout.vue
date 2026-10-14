@@ -178,6 +178,7 @@ function search() {
                                 </NavLink>
 
                                 <NavLink
+                                    v-if="authUser"
                                     :href="route('draft.index')"
                                     :active="route().current('draft.index')"
                                 >
@@ -467,6 +468,7 @@ function search() {
                         </ResponsiveNavLink>
 
                         <ResponsiveNavLink
+                            v-if="authUser"
                             :href="route('draft.index')"
                             :active="route().current('draft.index')"
                         >
