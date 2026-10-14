@@ -76,6 +76,16 @@ class Post extends Model
         return $this->hasMany(Comment::class)->latest();
     }
 
+    public function bookmarks(): HasMany
+    {
+        return $this->hasMany(Bookmark::class);
+    }
+
+    public function collaborators(): HasMany
+    {
+        return $this->hasMany(PostCollaborator::class);
+    }
+
     public function isVisibleTo(?int $userId): bool
     {
         if ($this->status !== 'published') {
@@ -137,6 +147,22 @@ class Post extends Model
                 'group',
                 'group.currentUserGroup',
                 'attachments',
+                'bookmarks' => function ($query) use ($userId) {
+                    if ($userId) {
+                        $query->where('user_id', $userId);
+                    } else {
+                        $query->whereRaw('1 = 0');
+                    }
+                },
+                'collaborators' => function ($query) use ($userId) {
+                    if ($userId) {
+                        $query
+                            ->where('user_id', $userId)
+                            ->where('status', 'accepted');
+                    } else {
+                        $query->whereRaw('1 = 0');
+                    }
+                },
             ])
             ->withCount('reactions')
             ->with([
