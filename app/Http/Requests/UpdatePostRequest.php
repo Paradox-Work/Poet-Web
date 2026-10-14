@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\File;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -53,7 +54,11 @@ class UpdatePostRequest extends FormRequest
             'type' => [
                 'required',
                 'string',
-                'in:post,poem',
+                Rule::in(
+                    $this->route('post')?->user_id === Auth::id()
+                        ? ['post', 'poem']
+                        : ['poem']
+                ),
             ],
 
             'content_rating' => [
