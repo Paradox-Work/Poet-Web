@@ -42,6 +42,25 @@ Route::get('/legal/{page}', function (string $page) {
 Route::get('/sitemap.xml', SitemapController::class)
     ->name('sitemap');
 
+Route::get('/robots.txt', function () {
+    $body = implode("\n", [
+        'User-agent: *',
+        'Allow: /',
+        'Disallow: /admin',
+        'Disallow: /messages',
+        'Disallow: /library',
+        'Disallow: /drafts',
+        'Disallow: /collaborations',
+        'Disallow: /report',
+        'Sitemap: ' . route('sitemap'),
+        '',
+    ]);
+
+    return response($body, 200, [
+        'Content-Type' => 'text/plain; charset=UTF-8',
+    ]);
+})->name('robots');
+
 Route::get('/u/{user:username}', [ProfileController::class, 'index'])
     ->name('profile');
 
