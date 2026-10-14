@@ -36,7 +36,7 @@ const props = defineProps({
 });
 
 const authUser = usePage().props.auth.user;
-const { t } = useI18n();
+const { locale, t } = useI18n();
 
 const allSourceOptions = [
     {
@@ -203,7 +203,7 @@ function changeSource(source) {
                 class="mx-auto flex h-full min-h-0 max-w-[1560px] flex-col px-4 pb-3 pt-5 sm:px-6 sm:pt-6 lg:px-8"
             >
                 <div
-                    class="flex shrink-0 flex-col gap-4 px-[2%] md:flex-row md:items-end md:justify-between md:gap-6 lg:px-[7%]"
+                    class="flex shrink-0 flex-col gap-4 px-[2%] lg:flex-row lg:items-end lg:justify-between lg:gap-6 min-[1400px]:px-[7%]"
                 >
                     <div class="min-w-0">
                         <div
@@ -220,7 +220,7 @@ function changeSource(source) {
                     </div>
 
                     <div
-                        class="grid w-full shrink-0 grid-cols-1 gap-2 md:flex md:w-auto md:items-center"
+                        class="grid w-full shrink-0 grid-cols-1 gap-2 sm:grid-cols-2 lg:flex lg:w-auto lg:items-center"
                     >
                         <label
                             class="sr-only"
@@ -233,7 +233,7 @@ function changeSource(source) {
                             id="feed-type"
                             :value="feedFilters.feed"
                             @change="changeFeed"
-                            class="w-full rounded-full border border-[var(--poet-border)] bg-[var(--poet-surface)] py-2 pl-3 pr-9 text-sm font-medium text-[var(--poet-text)] shadow-sm transition hover:border-[var(--poet-border-strong)] focus:border-[var(--poet-accent)] focus:ring-[var(--poet-accent)] md:w-32"
+                            class="w-full rounded-full border border-[var(--poet-border)] bg-[var(--poet-surface)] py-2 pl-3 pr-9 text-sm font-medium text-[var(--poet-text)] shadow-sm transition hover:border-[var(--poet-border-strong)] focus:border-[var(--poet-accent)] focus:ring-[var(--poet-accent)] lg:w-32"
                         >
                             <option value="poems">
                                 {{ t('home.poems') }}
@@ -266,10 +266,10 @@ function changeSource(source) {
                                 'posts'
                             "
                             @change="changeGenre"
-                            class="w-full rounded-full border border-[var(--poet-border)] bg-[var(--poet-surface)] py-2 pl-3 pr-9 text-sm text-[var(--poet-text)] shadow-sm transition hover:border-[var(--poet-border-strong)] focus:border-[var(--poet-accent)] focus:ring-[var(--poet-accent)] disabled:cursor-not-allowed disabled:opacity-40 md:w-44"
+                            class="w-full rounded-full border border-[var(--poet-border)] bg-[var(--poet-surface)] py-2 pl-3 pr-9 text-sm text-[var(--poet-text)] shadow-sm transition hover:border-[var(--poet-border-strong)] focus:border-[var(--poet-accent)] focus:ring-[var(--poet-accent)] disabled:cursor-not-allowed disabled:opacity-40 lg:w-44"
                         >
                             <option value="">
-                                All genres
+                                {{ locale === 'lv' ? 'Visi žanri' : 'All genres' }}
                             </option>
 
                             <option
