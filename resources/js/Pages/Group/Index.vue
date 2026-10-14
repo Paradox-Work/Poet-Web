@@ -76,6 +76,13 @@ const joiningGroupId =
 const joinedRail =
     ref(null);
 
+const joinedSearch = ref('');
+const filteredJoinedGroups = computed(() => {
+    const query = joinedSearch.value.trim().toLocaleLowerCase();
+    return query ? props.joinedGroups.filter(group => group.name.toLocaleLowerCase().includes(query)) : props.joinedGroups;
+});
+const showAllJoined = ref(false);
+
 const hasSearch =
     computed(() =>
         props.search.trim() !== ''
@@ -303,14 +310,23 @@ function membershipLabel(group) {
                         </div>
                     </div>
 
+                    <div v-if="joinedGroups.length" class="mb-3 flex flex-wrap items-center gap-2">
+                        <label class="relative min-w-0 flex-1 sm:max-w-xs">
+                            <MagnifyingGlassIcon class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--poet-muted)]" />
+                            <input v-model="joinedSearch" type="search" :placeholder="locale === 'lv' ? 'Meklēt savās grupās...' : 'Find my groups...'" class="w-full rounded-full border border-[var(--poet-border)] bg-[var(--poet-surface)] py-2 pl-9 pr-3 text-sm text-[var(--poet-text)]" />
+                        </label>
+                        <button type="button" class="rounded-full border border-[var(--poet-border)] px-3 py-2 text-xs text-[var(--poet-text)]" @click="showAllJoined = !showAllJoined">
+                            {{ showAllJoined ? (locale === 'lv' ? 'Rinda' : 'Carousel') : (locale === 'lv' ? 'Rādīt visas' : 'View all') }}
+                        </button>
+                    </div>
                     <div
-                        v-if="joinedGroups.length"
+                        v-if="joinedGroups.length && filteredJoinedGroups.length"
                         ref="joinedRail"
-                        class="scrollbar-hidden flex snap-x gap-3 overflow-x-auto pb-2"
-                        @wheel="scrollJoinedRail"
+                         :class="showAllJoined || joinedSearch ? 'grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4' : 'scrollbar-hidden flex snap-x gap-3 overflow-x-auto pb-2'"
+                        @wheel="!showAllJoined && !joinedSearch && scrollJoinedRail($event)"
                     >
                         <Link
-                            v-for="group in joinedGroups"
+                            v-for="group in filteredJoinedGroups"
                             :key="group.id"
                             :href="
                                 route(
@@ -318,7 +334,7 @@ function membershipLabel(group) {
                                     group.slug
                                 )
                             "
-                            class="group w-44 shrink-0 snap-start overflow-hidden rounded-2xl border border-[var(--poet-border)] bg-[var(--poet-surface)] transition hover:-translate-y-0.5 hover:border-[var(--poet-border-strong)] hover:shadow-md sm:w-52"
+                            class="group min-w-0 w-full shrink-0 snap-start overflow-hidden rounded-2xl border border-[var(--poet-border)] bg-[var(--poet-surface)] transition hover:-translate-y-0.5 hover:border-[var(--poet-border-strong)] hover:shadow-md sm:w-52" :class="showAllJoined || joinedSearch ? '!w-full' : 'w-44'"
                         >
                             <div
                                 class="relative h-20 overflow-hidden bg-[var(--poet-surface-soft)]"
@@ -368,6 +384,7 @@ function membershipLabel(group) {
                         </Link>
                     </div>
 
+                    <p v-else-if="joinedGroups.length && joinedSearch" class="py-6 text-center text-sm text-[var(--poet-muted)]">{{ locale === 'lv' ? 'Nav atrasta neviena tava grupa.' : 'No joined groups match your search.' }}</p>
                     <div
                         v-else
                         class="rounded-2xl border border-dashed border-[var(--poet-border)] bg-[var(--poet-surface)] px-5 py-8 text-center"
