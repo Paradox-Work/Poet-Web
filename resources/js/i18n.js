@@ -16,6 +16,10 @@ function initialLocale() {
 
 const locale = ref(initialLocale());
 
+if (typeof document !== 'undefined') {
+    document.documentElement.lang = locale.value;
+}
+
 const messages = {
     lv: {
         'nav.home': 'Sākums',
