@@ -82,6 +82,8 @@ decline
 
 Only the invitee can accept/decline their invitation.
 
+The invitee receives a database notification when invited. After acceptance, the poem owner receives a collaboration-accepted notification. Both notifications integrate with the existing Poet-Web notification dropdown.
+
 ## Editing
 
 `UpdatePostRequest::authorize()` allows:
