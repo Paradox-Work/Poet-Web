@@ -153,6 +153,11 @@ class HandleInertiaRequests extends Middleware
                                                 ->data['decline_url']
                                                 ?? null,
 
+                                        'expires_at' =>
+                                            $notification
+                                                ->data['expires_at']
+                                                ?? null,
+
                                         'read_at' =>
                                             $notification
                                                 ->read_at
