@@ -193,6 +193,30 @@ function search() {
 
                                 <NavLink
                                     v-if="authUser"
+                                    :href="route('saved.index')"
+                                    :active="route().current('saved.index')"
+                                >
+                                    {{ locale === 'lv' ? 'Saglabātie' : 'Saved' }}
+                                </NavLink>
+
+                                <NavLink
+                                    v-if="authUser"
+                                    :href="route('messages.show')"
+                                    :active="route().current('messages.*')"
+                                >
+                                    {{ locale === 'lv' ? 'Ziņas' : 'Messages' }}
+                                </NavLink>
+
+                                <NavLink
+                                    v-if="authUser?.is_admin"
+                                    :href="route('admin.moderation')"
+                                    :active="route().current('admin.*')"
+                                >
+                                    {{ locale === 'lv' ? 'Moderācija' : 'Moderation' }}
+                                </NavLink>
+
+                                <NavLink
+                                    v-if="authUser"
                                     :href="route('draft.index')"
                                     :active="route().current('draft.index')"
                                 >
@@ -366,6 +390,22 @@ function search() {
                                             :href="route('profile', {username: authUser.username})"
                                         >
                                             {{ t('nav.profile') }}
+                                        </DropdownLink>
+                                        <DropdownLink
+                                            :href="route('saved.index')"
+                                        >
+                                            {{ locale === 'lv' ? 'Saglabātie darbi' : 'Saved publications' }}
+                                        </DropdownLink>
+                                        <DropdownLink
+                                            :href="route('messages.show')"
+                                        >
+                                            {{ locale === 'lv' ? 'Tiešās ziņas' : 'Direct messages' }}
+                                        </DropdownLink>
+                                        <DropdownLink
+                                            v-if="authUser?.is_admin"
+                                            :href="route('admin.moderation')"
+                                        >
+                                            {{ locale === 'lv' ? 'Moderācija' : 'Moderation' }}
                                         </DropdownLink>
                                         <DropdownLink
                                             :href="route('logout')"
@@ -547,6 +587,30 @@ function search() {
                             :active="route().current('about')"
                         >
                             {{ t('nav.about') }}
+                        </ResponsiveNavLink>
+
+                        <ResponsiveNavLink
+                            v-if="authUser"
+                            :href="route('saved.index')"
+                            :active="route().current('saved.index')"
+                        >
+                            {{ locale === 'lv' ? 'Saglabātie' : 'Saved' }}
+                        </ResponsiveNavLink>
+
+                        <ResponsiveNavLink
+                            v-if="authUser"
+                            :href="route('messages.show')"
+                            :active="route().current('messages.*')"
+                        >
+                            {{ locale === 'lv' ? 'Ziņas' : 'Messages' }}
+                        </ResponsiveNavLink>
+
+                        <ResponsiveNavLink
+                            v-if="authUser?.is_admin"
+                            :href="route('admin.moderation')"
+                            :active="route().current('admin.*')"
+                        >
+                            {{ locale === 'lv' ? 'Moderācija' : 'Moderation' }}
                         </ResponsiveNavLink>
 
                         <ResponsiveNavLink
