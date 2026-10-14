@@ -165,13 +165,13 @@ function search() {
 
                             <!-- Navigation Links -->
                             <div
-                                class="hidden space-x-7 sm:-my-px sm:ms-10 sm:flex"
+                                class="hidden space-x-7 min-[1380px]:-my-px min-[1380px]:ms-10 min-[1380px]:flex"
                             >
                                 <NavLink
                                     :href="route('dashboard')"
                                     :active="route().current('dashboard')"
                                 >
-                                    Home
+                                    {{ t('nav.home') }}
                                 </NavLink>
 
                                 <NavLink
@@ -181,7 +181,7 @@ function search() {
                                         route().current('group.profile')
                                     "
                                 >
-                                    Groups
+                                    {{ t('nav.groups') }}
                                 </NavLink>
 
                                 <NavLink
@@ -196,7 +196,7 @@ function search() {
                                     :href="route('draft.index')"
                                     :active="route().current('draft.index')"
                                 >
-                                    Drafts
+                                    {{ t('nav.drafts') }}
                                 </NavLink>
 
                                 <div class="flex items-center">
@@ -211,7 +211,7 @@ function search() {
                                                 type="button"
                                                 class="poet-focus inline-flex items-center gap-1.5 rounded-full bg-[var(--poet-accent)] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-[var(--poet-accent-strong)] hover:shadow-md"
                                             >
-                                                Create
+                                                {{ t('nav.create') }}
 
                                                 <ChevronDownIcon
                                                     class="h-4 w-4"
@@ -250,7 +250,7 @@ function search() {
 
                                                     <span>
                                                         <span class="block font-medium text-[var(--poet-text)]">
-                                                            Poem
+                                                            {{ t('nav.poem') }}
                                                         </span>
 
                                                         <span class="block text-xs text-[var(--poet-muted)]">
@@ -265,10 +265,10 @@ function search() {
                             </div>
                         </div>
 
-                        <div class="hidden sm:ms-6 sm:flex sm:items-center">
+                        <div class="hidden min-[1380px]:ms-6 min-[1380px]:flex min-[1380px]:items-center">
 
                             <div
-                                class="hidden sm:flex flex-1 max-w-md mx-4"
+                                class="mx-4 hidden max-w-md flex-1 min-[1380px]:flex"
                             >
                                 <TextInput
                                     v-model="keywords"
@@ -376,7 +376,7 @@ function search() {
                                         </DropdownLink>
                                     </template>
                                 </Dropdown>
-                                <div v-else class="hidden sm:flex sm:items-center">
+                                <div v-else class="hidden min-[1380px]:flex min-[1380px]:items-center">
                                     <Link
                                         :href="route('login')"
                                         class="text-sm text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
@@ -395,7 +395,7 @@ function search() {
 
                         <!-- Mobile notifications + hamburger -->
                         <div
-                            class="-me-2 flex items-center gap-1 sm:hidden"
+                            class="-me-2 flex items-center gap-1 min-[1380px]:hidden"
                         >
                             <NotificationDropdown
                                 v-if="authUser"
@@ -447,9 +447,21 @@ function search() {
                         block: showingNavigationDropdown,
                         hidden: !showingNavigationDropdown,
                     }"
-                    class="sm:hidden"
+                    class="min-[1380px]:hidden"
                 >
                     <div class="space-y-1 pb-3 pt-2">
+                        <div class="px-4 pb-2">
+                            <TextInput
+                                v-model="keywords"
+                                :placeholder="t('nav.search')"
+                                class="w-full !rounded-full"
+                                @keyup.enter="
+                                    search();
+                                    showingNavigationDropdown = false;
+                                "
+                            />
+                        </div>
+
                         <div class="flex items-center gap-2 px-4 py-2 text-sm text-[var(--poet-muted)]">
                             <span>Valoda / Language</span>
                             <button
@@ -495,7 +507,7 @@ function search() {
                             :href="route('dashboard')"
                             :active="route().current('dashboard')"
                         >
-                            Home
+                            {{ t('nav.home') }}
                         </ResponsiveNavLink>
 
                         <button
@@ -527,7 +539,7 @@ function search() {
                                 route().current('group.profile')
                             "
                         >
-                            Groups
+                            {{ t('nav.groups') }}
                         </ResponsiveNavLink>
 
                         <ResponsiveNavLink
@@ -542,7 +554,7 @@ function search() {
                             :href="route('draft.index')"
                             :active="route().current('draft.index')"
                         >
-                            Drafts
+                            {{ t('nav.drafts') }}
                         </ResponsiveNavLink>
                     </div>
 
