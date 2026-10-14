@@ -7,7 +7,15 @@ const { locale, t } = useI18n();
 </script>
 
 <template>
-    <Head :title="t('about.title')" />
+    <Head :title="t('about.title')">
+        <meta
+            name="description"
+            :content="t('about.problem')"
+        />
+        <meta property="og:title" :content="t('about.title')" />
+        <meta property="og:description" :content="t('about.subtitle')" />
+        <meta property="og:type" content="website" />
+    </Head>
 
     <AuthenticatedLayout>
         <div class="h-full overflow-y-auto bg-[var(--poet-bg)]">
