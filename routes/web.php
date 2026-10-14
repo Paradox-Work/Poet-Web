@@ -15,6 +15,12 @@ use App\Http\Controllers\PostInteractionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\LibraryController;
+use App\Http\Controllers\MessageController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\CollaborationController;
+use App\Http\Controllers\SitemapController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -23,6 +29,18 @@ Route::get('/', [HomeController::class, 'index'])
 
 Route::get('/about', fn () => Inertia::render('About'))
     ->name('about');
+
+Route::get('/legal/{page}', function (string $page) {
+    abort_unless(
+        in_array($page, ['privacy', 'terms', 'guidelines', 'copyright'], true),
+        404
+    );
+
+    return Inertia::render('Legal/Show', ['page' => $page]);
+})->name('legal.show');
+
+Route::get('/sitemap.xml', SitemapController::class)
+    ->name('sitemap');
 
 Route::get('/u/{user:username}', [ProfileController::class, 'index'])
     ->name('profile');
@@ -49,7 +67,7 @@ Route::get(
 Route::get('/posts/{post}', [PostController::class, 'view'])
     ->name('post.view');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'not_suspended'])->group(function () {
     Route::post('/posts', [PostController::class, 'store'])
         ->middleware('throttle:20,1')
         ->name('post.create');
@@ -156,6 +174,58 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead'])
         ->name('notifications.readAll');
+
+    Route::get('/library', [LibraryController::class, 'index'])
+        ->name('library.index');
+    Route::post('/posts/{post}/bookmark', [LibraryController::class, 'toggleBookmark'])
+        ->name('bookmarks.toggle');
+    Route::post('/reading-lists', [LibraryController::class, 'storeList'])
+        ->name('reading-lists.store');
+    Route::delete('/reading-lists/{readingList}', [LibraryController::class, 'destroyList'])
+        ->name('reading-lists.destroy');
+    Route::post('/reading-lists/{readingList}/posts/{post}', [LibraryController::class, 'addToList'])
+        ->name('reading-lists.posts.add');
+    Route::delete('/reading-lists/{readingList}/posts/{post}', [LibraryController::class, 'removeFromList'])
+        ->name('reading-lists.posts.remove');
+
+    Route::get('/messages', [MessageController::class, 'index'])
+        ->name('messages.index');
+    Route::get('/messages/{conversation}', [MessageController::class, 'index'])
+        ->name('messages.show');
+    Route::post('/messages/start/{user}', [MessageController::class, 'start'])
+        ->name('messages.start');
+    Route::post('/messages/{conversation}', [MessageController::class, 'send'])
+        ->middleware('throttle:60,1')
+        ->name('messages.send');
+    Route::get('/messages/{conversation}/poll', [MessageController::class, 'poll'])
+        ->middleware('throttle:120,1')
+        ->name('messages.poll');
+
+    Route::get('/report/{type}/{id}', [ReportController::class, 'create'])
+        ->name('reports.create');
+    Route::post('/reports', [ReportController::class, 'store'])
+        ->middleware('throttle:10,1')
+        ->name('reports.store');
+
+    Route::get('/collaborations', [CollaborationController::class, 'index'])
+        ->name('collaborations.index');
+    Route::get('/posts/{post}/collaborators', [CollaborationController::class, 'manage'])
+        ->name('collaborations.manage');
+    Route::post('/posts/{post}/collaborators', [CollaborationController::class, 'invite'])
+        ->name('collaborations.invite');
+    Route::post('/collaborations/{collaborator}/accept', [CollaborationController::class, 'accept'])
+        ->name('collaborations.accept');
+    Route::post('/collaborations/{collaborator}/decline', [CollaborationController::class, 'decline'])
+        ->name('collaborations.decline');
+    Route::delete('/collaborations/{collaborator}', [CollaborationController::class, 'remove'])
+        ->name('collaborations.remove');
+
+    Route::get('/admin', [AdminController::class, 'index'])
+        ->name('admin.index');
+    Route::post('/admin/reports/{report}/resolve', [AdminController::class, 'resolve'])
+        ->name('admin.reports.resolve');
+    Route::post('/admin/users/{user}/unsuspend', [AdminController::class, 'unsuspend'])
+        ->name('admin.users.unsuspend');
 });
 
 require __DIR__.'/auth.php';
