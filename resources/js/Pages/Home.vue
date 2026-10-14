@@ -80,6 +80,14 @@ const activeSourceIndex =
         )
     );
 
+const activeSourceLabel = computed(
+    () =>
+        sourceOptions.value[
+            activeSourceIndex.value
+        ]?.label
+        ?? 'home.explore'
+);
+
 const sourceIndicatorStyle =
     computed(() => ({
         left:
@@ -210,6 +218,9 @@ function changeSource(source) {
                             class="truncate text-xs font-semibold uppercase tracking-[0.22em] text-[var(--poet-muted)]"
                         >
                             {{ t('home.feed') }} · {{ feedLabel }}
+                            <span class="compact-height-source hidden">
+                                · {{ t(activeSourceLabel) }}
+                            </span>
                         </div>
 
                         <div
@@ -286,7 +297,7 @@ function changeSource(source) {
                 </div>
 
                 <nav
-                    class="flex shrink-0 justify-center pb-3 pt-4 sm:pb-2 sm:pt-5"
+                    class="home-source-tabs flex shrink-0 justify-center pb-3 pt-4 sm:pb-2 sm:pt-5"
                     aria-label="Feed source"
                 >
                     <div
