@@ -26,6 +26,7 @@ class UserResource extends JsonResource
             $data['email'] = $this->email;
             $data['email_verified_at'] = $this->email_verified_at;
             $data['updated_at'] = $this->updated_at;
+            $data['is_site_admin'] = (bool) $this->is_site_admin;
         }
 
         return $data;
