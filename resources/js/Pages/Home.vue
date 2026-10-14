@@ -213,7 +213,26 @@ function changeSource(source) {
 </script>
 
 <template>
-    <Head :title="t('nav.home')" />
+    <Head :title="t('nav.home')">
+        <meta
+            name="description"
+            :content="
+                locale === 'lv'
+                    ? 'Atklāj dzejoļus, autorus un rakstīšanas kopienas Poet-Web platformā.'
+                    : 'Discover poems, authors, and writing communities on Poet-Web.'
+            "
+        />
+        <meta property="og:title" content="Poet-Web" />
+        <meta
+            property="og:description"
+            :content="
+                locale === 'lv'
+                    ? 'Dzejas publicēšanas un rakstīšanas kopienu platforma.'
+                    : 'A poetry publishing and writing-community platform.'
+            "
+        />
+        <meta property="og:type" content="website" />
+    </Head>
 
     <AuthenticatedLayout>
         <div
