@@ -22,6 +22,16 @@ test('poem owners can invite collaborators who can accept and edit', function ()
 
     $record = PostCollaborator::query()->firstOrFail();
 
+    expect(
+        $collaborator
+            ->notifications()
+            ->where(
+                'data->kind',
+                'collaboration_invited'
+            )
+            ->exists()
+    )->toBeTrue();
+
     $this
         ->actingAs($collaborator)
         ->post(route('collaborations.accept', $record))
@@ -40,6 +50,16 @@ test('poem owners can invite collaborators who can accept and edit', function ()
         ->assertSessionHasNoErrors();
 
     expect($poem->fresh()->title)->toBe('Edited together');
+
+    expect(
+        $owner
+            ->notifications()
+            ->where(
+                'data->kind',
+                'collaboration_accepted'
+            )
+            ->exists()
+    )->toBeTrue();
 });
 
 test('non collaborators cannot edit another users poem', function () {
