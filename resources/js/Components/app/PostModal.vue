@@ -55,10 +55,10 @@
 
                                     {{
                                         form.id
-                                            ? 'Update Post'
+                                            ? (locale === 'lv' ? 'Atjaunināt ierakstu' : 'Update Post')
                                             : form.type === 'poem'
-                                                ? 'Write Poem'
-                                                : 'Create Post'
+                                                ? (locale === 'lv' ? 'Rakstīt dzejoli' : 'Write Poem')
+                                                : (locale === 'lv' ? 'Izveidot ierakstu' : 'Create Post')
                                     }}
 
                                     <button
@@ -128,13 +128,13 @@
                                             <div
                                                 class="text-sm font-semibold text-[var(--poet-text)]"
                                             >
-                                                Content rating
+                                                {{ locale === 'lv' ? 'Satura vērtējums' : 'Content rating' }}
                                             </div>
 
                                             <p
                                                 class="mt-0.5 text-xs text-[var(--poet-muted)]"
                                             >
-                                                Mature publications show a warning before opening.
+                                                {{ locale === 'lv' ? 'Pirms pieaugušajiem paredzēta satura atvēršanas tiek parādīts brīdinājums.' : 'Mature publications show a warning before opening.' }}
                                             </p>
                                         </div>
 
@@ -196,14 +196,14 @@
                                             <span>
                                                 {{
                                                     draftState === 'saving'
-                                                        ? 'Saving draft...'
+                                                        ? (locale === 'lv' ? 'Saglabā melnrakstu...' : 'Saving draft...')
                                                         : draftState === 'saved'
-                                                            ? 'Draft saved'
+                                                            ? (locale === 'lv' ? 'Melnraksts saglabāts' : 'Draft saved')
                                                             : draftState === 'restored'
-                                                                ? 'Draft restored'
+                                                                ? (locale === 'lv' ? 'Melnraksts atjaunots' : 'Draft restored')
                                                                 : draftState === 'error'
-                                                                    ? 'Draft save failed'
-                                                                    : 'Draft autosave on'
+                                                                    ? (locale === 'lv' ? 'Melnrakstu neizdevās saglabāt' : 'Draft save failed')
+                                                                    : (locale === 'lv' ? 'Automātiskā saglabāšana ieslēgta' : 'Draft autosave on')
                                                 }}
                                             </span>
 
@@ -216,7 +216,7 @@
                                                 @click="resumeLatestDraft"
                                                 class="font-medium text-indigo-500 hover:text-indigo-400 hover:underline"
                                             >
-                                                Resume latest draft
+                                                {{ locale === 'lv' ? 'Turpināt jaunāko melnrakstu' : 'Resume latest draft' }}
                                             </button>
                                         </div>
 
@@ -243,14 +243,14 @@
                                     >
                                         <div>
                                             <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
-                                                Poem title
+                                                {{ locale === 'lv' ? 'Dzejoļa nosaukums' : 'Poem title' }}
                                             </label>
 
                                             <input
                                                 v-model="form.title"
                                                 type="text"
                                                 maxlength="160"
-                                                placeholder="Give your poem a title..."
+                                                :placeholder="locale === 'lv' ? 'Piešķir dzejolim nosaukumu...' : 'Give your poem a title...'"
                                                 class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
                                             />
 
@@ -264,9 +264,9 @@
 
                                         <div>
                                             <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
-                                                Caption
+                                                {{ locale === 'lv' ? 'Apraksts' : 'Caption' }}
                                                 <span class="font-normal text-gray-400">
-                                                    optional
+                                                    {{ locale === 'lv' ? 'neobligāti' : 'optional' }}
                                                 </span>
                                             </label>
 
@@ -274,12 +274,12 @@
                                                 v-model="form.caption"
                                                 rows="2"
                                                 maxlength="500"
-                                                placeholder="A short note, context, dedication, or thought about the piece..."
+                                                :placeholder="locale === 'lv' ? 'Īsa piezīme, konteksts, veltījums vai doma par darbu...' : 'A short note, context, dedication, or thought about the piece...'"
                                                 class="block w-full resize-none rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
                                             />
 
                                             <div class="mt-1 flex justify-between text-xs text-gray-400">
-                                                <span>Shown separately from the poem.</span>
+                                                <span>{{ locale === 'lv' ? 'Tiek rādīts atsevišķi no dzejoļa.' : 'Shown separately from the poem.' }}</span>
                                                 <span>{{ (form.caption ?? '').length }}/500</span>
                                             </div>
                                         </div>
@@ -289,7 +289,7 @@
                                         v-if="form.type === 'poem'"
                                         class="mb-2 text-xs text-gray-500 dark:text-gray-400"
                                     >
-                                        Poetry mode keeps each Enter close to the previous line. Use an empty line between stanzas.
+                                        {{ locale === 'lv' ? 'Dzejas režīmā katra Enter rinda paliek cieši pie iepriekšējās. Starp pantiem atstāj tukšu rindu.' : 'Poetry mode keeps each Enter close to the previous line. Use an empty line between stanzas.' }}
                                     </div>
 
                                     <TiptapEditor
@@ -299,7 +299,7 @@
 
                                     <div class="mt-4">
                                         <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
-                                            Hashtags
+                                            {{ locale === 'lv' ? 'Tēmturi' : 'Hashtags' }}
                                             <span class="font-normal text-gray-400">
                                                 optional
                                             </span>
@@ -308,12 +308,12 @@
                                         <input
                                             v-model="hashtagsInput"
                                             type="text"
-                                            placeholder="poetry, night, memories"
+                                            :placeholder="locale === 'lv' ? 'dzeja, nakts, atmiņas' : 'poetry, night, memories'"
                                             class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
                                         />
 
                                         <p class="mt-1 text-xs text-gray-400">
-                                            Separate tags with spaces or commas. You can type them with or without #.
+                                            {{ locale === 'lv' ? 'Atdali tēmturus ar atstarpēm vai komatiem. # zīme nav obligāta.' : 'Separate tags with spaces or commas. You can type them with or without #.' }}
                                         </p>
 
                                         <p
@@ -328,7 +328,7 @@
                                         v-if="showExtensionsText"
                                         class="border-l-4 border-amber-500 py-2 px-3 bg-amber-100 mt-3 text-gray-800"
                                     >
-                                        Files must use one of the following extensions:
+                                        {{ locale === 'lv' ? 'Failiem jāizmanto kāds no šiem paplašinājumiem:' : 'Files must use one of the following extensions:' }}
 
                                         <br>
 
@@ -373,7 +373,7 @@
                                                     "
                                                     class="absolute z-30 left-0 bottom-0 right-0 py-2 px-3 text-sm bg-black/80 text-white flex justify-between items-center"
                                                 >
-                                                    To be deleted
+                                                    {{ locale === 'lv' ? 'Tiks dzēsts' : 'To be deleted' }}
 
                                                     <ArrowUturnLeftIcon
                                                         @click.stop="undoDelete(myFile)"
@@ -437,7 +437,7 @@
 
                                         <PaperClipIcon class="w-4 h-4 mr-2" />
 
-                                        Attach Files
+                                        {{ locale === 'lv' ? 'Pievienot failus' : 'Attach Files' }}
 
                                         <input
                                             type="file"
@@ -455,7 +455,7 @@
                                         @click="submit"
                                     >
 
-                                        {{ form.id ? 'Save Changes' : 'Publish Post' }}
+                                        {{ form.id ? (locale === 'lv' ? 'Saglabāt izmaiņas' : 'Save Changes') : (locale === 'lv' ? 'Publicēt' : 'Publish Post') }}
 
                                     </button>
 
@@ -511,6 +511,9 @@ import TiptapEditor from '@/Components/app/TiptapEditor.vue';
 import PostUserHeader from '@/Components/app/PostUserHeader.vue';
 import { isImage } from '@/helpers.js';
 import axios from 'axios';
+import { useI18n } from '@/i18n';
+
+const { locale } = useI18n();
 
 const props = defineProps({
 
