@@ -361,7 +361,7 @@ The current main qualification build is verified by GitHub Actions with:
 
 ```text
 82 tests passed
-377 assertions
+399 assertions
 0 failures
 ```
 
