@@ -25,7 +25,8 @@ const props = defineProps({
         default: () => ({
             feed: 'poems',
             source: 'for_you',
-            genre: null
+            genre: null,
+            sort: 'newest'
         })
     },
 
@@ -140,11 +141,16 @@ function navigateFilters({
 
     genre =
         props.feedFilters.genre
-            ?? null
+            ?? null,
+
+    sort =
+        props.feedFilters.sort
+            ?? 'newest'
 } = {}) {
     const query = {
         feed,
-        source
+        source,
+        sort
     };
 
     if (
@@ -183,6 +189,12 @@ function changeGenre(event) {
         genre:
             event.target.value ||
             null
+    });
+}
+
+function changeSort(event) {
+    navigateFilters({
+        sort: event.target.value
     });
 }
 
@@ -256,6 +268,33 @@ function changeSource(source) {
 
                             <option value="all">
                                 {{ t('home.everything') }}
+                            </option>
+                        </select>
+
+                        <label
+                            class="sr-only"
+                            for="feed-sort"
+                        >
+                            {{ locale === 'lv' ? 'Kārtošana' : 'Sort' }}
+                        </label>
+
+                        <select
+                            id="feed-sort"
+                            :value="feedFilters.sort ?? 'newest'"
+                            @change="changeSort"
+                            class="w-full rounded-full border border-[var(--poet-border)] bg-[var(--poet-surface)] py-2 pl-3 pr-9 text-sm text-[var(--poet-text)] shadow-sm transition hover:border-[var(--poet-border-strong)] focus:border-[var(--poet-accent)] focus:ring-[var(--poet-accent)] lg:w-40"
+                        >
+                            <option value="newest">
+                                {{ locale === 'lv' ? 'Jaunākie' : 'Newest' }}
+                            </option>
+                            <option value="trending">
+                                {{ locale === 'lv' ? 'Aktuālie' : 'Trending' }}
+                            </option>
+                            <option value="popular">
+                                {{ locale === 'lv' ? 'Visvairāk patīk' : 'Most liked' }}
+                            </option>
+                            <option value="discussed">
+                                {{ locale === 'lv' ? 'Visvairāk apspriesti' : 'Most discussed' }}
                             </option>
                         </select>
 
@@ -336,7 +375,7 @@ function changeSource(source) {
                 <div class="min-h-0 flex-1">
                     <PostList
                         :key="
-                            `${feedFilters.source}-${feedFilters.feed}-${feedFilters.genre ?? 'all'}`
+                            `${feedFilters.source}-${feedFilters.feed}-${feedFilters.genre ?? 'all'}-${feedFilters.sort ?? 'newest'}`
                         "
                         :posts="posts"
                         mode="deck"
