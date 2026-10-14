@@ -1,0 +1,6 @@
+@extends('errors.layout')
+@section('title', 'Sesija beigusies')
+@section('code', '419')
+@section('heading', 'Sesija ir beigusies.')
+@section('message', 'Drošības sesija vairs nav derīga. Atver sākumlapu un mēģini darbību vēlreiz.')
+@section('action', 'Atvērt sākumlapu')
