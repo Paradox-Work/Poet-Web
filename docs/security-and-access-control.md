@@ -169,3 +169,59 @@ VisibilitySecurityTest
 GroupVisibilityTest
 PresentationDemoSeederTest
 ```
+
+
+## Personal library authorization
+
+Bookmarks require the publication to pass the same visibility rule used by the feed.
+
+Reading-list mutations additionally require:
+
+```text
+reading_list.user_id = authenticated user
+```
+
+A stale relationship never grants access to a publication that later becomes private/inaccessible.
+
+## Direct-message privacy
+
+Conversation routes check participant membership before:
+
+- opening a thread;
+- sending;
+- polling;
+- updating read state.
+
+A non-participant receives 404 rather than conversation metadata.
+
+Direct conversation pairs are unique through a deterministic `direct_key`.
+
+## Collaboration authorization
+
+Accepted collaborators may edit poems but do not gain ownership/deletion rights.
+
+For group poems, collaborator access additionally requires current approved group membership.
+
+Collaboration therefore cannot be used as a private-group access bypass.
+
+## Reporting and site administration
+
+Reports for posts/comments first verify that the reporter may see the underlying publication.
+
+The site administration dashboard requires:
+
+```text
+users.is_site_admin = true
+```
+
+This permission is separate from group-admin roles.
+
+Suspended users are rejected during login and logged out when attempting protected authenticated routes.
+
+## Crawler/public metadata boundaries
+
+The sitemap includes only standalone public and public-group publications.
+
+Private/account areas are disallowed by robots.txt and, more importantly, remain protected by backend authorization regardless of crawler directives.
+
+Robots directives are not treated as a security mechanism.
