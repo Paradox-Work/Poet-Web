@@ -174,9 +174,17 @@ function markAllRead() {
     );
 }
 
+function isExpired(notification) {
+    return notification.expires_at && new Date(notification.expires_at).getTime() <= Date.now();
+}
+
 function acceptInvitation(
     notification
 ) {
+    if (isExpired(notification)) {
+        router.visit(notification.action_url ?? route('group.index'));
+        return;
+    }
     if (!notification.accept_url) {
         return;
     }
@@ -377,7 +385,11 @@ function declineInvitation(
                             <div
                                 class="mt-2 flex items-center gap-2"
                             >
+                                <p v-if="isExpired(notification)" class="text-xs text-[var(--poet-muted)]">
+                                    {{ 'Invitation expired. Ask the group administrator for a new invitation.' }}
+                                </p>
                                 <button
+                                    v-if="!isExpired(notification)"
                                     type="button"
                                     @click.stop="
                                         acceptInvitation(
@@ -393,6 +405,7 @@ function declineInvitation(
                                 </button>
 
                                 <button
+                                    v-if="!isExpired(notification)"
                                     type="button"
                                     @click.stop="
                                         declineInvitation(
