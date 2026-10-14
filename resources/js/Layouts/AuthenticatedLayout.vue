@@ -1,5 +1,6 @@
 <script setup>
 import {
+    onBeforeUnmount,
     onMounted,
     ref
 } from 'vue';
@@ -56,6 +57,10 @@ const isDark = ref(false);
 const authUser = usePage().props.auth.user;
 
 const showCreatePostModal = ref(false);
+const isNavigating = ref(false);
+
+let stopNavigationStart = null;
+let stopNavigationFinish = null;
 
 const newPost = {
     id: null,
@@ -92,6 +97,20 @@ function toggleTheme() {
 }
 
 onMounted(() => {
+    stopNavigationStart = router.on(
+        'start',
+        () => {
+            isNavigating.value = true;
+        }
+    );
+
+    stopNavigationFinish = router.on(
+        'finish',
+        () => {
+            isNavigating.value = false;
+        }
+    );
+
     isDark.value =
         document.documentElement
             .classList
@@ -99,6 +118,11 @@ onMounted(() => {
 
     document.documentElement.lang =
         locale.value;
+});
+
+onBeforeUnmount(() => {
+    stopNavigationStart?.();
+    stopNavigationFinish?.();
 });
 
 const keywords =
@@ -127,6 +151,21 @@ function search() {
 
 <template>
     <div>
+        <a
+            href="#main-content"
+            class="poet-focus fixed left-3 top-3 z-[200] -translate-y-24 rounded-lg bg-[var(--poet-accent)] px-4 py-2 text-sm font-semibold text-white transition focus:translate-y-0"
+        >
+            {{ locale === 'lv' ? 'Pāriet uz saturu' : 'Skip to content' }}
+        </a>
+
+        <div
+            v-if="isNavigating"
+            class="fixed inset-x-0 top-0 z-[190] h-0.5 overflow-hidden bg-[var(--poet-accent-soft)]"
+            role="status"
+            :aria-label="locale === 'lv' ? 'Ielādē lapu' : 'Loading page'"
+        >
+            <div class="h-full w-1/3 animate-pulse bg-[var(--poet-accent)]" />
+        </div>
         <div class="h-screen flex flex-col bg-[var(--poet-bg)] text-[var(--poet-text)]">
             <nav
                 class="relative z-[100] overflow-visible border-b border-[var(--poet-border)] bg-[var(--poet-nav)]/95 backdrop-blur-md"
@@ -368,6 +407,27 @@ function search() {
                                             {{ t('nav.profile') }}
                                         </DropdownLink>
                                         <DropdownLink
+                                            :href="route('library.index')"
+                                        >
+                                            {{ locale === 'lv' ? 'Bibliotēka' : 'Library' }}
+                                        </DropdownLink>
+                                        <DropdownLink
+                                            :href="route('messages.index')"
+                                        >
+                                            {{ locale === 'lv' ? 'Ziņas' : 'Messages' }}
+                                        </DropdownLink>
+                                        <DropdownLink
+                                            :href="route('collaborations.index')"
+                                        >
+                                            {{ locale === 'lv' ? 'Kopdarbi' : 'Collaborations' }}
+                                        </DropdownLink>
+                                        <DropdownLink
+                                            v-if="authUser.is_site_admin"
+                                            :href="route('admin.index')"
+                                        >
+                                            {{ locale === 'lv' ? 'Administrēšana' : 'Administration' }}
+                                        </DropdownLink>
+                                        <DropdownLink
                                             :href="route('logout')"
                                             method="post"
                                             as="button"
@@ -405,6 +465,8 @@ function search() {
                                     showingNavigationDropdown =
                                         !showingNavigationDropdown
                                 "
+                                :aria-expanded="showingNavigationDropdown"
+                                :aria-label="locale === 'lv' ? 'Atvērt navigāciju' : 'Open navigation'"
                                 class="poet-focus inline-flex items-center justify-center rounded-full p-2 text-[var(--poet-muted)] transition hover:bg-[var(--poet-surface-soft)] hover:text-[var(--poet-text)]"
                             >
                                 <svg
@@ -551,6 +613,38 @@ function search() {
 
                         <ResponsiveNavLink
                             v-if="authUser"
+                            :href="route('library.index')"
+                            :active="route().current('library.index')"
+                        >
+                            {{ locale === 'lv' ? 'Bibliotēka' : 'Library' }}
+                        </ResponsiveNavLink>
+
+                        <ResponsiveNavLink
+                            v-if="authUser"
+                            :href="route('messages.index')"
+                            :active="route().current('messages.*')"
+                        >
+                            {{ locale === 'lv' ? 'Ziņas' : 'Messages' }}
+                        </ResponsiveNavLink>
+
+                        <ResponsiveNavLink
+                            v-if="authUser"
+                            :href="route('collaborations.index')"
+                            :active="route().current('collaborations.*')"
+                        >
+                            {{ locale === 'lv' ? 'Kopdarbi' : 'Collaborations' }}
+                        </ResponsiveNavLink>
+
+                        <ResponsiveNavLink
+                            v-if="authUser?.is_site_admin"
+                            :href="route('admin.index')"
+                            :active="route().current('admin.*')"
+                        >
+                            {{ locale === 'lv' ? 'Administrēšana' : 'Administration' }}
+                        </ResponsiveNavLink>
+
+                        <ResponsiveNavLink
+                            v-if="authUser"
                             :href="route('draft.index')"
                             :active="route().current('draft.index')"
                         >
@@ -579,6 +673,11 @@ function search() {
                                 {{ t('nav.profile') }}
                             </ResponsiveNavLink>
                             <ResponsiveNavLink
+                                :href="route('legal.show', 'guidelines')"
+                            >
+                                {{ locale === 'lv' ? 'Kopienas vadlīnijas' : 'Community guidelines' }}
+                            </ResponsiveNavLink>
+                            <ResponsiveNavLink
                                 :href="route('logout')"
                                 method="post"
                                 as="button"
@@ -601,7 +700,11 @@ function search() {
             </header>
 
             <!-- Page Content -->
-            <main class="flex-1 min-h-0">
+            <main
+                id="main-content"
+                tabindex="-1"
+                class="flex-1 min-h-0 outline-none"
+            >
                 <slot />
             </main>
 
