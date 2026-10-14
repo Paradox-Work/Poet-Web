@@ -2,60 +2,60 @@
 
 ## Overview
 
-Global search is available to guests and authenticated users.
-
-Route:
+Global search is public.
 
 ```text
 GET /search/{search?}
 route: search
 ```
 
-An empty search redirects to the dashboard.
+Empty search redirects to the dashboard.
 
-The search string is trimmed and limited to 100 characters.
+The query is trimmed and capped at 100 characters.
 
-## Search targets
+## Users
 
-### Users
-
-Matches:
+Searches:
 
 ```text
-name LIKE %search%
-OR username LIKE %search%
+name
+username
 ```
 
-User results are paginated with the independent page parameter:
+Pagination:
 
 ```text
+12 per page
 users_page
 ```
 
-### Groups
+## Groups
 
-Matches:
+Searches:
 
 ```text
-name LIKE %search%
-OR about LIKE %search%
+name
+about
 ```
 
-Group results use:
+Pagination:
 
 ```text
+12 per page
 groups_page
 ```
 
-### Publications
+Group results include metadata such as visibility, but publication visibility is enforced separately.
 
-Publication search starts from:
+## Publications
+
+Publication search begins with:
 
 ```php
 Post::postsForTimeline($request->user()?->id)
 ```
 
-Then matches:
+It then matches:
 
 ```text
 body
@@ -63,58 +63,60 @@ title
 caption
 ```
 
-When the search starts with `#`, it also checks the JSON `hashtags` field.
+If the search starts with `#`, it also checks the JSON `hashtags` field.
 
-Publication results use:
+Pagination:
 
 ```text
+20 per page
 posts_page
 ```
 
-and are paginated by 20.
-
 ## Guest visibility
 
-Guests may search public standalone publications, users, and groups.
+Guests may find:
 
-Because `postsForTimeline(null)` excludes group publications, guest search cannot reveal member-only group content.
+- users;
+- groups;
+- standalone public publications;
+- public-group publications.
+
+Guests cannot receive private-group publications because the base timeline query excludes them without approved membership.
 
 ## Authenticated visibility
 
 Authenticated users receive:
 
-- standalone public publications;
-- group publications for groups where they are approved members.
+- all public standalone/group content;
+- private-group publications for groups where they are approved members.
 
-Search does not provide a second path around group authorization.
+Search therefore does not create an alternate path around private-group authorization.
 
 ## Independent pagination
 
-Users, groups, and publications use separate pagination parameter names so moving to page 2 of one result type does not unintentionally move the other result types.
+```text
+users_page
+groups_page
+posts_page
+```
 
-This behavior is covered by automated tests.
+are independent so paging one result type does not move the others.
 
 ## Hashtags
 
-A hashtag such as:
+A hashtag must be URL encoded when placed in the route because `#` otherwise starts a browser fragment.
 
-```text
-#poetry
-```
-
-must be URL encoded when placed into the route because `#` otherwise starts a browser fragment.
-
-The server removes the leading `#` before matching the `hashtags` JSON array.
+The server strips the leading `#` before matching the stored hashtags array.
 
 ## Main files
 
 ```text
-routes/web.php
 app/Http/Controllers/SearchController.php
 app/Models/Post.php
 app/Http/Resources/PostResource.php
 app/Http/Resources/UserResource.php
 app/Http/Resources/GroupResource.php
-resources/js/Layouts/AuthenticatedLayout.vue
 resources/js/Pages/Search.vue
+resources/js/Layouts/AuthenticatedLayout.vue
+routes/web.php
 ```

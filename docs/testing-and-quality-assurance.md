@@ -2,7 +2,7 @@
 
 ## Test approach
 
-Poet-Web primarily uses Laravel feature tests because the qualification-review concerns are request-level behaviors:
+Poet-Web primarily uses Laravel feature tests because the qualification-review risks are request-level behaviors:
 
 - authentication;
 - validation;
@@ -12,11 +12,11 @@ Poet-Web primarily uses Laravel feature tests because the qualification-review c
 - route behavior;
 - file access.
 
-Feature tests act like automated HTTP clients. They create test data, authenticate when needed, call real Laravel routes, and assert responses/database state.
+Feature tests create test data, authenticate when needed, call real Laravel routes, and assert HTTP/database outcomes.
 
-## Current automated suite
+## Current verified checkpoint
 
-At the qualification hardening checkpoint, GitHub Actions completed successfully with:
+The current qualification build on `main` is verified by GitHub Actions with:
 
 ```text
 70 tests passed
@@ -24,14 +24,18 @@ At the qualification hardening checkpoint, GitHub Actions completed successfully
 0 failures
 ```
 
-The Vite production build also completed successfully.
+The same CI run also completed:
+
+- database migrations;
+- `npm ci`;
+- Vite production build.
 
 ## Important covered areas
 
 ### Authentication
 
 - login;
-- invalid password rejection;
+- invalid-password rejection;
 - logout;
 - registration;
 - email verification;
@@ -41,8 +45,8 @@ The Vite production build also completed successfully.
 
 - ownership for update/delete;
 - rich-text sanitization;
-- empty publication rejection;
-- group publication visibility.
+- empty-publication rejection;
+- publication visibility.
 
 ### Drafts
 
@@ -52,16 +56,19 @@ The Vite production build also completed successfully.
 
 ### Groups
 
-- public vs private group publication visibility;
+- public vs private publication visibility;
 - guest access to public group content;
-- denial of private group content to guests/outsiders;
-- admin visibility updates and validation;
+- denial of private-group content to guests/outsiders;
+- administrator visibility updates;
+- visibility validation;
 - join request status;
-- admin-only approval;
-- approved-member publication;
-- moderator/admin deletion behavior;
-- invitation ownership/expiry;
-- invitation acceptance using POST.
+- admin-only request resolution;
+- approved-member publishing;
+- group-admin moderation;
+- invitation ownership;
+- invitation expiration;
+- POST-based acceptance;
+- non-admin invitation denial.
 
 ### Follows
 
@@ -71,35 +78,39 @@ The Vite production build also completed successfully.
 
 ### Attachments
 
-- approved member access;
+- permitted-member access;
 - outsider denial;
-- owner-only draft files;
+- draft owner-only access;
 - private-disk storage for new uploads;
-- guest denial for group-only files.
+- guest denial for protected private-group attachments.
+
+Public standalone/public-group attachment access inherits the shared publication visibility policy.
 
 ### Search
 
 - public search;
 - visibility-preserving publication results;
-- separate pagination for users/groups/posts.
+- independent user/group/post pagination.
 
 ### Guest access
 
-- Latvian-first guest interface with English switch (frontend build verified);
-- public Home feed;
+- public Home/Explore;
 - public search;
 - public profile publications;
-- no private user fields.
+- dedicated public publication page;
+- omission of private user fields.
+
+The bilingual interface itself is additionally verified by the production frontend build and manual UI smoke testing; the PHP feature suite is not a browser localization test framework.
 
 ### Presentation demo data
 
-- local presentation seeder executes successfully;
-- public and private demo groups are created;
+- presentation seeder executes;
+- public/private demo groups are created;
 - Latvian demo publication data is created.
 
-### Revoked group access
+### Revoked private-group access
 
-Tests verify that former members cannot continue interacting with member-only publications/comments after their membership is removed.
+Tests verify that a former private-group member cannot continue interacting with protected publications/comments after membership removal.
 
 ## Continuous integration
 
@@ -123,7 +134,7 @@ checkout
 → setup PHP
 → setup Node
 → composer install
-→ create test env/key
+→ prepare test environment
 → migrate SQLite test database
 → npm ci
 → npm run build
@@ -132,11 +143,8 @@ checkout
 
 ## Local verification
 
-With Sail running:
-
 ```bash
 ./vendor/bin/sail artisan migrate
-./vendor/bin/sail npm ci
 ./vendor/bin/sail npm run build
 ./vendor/bin/sail artisan test
 ```
@@ -147,38 +155,49 @@ For normal frontend development:
 ./vendor/bin/sail npm run dev
 ```
 
+Run `npm ci` when JavaScript dependencies/lockfile need to be freshly synchronized; it is not necessary after every code-only pull.
+
 ## Manual smoke testing
 
-Automated backend tests do not replace browser testing.
+Automated tests do not replace browser testing.
 
-Before a demonstration/submission, manually test:
+Before presentation/submission, manually verify:
 
-1. guest Home/Explore;
-2. guest search;
-3. guest profile and dedicated public publication;
-4. registration/login;
-5. create/edit/delete standalone post;
-6. create poem;
-7. attachment image/file preview and download;
-8. follow/unfollow;
-9. create/join group;
-10. manual join approval and invitation;
-11. group publication visibility from member vs outsider;
-12. comment/reply/reaction;
-13. profile update/images;
-14. search pagination;
-15. logout and guest navigation;
-16. responsive/mobile layout;
-17. light/dark theme.
+1. Latvian default interface and LV/EN switching;
+2. guest Home/Explore;
+3. guest search;
+4. guest profile;
+5. guest dedicated standalone publication;
+6. public-group publication as guest;
+7. private-group content denied as guest/outsider;
+8. registration/login;
+9. create/edit/delete standalone post;
+10. poem writing + autosave + publishing;
+11. attachment preview/download;
+12. follow/unfollow;
+13. group creation with public/private visibility;
+14. automatic/manual join flow;
+15. invitation accept/decline;
+16. role change/member removal;
+17. comments/replies/reactions;
+18. profile update/images;
+19. search pagination;
+20. responsive layout and dark/light theme.
 
 ## What passing tests mean
 
-Passing tests demonstrate that the covered behavior is working under the tested conditions. They do not prove that the application has no bugs.
+Passing tests prove only the behavior that is covered under the tested conditions.
 
-That is why the final qualification check combines:
+Final qualification confidence therefore combines:
 
-- automated regression tests;
-- frontend production build;
-- database migration test;
-- manual browser smoke testing;
-- code/documentation review.
+```text
+automated regression tests
++
+frontend production build
++
+database migration check
++
+manual browser smoke test
++
+documentation/code review
+```

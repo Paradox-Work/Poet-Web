@@ -1,318 +1,171 @@
-# Post Comments Flow
+# Comments and Replies Flow
 
 ## Overview
 
-Poet-Web allows authenticated users to comment on posts directly from the post feed.
+Visible publications include a threaded comment system.
 
-Comments are loaded together with posts, displayed inside an expandable comment section, and created asynchronously without reloading the page.
+Guests may read comments attached to content they are allowed to view.
 
-Each current top-level comment belongs to:
+Authentication is required to:
 
-- one post;
-- one user.
+- create comments;
+- reply;
+- edit;
+- delete;
+- react.
 
-The `comments` table also contains a nullable `parent_id` column that references another comment. This prepares the database for threaded replies, but reply creation and nested reply rendering are not implemented yet.
+## Database
 
----
+All comments use the same `comments` table.
 
-## Data Relationships
-
-```mermaid
-erDiagram
-    USER ||--o{ COMMENT : creates
-    POST ||--o{ COMMENT : contains
-    COMMENT ||--o{ COMMENT : parent_of
-
-    COMMENT {
-        bigint id
-        bigint parent_id nullable
-        bigint post_id
-        bigint user_id
-        text comment
-        timestamp created_at
-        timestamp updated_at
-    }
+```text
+post_id
+user_id
+parent_id
+comment
+created_at
+updated_at
 ```
 
-The current `Comment` model defines:
+`parent_id` is a nullable self-reference.
+
+```text
+parent_id = null
+→ top-level comment
+
+parent_id = another comment ID
+→ reply
+```
+
+The model provides:
 
 ```text
 user()
 post()
 reactions()
+comments()
+parent()
 ```
 
-The database is already capable of storing a parent comment ID, but `parent()` / `replies()` Eloquent relationships have not been added yet.
+## Loading
 
-The `Post` model defines `comments()` for retrieving comments belonging to a post.
+`Post::postsForTimeline()` loads comments with:
 
----
+- author;
+- reaction count;
+- current authenticated user's reaction.
 
-## Loading Comments
+`PostResource` receives a flat comment collection and builds the nested tree in PHP.
 
-When the home feed is requested, `HomeController` loads posts together with:
+See [Comment replies flow](comment-replies-flow.md).
 
-- total post reaction count;
-- the authenticated user's post reaction;
-- total comment count;
-- comments belonging to each post;
-- the author of each comment;
-- total reaction count for each comment;
-- the authenticated user's reaction on each comment.
+## Creating a comment or reply
 
-```mermaid
-flowchart TD
-    A[User opens home feed]
-    B[HomeController]
-    C[Load posts]
-    D[Count post reactions]
-    E[Count comments]
-    F[Load comments]
-    G[Load comment users]
-    H[Count comment reactions]
-    I[Load current-user comment reactions]
-    J[PostResource and CommentResource]
-    K[PostItem.vue]
-
-    A --> B
-    B --> C
-    C --> D
-    C --> E
-    C --> F
-    F --> G
-    F --> H
-    F --> I
-    D --> J
-    E --> J
-    G --> J
-    H --> J
-    I --> J
-    J --> K
-```
-
-`PostResource` exposes:
-
-```text
-num_of_comments
-comments
-```
-
-Each comment is transformed through `CommentResource`.
-
----
-
-## Creating a Comment
-
-The comment form is located inside `PostItem.vue`.
-
-When the user submits a comment, Vue sends:
+Route:
 
 ```text
 POST /posts/{post}/comments
+route: post.comment.create
 ```
 
-The route is named:
+Controller:
 
 ```text
-post.comment.create
+CommentController::createComment()
 ```
 
-Laravel route model binding resolves `{post}` into the corresponding `Post` model.
-
-### Request Flow
-
-```mermaid
-flowchart TD
-    A[User enters comment]
-    B[createComment]
-    C[Axios POST]
-    D[post.comment.create]
-    E[PostController createComment]
-    F[Validate comment]
-    G[Create Comment record]
-    H[Load user]
-    I[Load reaction count]
-    J[CommentResource]
-    K[JSON 201 response]
-    L[Unshift comment into post.comments]
-    M[Increase num_of_comments]
-
-    A --> B
-    B --> C
-    C --> D
-    D --> E
-    E --> F
-    F --> G
-    G --> H
-    H --> I
-    I --> J
-    J --> K
-    K --> L
-    L --> M
-```
-
----
-
-## Validation
-
-Comment creation currently requires:
+The controller first verifies:
 
 ```text
-required
-string
-max:2000
+$post->isVisibleTo(current user)
 ```
 
-The frontend also prevents submission when the trimmed comment is empty.
-
-While a create request is in progress, `commentPending` prevents repeated submissions.
-
----
-
-## Immediate UI Update
-
-After Laravel creates the comment, the controller returns a `CommentResource` response with HTTP status `201`.
-
-Vue inserts the returned comment at the beginning of the comment collection:
-
-```js
-props.post.comments.unshift(data);
-```
-
-and increments:
-
-```js
-props.post.num_of_comments++;
-```
-
-No page reload is required.
-
----
-
-## Comment Reaction State
-
-New and loaded comments include:
+Then validates:
 
 ```text
-num_of_reactions
-current_user_has_reaction
-```
+comment
+→ required string max 2000
 
-A newly created comment has no reactions, so its reaction count is normally `0` and the authenticated-user state is false.
-
-Existing comments load both the total reaction count and the authenticated user's filtered reaction relationship.
-
-See: [Reaction system flow](reaction-system-flow.md)
-
----
-
-## Comment Panel
-
-The Like and Comment controls are contained inside a Headless UI `Disclosure`.
-
-The post Like button remains an independent action.
-
-The Comment button is the `DisclosureButton`, while the comment form and comment list are rendered inside the `DisclosurePanel`.
-
-```mermaid
-flowchart TD
-    A[Post actions]
-    B[Like button]
-    C[Comment button]
-    D[DisclosurePanel]
-    E[Comment input]
-    F[Submit button]
-    G[Existing comments]
-
-    A --> B
-    A --> C
-    C --> D
-    D --> E
-    D --> F
-    D --> G
-```
-
----
-
-## Parent Comment Support
-
-The migration adds:
-
-```text
 parent_id
+→ nullable integer
+→ must be a comment belonging to the same post
 ```
 
-as a nullable self-referencing foreign key:
+This same endpoint therefore creates both root comments and replies.
+
+## Reply integrity
+
+The `parent_id` validation is scoped to:
 
 ```text
-comments.parent_id -> comments.id
+post_id = current post
 ```
 
-Top-level comments use:
+so a reply cannot point to a comment from another publication.
+
+## Editing
+
+Route:
 
 ```text
-parent_id = null
+PUT /comments/{comment}
 ```
 
-A future reply could use:
+`UpdateCommentRequest` requires:
+
+- authenticated user owns the comment;
+- underlying publication is still visible.
+
+A former member of a private group cannot continue editing an old comment after access is revoked.
+
+## Deletion
+
+Route:
 
 ```text
-parent_id = ID of another comment
+DELETE /comments/{comment}
 ```
 
-The foreign key uses cascade deletion, so if a parent comment is physically removed from the database, dependent replies cannot remain orphaned.
+Deletion first rechecks publication visibility.
 
-At the current stage, this is database preparation only. Poet-Web does not yet submit `parent_id` from the frontend and does not render nested replies.
+It is then allowed for:
 
----
+- comment owner;
+- publication owner.
 
-## Main Responsibilities
+The database self-reference uses cascade deletion, so deleting a parent comment removes dependent replies.
 
-### `Comment.php`
+## Reactions
 
-Represents comments and currently defines user, post, and polymorphic reaction relationships.
+Comment reactions use:
 
-### `Post.php`
+```text
+POST /comments/{comment}/reaction
+```
 
-Defines `comments()` and retrieves comments newest first.
+and also recheck parent-publication visibility.
 
-### `HomeController.php`
+## Frontend
 
-Loads comment counts, comment authors, and comment reaction state for the feed.
+`CommentList.vue` recursively renders nested replies.
 
-### `PostController.php`
+It is guest-safe:
 
-Creates, updates, deletes, and reacts to comments.
+- comments render without `auth.user`;
+- comment form is hidden for guests;
+- trying to react as a guest redirects to login;
+- edit/delete controls handle null authentication state.
 
-### `CommentResource.php`
+## Main files
 
-Returns comment text, timestamps, author data, reaction count, and authenticated-user reaction state.
-
-### `PostResource.php`
-
-Includes the comment count and serialized comment collection in each post.
-
-### `PostItem.vue`
-
-Displays comments, creates comments asynchronously, handles editing/deleting, and provides comment reaction controls.
-
-### `web.php`
-
-Defines authenticated create, update, delete, and reaction endpoints for comments.
-
----
-
-## Current Result
-
-Authenticated users can currently:
-
-1. see the number of comments on a post;
-2. open the comment section;
-3. view existing comments;
-4. create a comment;
-5. immediately see the new comment without refreshing;
-6. edit their own comments;
-7. delete their own comments;
-8. like and unlike comments.
-
-The database is also prepared for future threaded replies through `parent_id`, but the reply feature itself is not yet implemented.
+```text
+app/Models/Comment.php
+app/Models/Post.php
+app/Http/Controllers/CommentController.php
+app/Http/Requests/UpdateCommentRequest.php
+app/Http/Resources/CommentResource.php
+app/Http/Resources/PostResource.php
+resources/js/Components/app/CommentList.vue
+resources/js/Components/app/PostItem.vue
+routes/web.php
+```

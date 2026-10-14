@@ -2,9 +2,9 @@
 
 ## Overview
 
-Post attachments are private files served through Laravel after authorization.
+Post attachments are stored privately and served through Laravel after authorization.
 
-They are not intended to be reachable through a direct `/storage/...` URL.
+They are not intended to be accessed through a direct `/storage/...` path.
 
 ## Routes
 
@@ -22,112 +22,125 @@ GET /posts/attachments/{attachment}/download
 route: post.download
 ```
 
-Both routes use Laravel route model binding for `PostAttachment`.
+Both routes are public endpoints in the routing sense because a guest may legitimately access an attachment belonging to public content.
 
-## Model binding
+The controller still performs content authorization before returning file bytes.
 
-For an attachment with ID 12:
+## Route model binding
 
 ```text
 /posts/attachments/12
-        ↓
-{attachment} = 12
-        ↓
-PostAttachment model is resolved
-        ↓
-PostAttachmentController
+→ resolve PostAttachment 12
+→ PostAttachmentController
 ```
 
-A missing database row returns 404.
+Missing attachment rows return 404.
 
-## Authorization
+## Draft authorization
 
-`PostAttachmentController::authorizeAttachment()` loads the parent post and applies different rules by post state.
-
-### Draft attachment
+For a draft:
 
 ```text
-request user exists
-AND post.user_id = request user ID
+authenticated user exists
+AND
+post.user_id = authenticated user
 → allowed
 
 otherwise
 → 404
 ```
 
-### Published attachment
+## Published authorization
 
-The controller calls:
+For published content the controller calls:
 
 ```php
-$post->isVisibleTo($userId)
+$post->isVisibleTo($request->user()?->id)
 ```
 
 Therefore:
 
 ```text
-standalone publication attachment
-→ visible to guests and authenticated users
+standalone-publication attachment
+→ guest-accessible
 
-group publication attachment
+public-group attachment
+→ guest-accessible
+
+private-group attachment
 → approved member only
 ```
 
-This prevents an attachment URL or ID from bypassing publication access rules.
+The attachment URL therefore cannot bypass the parent publication's access model.
 
-## Storage lookup
+## Storage
 
-Current uploads use the private `local` disk.
+New uploads use:
 
-The controller checks:
+```text
+Laravel local disk
+storage/app/private/attachments/{post_id}/...
+```
+
+The serving controller checks:
 
 1. `local`;
-2. `public`.
+2. legacy `public` fallback.
 
-The public fallback provides compatibility during/after migration of older files. New application code stores post attachments privately.
+The public fallback exists for older/migrated records. New application uploads are private.
 
-## Response
+## Response hardening
 
-Inline view uses the stored MIME type and includes:
+Inline responses preserve the stored MIME type and include:
 
 ```text
 X-Content-Type-Options: nosniff
 ```
 
-Download uses the original attachment name.
+Downloads use the original attachment name.
 
 ## Resource URLs
 
 `PostAttachmentResource` generates:
 
 ```text
-url          → post.attachment.view
-download_url → post.download
+url
+→ post.attachment.view
+
+download_url
+→ post.download
 ```
 
-The database `url` column is no longer the access-control mechanism.
+The database `url` field is not the authorization mechanism.
 
 ## Migration
 
-`2026_10_14_000003_move_post_attachments_to_private_storage.php` moves existing physical post files from the public disk to the private local disk when possible.
+```text
+2026_10_14_000003_move_post_attachments_to_private_storage.php
+```
+
+moves older public post files to private storage when possible.
 
 ## Tests
 
-`AttachmentSecurityTest` verifies:
+Attachment regression tests cover:
 
-- group members can access permitted attachments;
-- outsiders cannot;
-- draft attachments are owner-only;
-- new publication attachments are stored on the private disk;
-- guests cannot access group-only attachments.
+- approved access;
+- outsider denial;
+- draft owner-only access;
+- private storage for new uploads;
+- guest denial for private-group files.
+
+Public-group behavior inherits the tested `Post::isVisibleTo()` visibility model.
 
 ## Main files
 
 ```text
-routes/web.php
 app/Http/Controllers/PostAttachmentController.php
 app/Http/Resources/PostAttachmentResource.php
 app/Models/PostAttachment.php
+app/Models/Post.php
 database/migrations/2026_10_14_000003_move_post_attachments_to_private_storage.php
 tests/Feature/AttachmentSecurityTest.php
+routes/web.php
 ```

@@ -1,311 +1,116 @@
-# Post Load More Flow
+# Infinite Post Loading Flow
 
 ## Overview
 
-Poet-Web uses automatic incremental loading for both the Home feed and group post feeds.
+Poet-Web incrementally loads publications for both:
 
-Laravel returns a paginated post collection. The first page is delivered through Inertia, while later pages are requested as JSON when the user approaches the bottom of the current feed.
+- Home/Explore;
+- group publication feeds.
+
+The first page is delivered through Inertia. Later pages are requested as JSON when the user approaches the end of the visible feed.
+
+## Shared backend query
+
+Both feeds start from:
+
+```php
+Post::postsForTimeline($userId)
+```
+
+This means pagination never bypasses publication visibility.
+
+### Home
+
+`HomeController` applies:
+
+- feed type;
+- source;
+- genre;
+
+before paginating by 10.
+
+Guests are allowed only the non-personalized `for_you` source.
+
+### Group profile
+
+`GroupController::profile()` limits the shared query to:
 
 ```text
-Initial request
-↓
-Laravel pagination
-↓
-First page through Inertia
-↓
-PostList.vue
-↓
-IntersectionObserver
-↓
-JSON request for next page
-↓
-Append unique posts
+posts.group_id = current group
 ```
 
----
-
-## Backend Pagination
-
-The shared post query is ordered newest first and paginated with:
+and only serves the collection when:
 
 ```text
-paginate(10)
+group visibility = public
+OR
+viewer is approved member
 ```
 
-The Home feed uses `HomeController`. Before pagination, it filters the shared timeline query to the authenticated user's own posts, posts from users they follow, and accessible group posts.
+This same permission is checked for JSON load-more requests.
 
-Group feeds use `GroupController`, which additionally limits posts to the current group and verifies approved membership.
+## Frontend state
 
-Each post is serialized through `PostResource`.
-
----
-
-## Initial Paginator
-
-The `posts` prop contains the standard Laravel paginator resource structure:
-
-```text
-posts
-├── data
-├── links
-│   ├── first
-│   ├── last
-│   ├── prev
-│   └── next
-└── meta
-```
-
-`data` contains the current page.
-
-`links.next` contains the URL used to fetch the next page.
-
----
-
-## Reactive Local Feed State
-
-`PostList.vue` stores visible feed state with Vue `reactive()`:
-
-```js
-const feedState = reactive({
-    posts: [...(props.posts.data ?? [])],
-    nextPageUrl: props.posts.links?.next ?? null,
-    loadedBeyondFirstPage: false
-});
-```
-
-The complete post array is not persisted with Inertia `useRemember()`.
-
-This avoids restoring stale post data after an Inertia redirect.
-
----
-
-## Synchronizing New and Updated First-Page Posts
-
-`PostList.vue` watches the incoming `posts` prop.
-
-When Inertia supplies new page data, the component:
-
-```text
-builds a map of incoming posts by ID
-        ↓
-replaces matching posts already in feedState.posts
-        ↓
-finds IDs that are not yet present
-        ↓
-prepends newly-created posts
-```
-
-This lets a newly-published post appear immediately after the create request completes.
-
-The same synchronization is used by the Home feed and group feeds.
-
----
-
-## Loading Additional Pages
-
-`loadMore()` first checks:
-
-```text
-feedState.nextPageUrl exists
-AND
-loadingMore is false
-```
-
-It then requests the URL with:
-
-```http
-Accept: application/json
-```
-
-The returned post IDs are compared with IDs already stored in `feedState.posts`.
-
-Only posts that are not already present are appended.
-
-```text
-existing IDs
-    +
-next page response
-    ↓
-filter duplicates
-    ↓
-feedState.posts.push(...)
-```
-
-After the request:
-
-```text
-feedState.nextPageUrl = response.links.next
-feedState.loadedBeyondFirstPage = true
-```
-
----
-
-## Intersection Observer
-
-A small marker is rendered after the post list.
-
-`IntersectionObserver` watches that marker relative to the feed's scroll container.
-
-The observer uses a bottom `rootMargin` so loading can begin shortly before the user reaches the actual end.
+`PostList.vue` keeps local reactive state for:
 
 ```text
 posts
-posts
-posts
-[observer marker]
+nextPageUrl
+loadedBeyondFirstPage
 ```
 
-When the marker becomes visible, `loadMore()` is called.
+The complete feed is not persisted with Inertia `useRemember()`, reducing stale-data restoration after redirects.
 
----
+## Loading another page
 
-## Duplicate Request Protection
-
-`loadingMore` prevents simultaneous load-more requests.
-
-Returned posts are also filtered by ID before being appended.
-
-These two checks prevent duplicate requests and duplicate visible posts.
-
----
-
-## Pagination State After Inertia Updates
-
-The first-page prop can change after actions such as creating or editing a post.
-
-When no later page has been loaded yet, `PostList.vue` refreshes:
+The flow is:
 
 ```text
-feedState.nextPageUrl
+IntersectionObserver reaches marker
+→ nextPageUrl exists?
+→ request with Accept: application/json
+→ backend applies same visibility/filter query
+→ receive next PostResource page
+→ remove duplicate IDs
+→ append unique publications
+→ update nextPageUrl
 ```
 
-from the latest incoming paginator.
+## Duplicate protection
 
-Once later pages have been loaded, the component keeps the existing pagination state instead of replacing the extended feed with only the new first page.
+Two safeguards are used:
 
----
+- `loadingMore` prevents parallel load-more requests;
+- returned IDs are filtered against IDs already present locally.
 
-## Deleting a Post From Local State
+## First-page synchronization
 
-Post deletion uses a separate explicit synchronization step.
+After create/edit actions cause Inertia to return a refreshed first page, `PostList.vue`:
 
-After `PostItem.vue` receives a successful response from the delete route, it emits:
+1. updates matching publications already in local state;
+2. finds new IDs;
+3. prepends newly created publications.
+
+This allows the feed to stay reactive without replacing all already-loaded later pages.
+
+## Deletion synchronization
+
+After a successful delete:
 
 ```text
-deleted(post.id)
+PostItem emits deleted(post.id)
+→ PostList removes that ID
 ```
 
-`PostList.vue` handles this through:
+This prevents a soft-deleted record from remaining visible in stale frontend state.
+
+## Main files
 
 ```text
-removePost(postId)
+app/Http/Controllers/HomeController.php
+app/Http/Controllers/GroupController.php
+app/Models/Post.php
+app/Http/Resources/PostResource.php
+resources/js/Components/app/PostList.vue
+resources/js/Components/app/PostItem.vue
 ```
-
-which filters the deleted ID out of `feedState.posts`.
-
-```mermaid
-flowchart TD
-    A[Delete request succeeds] --> B[PostItem emits deleted]
-    B --> C[PostList removePost]
-    C --> D[Filter feedState.posts]
-    D --> E[Deleted post disappears]
-```
-
-This prevents soft-deleted posts from remaining visible and later causing 404 responses if the user tries to edit or delete them again.
-
----
-
-## End of Feed
-
-When Laravel returns:
-
-```text
-links.next = null
-```
-
-the component stores:
-
-```text
-feedState.nextPageUrl = null
-```
-
-and no further pagination request is made.
-
----
-
-## Component Responsibilities
-
-### HomeController.php
-
-```text
-load timeline posts through postsForTimeline
-filter Home posts to own, followed-user, and accessible-group content
-paginate first and later pages
-return Inertia for normal request
-return JSON for pagination request
-```
-
-### GroupController.php
-
-```text
-verify approved membership
-load current group's posts
-paginate first and later pages
-return JSON for group pagination requests
-```
-
-### PostList.vue
-
-```text
-maintain reactive feedState
-synchronize incoming first-page posts
-prepend newly-created posts
-track next page URL
-load additional pages
-prevent duplicate posts
-remove successfully deleted posts
-render PostItem components
-```
-
-### PostItem.vue
-
-```text
-render individual post
-request post deletion
-emit deleted post ID after successful deletion
-```
-
----
-
-## Complete Feed Flow
-
-```mermaid
-flowchart TD
-    A[Page request] --> B[Laravel paginate 10]
-    B --> C[Inertia posts prop]
-    C --> D[Initialize feedState.posts]
-
-    D --> E{User action}
-
-    E -->|Scroll| F[IntersectionObserver]
-    F --> G[Request next page as JSON]
-    G --> H[Filter duplicate IDs]
-    H --> I[Append unique posts]
-
-    E -->|Create post| J[Inertia returns updated first page]
-    J --> K[Watch posts prop]
-    K --> L[Refresh matching posts]
-    L --> M[Prepend new IDs]
-
-    E -->|Delete post| N[DELETE request]
-    N --> O[Emit deleted ID]
-    O --> P[Filter deleted post from feed]
-```
-
----
-
-## Result
-
-Poet-Web loads only the first page initially and fetches additional posts when needed.
-
-The current feed implementation also keeps local reactive state synchronized with newly-created posts and successful deletions, avoiding both unnecessary full-page refreshes and stale soft-deleted post entries.

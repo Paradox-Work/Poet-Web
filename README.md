@@ -2,7 +2,7 @@
 
 Poet-Web is a social platform for poets, readers, and poetry communities, developed as a qualification project.
 
-Visitors can browse public poetry and posts before registering. Authenticated users can publish content, follow writers, join groups, comment, react, manage profiles, and participate in group communities.
+Visitors can browse public standalone publications and public-group content before registering. Authenticated users can publish content, follow writers, join groups, comment, react, manage profiles, and participate in group communities.
 
 ## Tech Stack
 
@@ -195,8 +195,11 @@ Technical flows and security notes are stored in `docs/`.
 Start with:
 
 - [Documentation index](docs/README.md)
+- [Current project status](docs/project-status.md)
 - [Implementation notes](docs/implementation-notes.md)
 - [Security and access control](docs/security-and-access-control.md)
+- [Localization flow](docs/localization-flow.md)
+- [About and author-rights page](docs/about-rights-flow.md)
 - [Testing and quality assurance](docs/testing-and-quality-assurance.md)
 - [Presentation demo guide](docs/presentation-demo-guide.md)
 - [ER diagram for presentation](docs/database-er-diagram.md)

@@ -1,4 +1,4 @@
-# Home Feed Flow
+# Home / Explore Feed Flow
 
 ## Overview
 
@@ -9,30 +9,33 @@ GET /
 route: dashboard
 ```
 
-Both guests and authenticated users can read visible publications.
+Guests and authenticated users receive only publications allowed by the shared visibility query.
 
-The controller uses `Post::postsForTimeline(?int $userId)` as the visibility base, then applies feed/source/genre filters.
+## Base visibility
 
-## Visibility base
+`HomeController` starts from:
+
+```php
+Post::postsForTimeline($request->user()?->id)
+```
+
+That means:
 
 ```text
-published standalone post
-→ visible to everyone
+standalone published publication
+→ public
 
-published group post
-→ visible only to approved group members
+public-group publication
+→ public
+
+private-group publication
+→ approved member only
 
 draft
 → excluded
 ```
 
-For a guest, `$userId` is null, so group publications are excluded.
-
-## Feed filters
-
-The Home controller supports:
-
-### Content type
+## Content filter
 
 ```text
 feed=poems
@@ -40,9 +43,15 @@ feed=posts
 feed=all
 ```
 
-Invalid values fall back to `poems`.
+Invalid values fall back to:
 
-### Source
+```text
+poems
+```
+
+## Source filter
+
+Authenticated users can use:
 
 ```text
 source=for_you
@@ -51,78 +60,63 @@ source=groups
 source=mine
 ```
 
-Invalid values fall back to `for_you`.
-
-Guests are always forced to `for_you`, because the other source modes depend on an authenticated identity.
-
-### Genre
-
-A genre may be supplied for poem browsing. The value is trimmed and limited to 50 characters.
-
-Genre filtering uses `whereJsonContains('posts.poem_genres', $genre)`.
-
-## Authenticated source behavior
+Guests are forced to:
 
 ```text
-for_you
-→ all publications already visible through postsForTimeline()
-
-following
-→ visible publications authored by followed users
-
-groups
-→ visible group publications
-
-mine
-→ visible publications authored by the current user
+source=for_you
 ```
 
-The visibility query still runs first, so source filters do not bypass group access rules.
+because personalized source filters require an identity.
 
-## Guest behavior
+`source=groups` does not bypass visibility. It simply narrows the already-visible query to posts with a non-null `group_id`.
 
-A guest receives a read-only Explore experience:
+## Genre filter
 
-```text
-source = for_you
-standalone public publications only
-no private group publications
-no personal source tabs
-```
+A poem genre may be supplied.
 
-Vue reduces the source selector to a single `Explore` option for guests.
+The value is:
 
-State-changing controls continue to require authentication.
+- trimmed;
+- capped at 50 characters;
+- applied with `whereJsonContains` to `poem_genres`.
+
+Genre counts are calculated from the currently selected source before final feed/genre filtering.
 
 ## Pagination
 
-Results use:
-
-```php
-paginate(10)->withQueryString()
+```text
+10 publications per page
 ```
 
-When the request asks for JSON, the controller returns the paginated resource collection directly. This supports the existing infinite-scroll behavior.
+Query parameters are preserved.
 
-## Genre counts
+JSON requests return the resource collection directly for infinite scrolling.
 
-Genre counts are calculated from the currently selected source before the final `feed`/genre result filtering.
+## Guest experience
 
-Only poem genres are counted.
+The frontend presents a read-only Explore mode:
 
-## Security property
+- public standalone poems/posts;
+- public-group poems/posts;
+- search/navigation;
+- login/register for write actions.
 
-Home is public, but that does not make group posts public.
+State-changing actions still require authentication.
 
-`Post::postsForTimeline()` remains the security boundary for collection visibility, and group membership is checked on the backend.
+## Localization
+
+The presentation-facing Home UI uses the shared Latvian/English translation layer.
+
+Latvian is the default when no saved browser preference exists.
 
 ## Main files
 
 ```text
-routes/web.php
 app/Http/Controllers/HomeController.php
 app/Models/Post.php
 app/Http/Resources/PostResource.php
 resources/js/Pages/Home.vue
 resources/js/Components/app/PostList.vue
+resources/js/i18n.js
+routes/web.php
 ```
