@@ -6,6 +6,7 @@ namespace App\Models;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -33,6 +34,8 @@ class User extends Authenticatable implements MustVerifyEmail
           
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_site_admin' => 'boolean',
+            'suspended_at' => 'datetime',
             
         ];
     }
@@ -64,6 +67,28 @@ class User extends Authenticatable implements MustVerifyEmail
             'follower_id',
             'user_id'
         );
+    }
+
+    public function bookmarks(): HasMany
+    {
+        return $this->hasMany(Bookmark::class);
+    }
+
+    public function readingLists(): HasMany
+    {
+        return $this->hasMany(ReadingList::class);
+    }
+
+    public function conversations(): BelongsToMany
+    {
+        return $this->belongsToMany(Conversation::class)
+            ->withPivot('last_read_at')
+            ->withTimestamps();
+    }
+
+    public function collaborations(): HasMany
+    {
+        return $this->hasMany(PostCollaborator::class);
     }
 
 }
