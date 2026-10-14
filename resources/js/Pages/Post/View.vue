@@ -1,5 +1,6 @@
 <script setup>
 import {
+    computed,
     onMounted,
     ref
 } from 'vue';
@@ -35,6 +36,33 @@ const props = defineProps({
 
 const authUser =
     usePage().props.auth.user;
+
+const seoTitle = computed(() =>
+    props.post.title
+        ? `${props.post.title} · Poet-Web`
+        : `${props.post.user?.name ?? 'Poet-Web'} · Poet-Web`
+);
+
+const seoDescription = computed(() => {
+    const source =
+        props.post.caption
+        || props.post.body
+        || '';
+
+    return source
+        .replace(/<[^>]*>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .slice(0, 180);
+});
+
+const seoImage = computed(() =>
+    props.post.attachments?.find(
+        item => item.mime?.startsWith('image/')
+    )?.url
+    || props.post.user?.avatar_url
+    || null
+);
 
 const showEditModal =
     ref(false);
@@ -122,7 +150,15 @@ function onModalHide() {
 </script>
 
 <template>
-    <Head title="Post" />
+    <Head :title="seoTitle">
+        <meta name="description" :content="seoDescription" />
+        <meta property="og:title" :content="seoTitle" />
+        <meta property="og:description" :content="seoDescription" />
+        <meta property="og:type" content="article" />
+        <meta property="og:url" :content="route('post.view', post.id)" />
+        <meta v-if="seoImage" property="og:image" :content="seoImage" />
+        <meta name="twitter:card" content="summary_large_image" />
+    </Head>
 
     <AuthenticatedLayout>
         <div
