@@ -144,8 +144,12 @@ test('user can delete their account', function () {
     $this->assertGuest();
 
     expect(
-        $user->fresh()
+        User::query()->find($user->id)
     )->toBeNull();
+
+    expect(
+        User::withTrashed()->find($user->id)
+    )->not->toBeNull();
 });
 
 test('correct password is required to delete account', function () {
