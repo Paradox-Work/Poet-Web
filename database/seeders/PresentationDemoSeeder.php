@@ -4,10 +4,15 @@ namespace Database\Seeders;
 
 use App\Enums\GroupUserRole;
 use App\Enums\GroupUserStatus;
+use App\Models\Bookmark;
 use App\Models\Comment;
+use App\Models\Conversation;
 use App\Models\Group;
 use App\Models\GroupUser;
 use App\Models\Post;
+use App\Models\PostCollaborator;
+use App\Models\ReadingList;
+use App\Models\Report;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -46,6 +51,11 @@ class PresentationDemoSeeder extends Seeder
             });
 
             $elza = $users['elza@poetweb.lv'];
+
+            $elza->forceFill([
+                'is_site_admin' => true,
+                'suspended_at' => null,
+            ])->save();
             $janis = $users['janis@poetweb.lv'];
             $marta = $users['marta@poetweb.lv'];
             $rihards = $users['rihards@poetweb.lv'];
@@ -205,6 +215,95 @@ class PresentationDemoSeeder extends Seeder
 
             $publicGroup->pinned_post_id = $publicGroupPost->id;
             $publicGroup->save();
+
+            Bookmark::query()->firstOrCreate([
+                'user_id' => $elza->id,
+                'post_id' => $publicGroupPost->id,
+            ]);
+
+            $readingList = ReadingList::query()->firstOrCreate(
+                [
+                    'user_id' => $elza->id,
+                    'name' => 'Prezentācijas izlase',
+                ],
+                [
+                    'description' =>
+                        'Publikācijas bibliotēkas un lasīšanas sarakstu demonstrācijai.',
+                ]
+            );
+
+            $readingList
+                ->posts()
+                ->syncWithoutDetaching([
+                    $firstPoem->id,
+                    $publicGroupPost->id,
+                ]);
+
+            $conversation = Conversation::query()->firstOrCreate(
+                [
+                    'direct_key' =>
+                        Conversation::directKey(
+                            $elza->id,
+                            $marta->id
+                        ),
+                ],
+                [
+                    'created_by' => $elza->id,
+                ]
+            );
+
+            $conversation
+                ->users()
+                ->syncWithoutDetaching([
+                    $elza->id,
+                    $marta->id,
+                ]);
+
+            $conversation
+                ->messages()
+                ->firstOrCreate(
+                    [
+                        'user_id' => $elza->id,
+                        'body' =>
+                            'Čau! Vai sestdienas lasījumam izvēlamies trīs īsos darbus?',
+                    ]
+                );
+
+            $conversation
+                ->messages()
+                ->firstOrCreate(
+                    [
+                        'user_id' => $marta->id,
+                        'body' =>
+                            'Jā — es ielikšu vienu no Jauno Autoru grupas.',
+                    ]
+                );
+
+            PostCollaborator::query()->updateOrCreate(
+                [
+                    'post_id' => $firstPoem->id,
+                    'user_id' => $marta->id,
+                ],
+                [
+                    'invited_by' => $elza->id,
+                    'status' => 'accepted',
+                    'role' => 'editor',
+                ]
+            );
+
+            Report::query()->firstOrCreate(
+                [
+                    'reporter_id' => $emils->id,
+                    'target_type' => 'post',
+                    'target_id' => $publicGroupPost->id,
+                    'status' => 'pending',
+                ],
+                [
+                    'reason' => 'other',
+                    'details' =>
+                        'Demo ziņojums moderācijas rindas demonstrācijai.',
+                ]
+            );
         });
 
         $this->command?->newLine();
@@ -219,6 +318,10 @@ class PresentationDemoSeeder extends Seeder
         );
         $this->command?->warn(
             'Demo credentials are for local presentation use only.'
+        );
+
+        $this->command?->info(
+            'Elza is also configured as the demo site administrator.'
         );
     }
 
