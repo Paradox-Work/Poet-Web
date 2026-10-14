@@ -16,6 +16,10 @@
             content="Read, write, discuss, and organize poetry in Poet-Web."
         >
         <meta name="twitter:card" content="summary">
+        <style>
+            html, body { background-color: #f4ede4; color: #0f1b2d; }
+            html.dark, html.dark body { background-color: #0f1b2d; color: #f4ede4; color-scheme: dark; }
+        </style>
 
         <script>
             (() => {
@@ -34,6 +38,7 @@
                 document.documentElement
                     .classList
                     .toggle('dark', useDark);
+                document.documentElement.style.colorScheme = useDark ? 'dark' : 'light';
             })();
         </script>
 
