@@ -65,6 +65,13 @@ class ReportController extends Controller
     ): void {
         if ($type === 'user') {
             User::query()->findOrFail($id);
+
+            abort_if(
+                $request->user()->id === $id,
+                422,
+                'You cannot report your own account.'
+            );
+
             return;
         }
 
