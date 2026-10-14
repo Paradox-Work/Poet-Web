@@ -78,6 +78,27 @@ class PostResource extends JsonResource
 
             'can_delete' =>
                 $canDelete,
+
+            'can_edit' =>
+                (bool) (
+                    $userId &&
+                    (
+                        $this->user_id === $userId
+                        ||
+                        (
+                            $this->type === 'poem'
+                            && $this->relationLoaded('collaborators')
+                            && $this->collaborators->isNotEmpty()
+                        )
+                    )
+                ),
+
+            'can_manage_collaborators' =>
+                (bool) (
+                    $userId
+                    && $this->type === 'poem'
+                    && $this->user_id === $userId
+                ),
             'attachments' => PostAttachmentResource::collection(
                 $this->attachments
             ),
@@ -87,6 +108,10 @@ class PostResource extends JsonResource
             'current_user_has_reaction' =>
                 $this->relationLoaded('reactions')
                     && $this->reactions->isNotEmpty(),
+
+            'current_user_has_bookmark' =>
+                $this->relationLoaded('bookmarks')
+                    && $this->bookmarks->isNotEmpty(),
 
             'num_of_comments' =>
                 $comments->count(),
