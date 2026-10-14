@@ -1,7 +1,10 @@
 <script setup>
 import {
-    computed
+    computed,
+    ref
 } from 'vue';
+
+import { useI18n } from '@/i18n';
 
 import {
     ClipboardIcon,
@@ -60,6 +63,9 @@ defineEmits([
     'delete',
     'pin'
 ]);
+
+const { locale } = useI18n();
+const copied = ref(false);
 
 const page =
     usePage();
@@ -171,6 +177,15 @@ async function copyPostUrl() {
             )
         );
 
+        copied.value = true;
+
+        window.setTimeout(
+            () => {
+                copied.value = false;
+            },
+            1500
+        );
+
     } catch (error) {
 
         console.error(
@@ -191,7 +206,7 @@ async function copyPostUrl() {
         <MenuButton
             type="button"
             class="w-8 h-8 rounded-full hover:bg-black/5 transition flex items-center justify-center dark:hover:bg-white/10"
-            aria-label="More options"
+:aria-label="locale === 'lv' ? 'Vairāk iespēju' : 'More options'"
         >
             <EllipsisVerticalIcon
                 class="w-5 h-5"
@@ -230,7 +245,11 @@ async function copyPostUrl() {
                                 class="mr-2 h-5 w-5"
                             />
 
-                            Copy link
+                            {{
+                                copied
+                                    ? (locale === 'lv' ? 'Saite nokopēta' : 'Link copied')
+                                    : (locale === 'lv' ? 'Kopēt saiti' : 'Copy link')
+                            }}
                         </button>
                     </MenuItem>
 
@@ -252,7 +271,7 @@ async function copyPostUrl() {
                             ]"
                         >
                             <UserGroupIcon class="mr-2 h-5 w-5" />
-                            Collaborators
+                            {{ locale === 'lv' ? 'Līdzautori' : 'Collaborators' }}
                         </Link>
                     </MenuItem>
 
@@ -281,7 +300,7 @@ async function copyPostUrl() {
                             ]"
                         >
                             <FlagIcon class="mr-2 h-5 w-5" />
-                            Report
+                            {{ locale === 'lv' ? 'Ziņot' : 'Report' }}
                         </Link>
                     </MenuItem>
 
@@ -304,7 +323,11 @@ async function copyPostUrl() {
                                 class="mr-2 h-5 w-5"
                             />
 
-                            {{ pinned ? 'Unpin' : 'Pin' }}
+                            {{
+                                pinned
+                                    ? (locale === 'lv' ? 'Atspraust' : 'Unpin')
+                                    : (locale === 'lv' ? 'Piespraust' : 'Pin')
+                            }}
                         </button>
                     </MenuItem>
 
@@ -328,7 +351,7 @@ async function copyPostUrl() {
                                 class="mr-2 h-5 w-5"
                             />
 
-                            Edit
+                            {{ locale === 'lv' ? 'Rediģēt' : 'Edit' }}
                         </button>
                     </MenuItem>
 
@@ -351,7 +374,7 @@ async function copyPostUrl() {
                                 class="mr-2 h-5 w-5"
                             />
 
-                            Delete
+                            {{ locale === 'lv' ? 'Dzēst' : 'Delete' }}
                         </button>
                     </MenuItem>
 
