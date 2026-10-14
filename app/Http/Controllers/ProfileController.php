@@ -374,7 +374,12 @@ class ProfileController extends Controller
             $user->avatar_path,
         ]);
 
-        DB::transaction(function () use ($user) {
+        $conversationIds =
+            DB::table('conversation_user')
+                ->where('user_id', $user->id)
+                ->pluck('conversation_id');
+
+        DB::transaction(function () use ($user, $conversationIds) {
             Follower::query()
                 ->where('user_id', $user->id)
                 ->orWhere('follower_id', $user->id)
@@ -404,6 +409,19 @@ class ProfileController extends Controller
             DB::table('conversation_user')
                 ->where('user_id', $user->id)
                 ->delete();
+
+            foreach ($conversationIds as $conversationId) {
+                $remainingParticipants =
+                    DB::table('conversation_user')
+                        ->where('conversation_id', $conversationId)
+                        ->count();
+
+                if ($remainingParticipants < 2) {
+                    DB::table('conversations')
+                        ->where('id', $conversationId)
+                        ->delete();
+                }
+            }
 
             DB::table('notifications')
                 ->where('notifiable_type', User::class)
