@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Http\Requests\StorePostRequest;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -38,6 +39,56 @@ class HandleInertiaRequests extends Middleware
                     ? new UserResource($request->user())
                     : null,
             ],
+
+            'messages' => function () use ($request) {
+                $user = $request->user();
+
+                if (!$user) {
+                    return [
+                        'unread_count' => 0,
+                    ];
+                }
+
+                $unreadCount =
+                    DB::table('messages')
+                        ->join(
+                            'conversation_user',
+                            function ($join) use ($user) {
+                                $join
+                                    ->on(
+                                        'conversation_user.conversation_id',
+                                        '=',
+                                        'messages.conversation_id'
+                                    )
+                                    ->where(
+                                        'conversation_user.user_id',
+                                        '=',
+                                        $user->id
+                                    );
+                            }
+                        )
+                        ->where(
+                            'messages.user_id',
+                            '!=',
+                            $user->id
+                        )
+                        ->where(function ($query) {
+                            $query
+                                ->whereNull(
+                                    'conversation_user.last_read_at'
+                                )
+                                ->orWhereColumn(
+                                    'messages.created_at',
+                                    '>',
+                                    'conversation_user.last_read_at'
+                                );
+                        })
+                        ->count();
+
+                return [
+                    'unread_count' => $unreadCount,
+                ];
+            },
 
             'notifications' => function () use ($request) {
                 $user = $request->user();
