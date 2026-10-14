@@ -5,6 +5,13 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
         <title inertia>{{ config('app.name', 'Poet-Web') }}</title>
+        <meta
+            name="description"
+            content="Poet-Web is a poetry publishing and community platform for readers, authors, and writing groups."
+        >
+        <meta name="robots" content="index,follow">
+        <meta property="og:site_name" content="Poet-Web">
+        <meta property="og:type" content="website">
 
         <script>
             (() => {
