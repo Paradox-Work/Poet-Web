@@ -31,6 +31,9 @@ const { locale } = useI18n();
 import EditDeleteDropdown
     from '@/Components/app/EditDeleteDropdown.vue';
 
+import ReportButton
+    from '@/Components/app/ReportButton.vue';
+
 
 const props = defineProps({
 
@@ -692,6 +695,16 @@ function onCommentDelete(
                             }}
                         </button>
 
+                        <ReportButton
+                            v-if="
+                                authUser &&
+                                authUser.id !== comment.user?.id
+                            "
+                            type="comment"
+                            :target-id="comment.id"
+                            compact
+                        />
+
                         <DisclosureButton
                             class="flex items-center gap-1 rounded px-2 py-1 text-xs text-indigo-600 hover:bg-indigo-50 dark:text-indigo-300 dark:hover:bg-indigo-950/40"
                         >
@@ -701,7 +714,7 @@ function onCommentDelete(
                                 {{ comment.num_of_comments ?? 0 }}
                             </span>
 
-                            Replies
+                            {{ locale === 'lv' ? 'Atbildes' : 'Replies' }}
                         </DisclosureButton>
                     </div>
                 </div>
@@ -738,7 +751,7 @@ function onCommentDelete(
                 : ''
         ]"
     >
-        No comments yet.
+        {{ locale === 'lv' ? 'Komentāru vēl nav.' : 'No comments yet.' }}
     </div>
 </div>
 </template>
