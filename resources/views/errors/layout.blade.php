@@ -74,7 +74,7 @@
         <p>{{ $lv ? $messageLv : $messageEn }}</p>
         <div class="code">{{ $lv ? 'Kļūdas kods' : 'Error code' }}: {{ $code }}</div>
 
-        <a href="{{ route('dashboard') }}">
+        <a href="{{ url('/') }}">
             {{ $lv ? 'Atgriezties sākumā' : 'Back to Home' }}
         </a>
     </main>
