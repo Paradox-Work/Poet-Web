@@ -19,6 +19,10 @@ import {
 
 import axios from 'axios';
 
+import { useI18n } from '@/i18n';
+
+const { t } = useI18n();
+
 const props = defineProps({
     modelValue: Boolean
 });
@@ -31,6 +35,7 @@ const emit = defineEmits([
 const name = ref('');
 const about = ref('');
 const autoApproval = ref(true);
+const visibility = ref('private');
 
 const submitting = ref(false);
 
@@ -50,6 +55,7 @@ function resetModal() {
     name.value = '';
     about.value = '';
     autoApproval.value = true;
+    visibility.value = 'private';
     errors.value = {};
 }
 
@@ -79,6 +85,8 @@ async function submit() {
                     about: about.value,
                     auto_approval:
                         autoApproval.value,
+                    visibility:
+                        visibility.value,
                 }
             );
 
@@ -152,7 +160,7 @@ async function submit() {
                             <DialogTitle
                                 class="flex items-center justify-between px-4 py-3 bg-gray-100 font-medium dark:bg-gray-700"
                             >
-                                Create new group
+                                {{ t('group.create_title') }}
 
                                 <button
                                     type="button"
@@ -173,7 +181,7 @@ async function submit() {
                                     <label
                                         class="block mb-1"
                                     >
-                                        Group name
+                                        {{ t('group.name') }}
                                     </label>
 
                                     <input
@@ -203,18 +211,51 @@ async function submit() {
                                             type="checkbox"
                                         />
 
-                                        Automatically approve new members
+                                        {{ t('group.auto_approve') }}
                                     </label>
 
                                 </div>
 
+
+                                <div class="mb-4">
+                                    <label class="mb-1 block">
+                                        {{ t('groups.visibility') }}
+                                    </label>
+
+                                    <select
+                                        v-model="visibility"
+                                        class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+                                    >
+                                        <option value="private">
+                                            {{ t('groups.private') }}
+                                        </option>
+                                        <option value="public">
+                                            {{ t('groups.public') }}
+                                        </option>
+                                    </select>
+
+                                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                        {{
+                                            visibility === 'public'
+                                                ? t('groups.public_help')
+                                                : t('groups.private_help')
+                                        }}
+                                    </p>
+
+                                    <div
+                                        v-if="errors.visibility"
+                                        class="mt-1 text-sm text-red-600"
+                                    >
+                                        {{ errors.visibility[0] }}
+                                    </div>
+                                </div>
 
                                 <div>
 
                                     <label
                                         class="block mb-1"
                                     >
-                                        About group
+                                        {{ t('group.about') }}
                                     </label>
 
                                     <textarea
@@ -245,7 +286,7 @@ async function submit() {
                                     @click="closeModal"
                                     class="bg-gray-100 hover:bg-gray-200 rounded-md py-2 px-4 dark:bg-gray-700 dark:hover:bg-gray-600"
                                 >
-                                    Cancel
+                                    {{ t('group.cancel') }}
                                 </button>
 
                                 <button
@@ -263,8 +304,8 @@ async function submit() {
 
                                     {{
                                         submitting
-                                            ? 'Creating...'
-                                            : 'Create'
+                                            ? t('group.creating')
+                                            : t('group.create')
                                     }}
                                 </button>
 
