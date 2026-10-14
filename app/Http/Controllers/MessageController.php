@@ -100,6 +100,31 @@ class MessageController extends Controller
                 );
         }
 
+        $search = trim(
+            $request->string('q')->toString()
+        );
+
+        if (mb_strlen($search) > 80) {
+            $search = mb_substr($search, 0, 80);
+        }
+
+        $userMatches = collect();
+
+        if ($search !== '') {
+            $like = '%' . $search . '%';
+
+            $userMatches = User::query()
+                ->whereKeyNot($user->id)
+                ->whereNull('suspended_at')
+                ->where(function ($query) use ($like) {
+                    $query
+                        ->where('name', 'like', $like)
+                        ->orWhere('username', 'like', $like);
+                })
+                ->limit(8)
+                ->get();
+        }
+
         return Inertia::render('Messages/Index', [
             'conversations' => $conversations,
             'activeConversation' => $conversation
@@ -119,6 +144,10 @@ class MessageController extends Controller
                 ]
                 : null,
             'messages' => $messages,
+            'search' => $search,
+            'userMatches' => UserResource::collection(
+                $userMatches
+            )->resolve($request),
         ]);
     }
 
