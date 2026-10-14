@@ -10,7 +10,8 @@ import {
     Head,
     Link,
     router,
-    useForm
+    useForm,
+    usePage
 } from '@inertiajs/vue3';
 
 import {
@@ -29,6 +30,7 @@ import { useI18n } from '@/i18n';
 import { poemGenres } from '@/data/poemGenres.js';
 
 const { locale } = useI18n();
+const authUser = usePage().props.auth.user;
 
 const props = defineProps({
     drafts: {
@@ -61,6 +63,18 @@ const formGuideOpen = ref(false);
 const genrePickerOpen = ref(false);
 const hashtagsInput = ref('');
 const customGenreInput = ref('');
+const collaborators = ref([]);
+const draftOwnerId = ref(null);
+const collaboratorUsername = ref('');
+const collaboratorPending = ref(false);
+const collaboratorError = ref('');
+
+const isDraftOwner = computed(
+    () =>
+        !draftId.value ||
+        draftOwnerId.value === null ||
+        draftOwnerId.value === authUser?.id
+);
 
 let saveTimer = null;
 
@@ -199,6 +213,10 @@ async function saveDraft() {
         draftId.value =
             response.data.draft.id;
 
+        if (draftOwnerId.value === null) {
+            draftOwnerId.value = authUser?.id ?? null;
+        }
+
         savedAt.value =
             response.data.draft.draft_saved_at;
 
@@ -245,6 +263,10 @@ function openDraft(draft) {
             .join(' ');
     savedAt.value =
         draft.draft_saved_at;
+    draftOwnerId.value =
+        draft.owner_id ?? authUser?.id ?? null;
+    collaborators.value =
+        draft.collaborators ?? [];
     saveState.value = 'saved';
     draftMenuOpen.value = false;
 }
@@ -256,6 +278,10 @@ function newPoem() {
     savedAt.value = null;
     hashtagsInput.value = '';
     customGenreInput.value = '';
+    collaborators.value = [];
+    draftOwnerId.value = null;
+    collaboratorUsername.value = '';
+    collaboratorError.value = '';
 
     form.reset();
     form.type = 'poem';
@@ -308,6 +334,72 @@ function addCustomGenre() {
     }
 
     customGenreInput.value = '';
+}
+
+async function addCollaborator() {
+    const username =
+        collaboratorUsername.value.trim();
+
+    if (
+        !draftId.value ||
+        !isDraftOwner.value ||
+        !username ||
+        collaboratorPending.value
+    ) {
+        return;
+    }
+
+    collaboratorPending.value = true;
+    collaboratorError.value = '';
+
+    try {
+        const response = await axios.post(
+            route(
+                'draft.collaborators.store',
+                draftId.value
+            ),
+            { username }
+        );
+
+        collaborators.value =
+            response.data.collaborators ?? [];
+
+        collaboratorUsername.value = '';
+    } catch (error) {
+        collaboratorError.value =
+            error.response?.data?.message
+            ?? (
+                locale.value === 'lv'
+                    ? 'Līdzautoru neizdevās pievienot.'
+                    : 'Could not add collaborator.'
+            );
+    } finally {
+        collaboratorPending.value = false;
+    }
+}
+
+async function removeCollaborator(user) {
+    if (
+        !draftId.value ||
+        !isDraftOwner.value
+    ) {
+        return;
+    }
+
+    await axios.delete(
+        route(
+            'draft.collaborators.destroy',
+            {
+                post: draftId.value,
+                user: user.id
+            }
+        )
+    );
+
+    collaborators.value =
+        collaborators.value.filter(
+            item => item.id !== user.id
+        );
 }
 
 function publish() {
@@ -514,7 +606,13 @@ if (props.editPoem) {
                         <button
                             type="button"
                             @click="publish"
-                            :disabled="form.processing"
+:disabled="
+                                form.processing ||
+                                (
+                                    draftId &&
+                                    !isDraftOwner
+                                )
+                            "
                             class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-50"
                         >
                             {{
@@ -659,6 +757,103 @@ if (props.editPoem) {
                                 {{ locale === 'lv' ? 'Papildu publicēšanas informācija, kas netraucē rakstīšanas laukam.' : 'Optional publishing details that stay out of the writing area.' }}
                             </p>
                         </div>
+
+                        <section
+                            v-if="draftId"
+                            class="rounded-xl border border-stone-200 bg-white/70 p-3 dark:border-gray-700 dark:bg-gray-900/40"
+                        >
+                            <div class="text-xs font-semibold uppercase tracking-[0.16em] text-gray-400">
+                                {{
+                                    locale === 'lv'
+                                        ? 'Līdzautori'
+                                        : 'Collaborators'
+                                }}
+                            </div>
+
+                            <p class="mt-1 text-xs leading-5 text-gray-400">
+                                {{
+                                    isDraftOwner
+                                        ? (
+                                            locale === 'lv'
+                                                ? 'Pievieno lietotāju pēc @lietotājvārda. Līdzautors var rediģēt un automātiski saglabāt melnrakstu, bet publicē īpašnieks.'
+                                                : 'Add a writer by @username. Collaborators can edit and autosave the draft; the owner publishes it.'
+                                        )
+                                        : (
+                                            locale === 'lv'
+                                                ? 'Šis melnraksts ir kopīgots ar tevi. Vari rediģēt saturu; publicēšanu veic īpašnieks.'
+                                                : 'This draft is shared with you. You can edit the content; the owner publishes it.'
+                                        )
+                                }}
+                            </p>
+
+                            <div
+                                v-if="isDraftOwner"
+                                class="mt-3 flex gap-2"
+                            >
+                                <input
+                                    v-model="collaboratorUsername"
+                                    type="text"
+                                    maxlength="255"
+                                    placeholder="@username"
+                                    class="min-w-0 flex-1 rounded-lg border-gray-300 bg-white text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+                                    @keyup.enter.prevent="addCollaborator"
+                                />
+
+                                <button
+                                    type="button"
+                                    @click="addCollaborator"
+                                    :disabled="
+                                        collaboratorPending ||
+                                        !collaboratorUsername.trim()
+                                    "
+                                    class="rounded-lg border border-gray-200 px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
+                                >
+                                    {{
+                                        locale === 'lv'
+                                            ? 'Pievienot'
+                                            : 'Add'
+                                    }}
+                                </button>
+                            </div>
+
+                            <p
+                                v-if="collaboratorError"
+                                class="mt-2 text-xs text-red-500"
+                            >
+                                {{ collaboratorError }}
+                            </p>
+
+                            <div
+                                v-if="collaborators.length"
+                                class="mt-3 space-y-1.5"
+                            >
+                                <div
+                                    v-for="person in collaborators"
+                                    :key="person.id"
+                                    class="flex items-center justify-between gap-2 rounded-lg bg-stone-100 px-2.5 py-2 text-xs dark:bg-gray-800"
+                                >
+                                    <span class="min-w-0 truncate text-gray-700 dark:text-gray-200">
+                                        {{ person.name }}
+                                        <span class="text-gray-400">
+                                            @{{ person.username }}
+                                        </span>
+                                    </span>
+
+                                    <button
+                                        v-if="isDraftOwner"
+                                        type="button"
+                                        @click="removeCollaborator(person)"
+                                        class="shrink-0 text-red-500 hover:underline"
+                                    >
+                                        {{
+                                            locale === 'lv'
+                                                ? 'Noņemt'
+                                                : 'Remove'
+                                        }}
+                                    </button>
+                                </div>
+                            </div>
+                        </section>
 
                         <section>
                             <div class="mb-2 flex items-center justify-between">
