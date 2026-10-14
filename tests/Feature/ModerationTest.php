@@ -3,6 +3,7 @@
 use App\Models\Report;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Inertia\Testing\AssertableInertia as Assert;
 
 test('users can report visible publications only once while pending', function () {
     $author = User::factory()->create();
@@ -108,4 +109,24 @@ test('ordinary users cannot open the site admin dashboard', function () {
         ->actingAs($user)
         ->get(route('admin.index'))
         ->assertForbidden();
+});
+
+
+test('site admin dashboard renders metrics and seven day activity', function () {
+    $admin = User::factory()->create();
+    $admin->forceFill(['is_site_admin' => true])->save();
+
+    $this
+        ->actingAs($admin)
+        ->get(route('admin.index'))
+        ->assertOk()
+        ->assertInertia(
+            fn (Assert $page) =>
+                $page
+                    ->component('Admin/Dashboard')
+                    ->has('stats.users')
+                    ->has('stats.publications')
+                    ->has('activity7d', 7)
+                    ->has('reports.data')
+        );
 });
