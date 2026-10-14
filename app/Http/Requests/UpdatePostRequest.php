@@ -26,12 +26,20 @@ class UpdatePostRequest extends FormRequest
             return true;
         }
 
-        return $post->type === 'poem'
+        $isCollaborator =
+            $post->type === 'poem'
             && PostCollaborator::query()
                 ->where('post_id', $post->id)
                 ->where('user_id', Auth::id())
                 ->where('status', 'accepted')
                 ->exists();
+
+        if (!$isCollaborator) {
+            return false;
+        }
+
+        return !$post->group_id
+            || $post->group?->hasApprovedUser(Auth::id());
     }
 
     /**
