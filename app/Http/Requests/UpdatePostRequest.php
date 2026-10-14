@@ -112,6 +112,57 @@ class UpdatePostRequest extends FormRequest
         ];
     }
 
+    public function after(): array
+    {
+        return [
+            function ($validator) {
+                $post = $this->route('post');
+
+                if (!$post) {
+                    return;
+                }
+
+                $deletedIds = collect($this->input('deleted_file_ids', []))
+                    ->map(fn ($id) => (int) $id)
+                    ->all();
+
+                $remaining = $post->attachments()
+                    ->whereNotIn('id', $deletedIds)
+                    ->get(['id', 'size']);
+
+                $newFiles = collect($this->file('attachments', []));
+
+                if ($remaining->count() + $newFiles->count() > 10) {
+                    $validator->errors()->add(
+                        'attachments',
+                        'A publication may have at most 10 attachments in total.'
+                    );
+                }
+
+                $remainingBytes = (int) $remaining->sum('size');
+                $newBytes = (int) $newFiles->sum(
+                    fn ($file) => $file?->getSize() ?? 0
+                );
+
+                if ($remainingBytes + $newBytes > 90 * 1024 * 1024) {
+                    $validator->errors()->add(
+                        'attachments',
+                        'The total stored attachment size must not exceed 90 MB.'
+                    );
+                }
+
+                $plainBody = trim(strip_tags((string) $this->input('body', '')));
+
+                if ($plainBody === '' && $remaining->isEmpty() && $newFiles->isEmpty()) {
+                    $validator->errors()->add(
+                        'body',
+                        'Add some text or at least one attachment before publishing.'
+                    );
+                }
+            },
+        ];
+    }
+
     public function messages(): array
     {
         return [

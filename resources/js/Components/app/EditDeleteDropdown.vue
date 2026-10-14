@@ -72,7 +72,7 @@ const editAllowed =
 
         return (
             props.user?.id ===
-            authUser.value.id
+            authUser.value?.id
         );
     });
 
@@ -85,7 +85,7 @@ const deleteAllowed =
          */
         if (
             props.user?.id ===
-            authUser.value.id
+            authUser.value?.id
         ) {
             return true;
         }
@@ -98,7 +98,7 @@ const deleteAllowed =
         if (
             props.comment &&
             props.post?.user?.id ===
-                authUser.value.id
+                authUser.value?.id
         ) {
             return true;
         }

@@ -27,6 +27,9 @@ class GroupController extends Controller
         ) {
             $user =
                 $request->user();
+
+            $userId =
+                $user?->id;
     
             $search =
                 trim(
@@ -47,49 +50,40 @@ class GroupController extends Controller
             }
     
             $joinedGroups =
-                Group::query()
-                    ->whereHas(
-                        'groupUsers',
-                        function ($query) use (
-                            $user
-                        ) {
-                            $query
-                                ->where(
-                                    'user_id',
-                                    $user->id
-                                )
-                                ->where(
-                                    'status',
-                                    GroupUserStatus::APPROVED->value
-                                );
-                        }
-                    )
-                    ->with(
-                        'currentUserGroup'
-                    )
-                    ->withCount(
-                        'approvedUsers'
-                    )
-                    ->orderBy('name')
-                    ->get();
+                $userId
+                    ? Group::query()
+                        ->whereHas(
+                            'groupUsers',
+                            function ($query) use ($userId) {
+                                $query
+                                    ->where('user_id', $userId)
+                                    ->where(
+                                        'status',
+                                        GroupUserStatus::APPROVED->value
+                                    );
+                            }
+                        )
+                        ->with('currentUserGroup')
+                        ->withCount('approvedUsers')
+                        ->orderBy('name')
+                        ->get()
+                    : collect();
     
             $discoverGroups =
                 Group::query()
-                    ->whereDoesntHave(
-                        'groupUsers',
-                        function ($query) use (
-                            $user
-                        ) {
-                            $query
-                                ->where(
-                                    'user_id',
-                                    $user->id
-                                )
-                                ->where(
-                                    'status',
-                                    GroupUserStatus::APPROVED->value
-                                );
-                        }
+                    ->when(
+                        $userId,
+                        fn ($query) =>
+                            $query->whereDoesntHave(
+                                'groupUsers',
+                                fn ($membershipQuery) =>
+                                    $membershipQuery
+                                        ->where('user_id', $userId)
+                                        ->where(
+                                            'status',
+                                            GroupUserStatus::APPROVED->value
+                                        )
+                            )
                     )
                     ->with(
                         'currentUserGroup'

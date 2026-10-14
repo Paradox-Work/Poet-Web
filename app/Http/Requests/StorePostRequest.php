@@ -34,7 +34,7 @@ class StorePostRequest extends FormRequest
 
     public function authorize(): bool
     {
-        return true;
+        return $this->user() !== null;
     }
 
     public function rules(): array
@@ -176,11 +176,29 @@ class StorePostRequest extends FormRequest
         ];
     }
 
-    protected function prepareForValidation()
+    protected function prepareForValidation(): void
     {
-        // Add your custom key to the request data
-        $this->merge([
-            'user_id' => auth()->user()->id,
-        ]);
+        if ($this->user()) {
+            $this->merge([
+                'user_id' => $this->user()->id,
+            ]);
+        }
+    }
+
+    public function after(): array
+    {
+        return [
+            function ($validator) {
+                $plainBody = trim(strip_tags((string) $this->input('body', '')));
+                $hasFiles = count($this->file('attachments', [])) > 0;
+
+                if ($plainBody === '' && !$hasFiles) {
+                    $validator->errors()->add(
+                        'body',
+                        'Add some text or at least one attachment before publishing.'
+                    );
+                }
+            },
+        ];
     }
 }

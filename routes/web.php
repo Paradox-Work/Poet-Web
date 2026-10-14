@@ -19,7 +19,7 @@ use App\Http\Controllers\SearchController;
 use App\Http\Controllers\NotificationController;
 
 Route::get('/', [HomeController::class, 'index'])
-    ->middleware(['auth'])->name('dashboard');
+    ->name('dashboard');
 
 Route::get('/u/{user:username}', [ProfileController::class, 'index'])
     ->name('profile');
@@ -28,66 +28,15 @@ Route::get(
     '/g/{group:slug}',
     [GroupController::class, 'profile']
 )->name('group.profile');
+Route::get(
+    '/posts/attachments/{attachment}',
+    [PostAttachmentController::class, 'viewAttachment']
+)->name('post.attachment.view');
 
-Route::middleware('auth')->group(function () {
-
-    
-    Route::post(
-        '/posts', 
-        [PostController::class, 'store']
-    )
-        ->middleware('throttle:20,1')
-        ->name('post.create');
-
-    Route::get(
-        '/write/poem',
-        [PoemController::class, 'writePoem']
-    )->name('poem.write');
-
-    Route::get(
-        '/drafts',
-        [DraftController::class, 'drafts']
-    )->name('draft.index');
-
-    Route::get(
-        '/drafts/latest',
-        [DraftController::class, 'latestDraft']
-    )->name('draft.latest');
-
-    Route::post(
-        '/drafts',
-        [DraftController::class, 'storeDraft']
-    )
-        ->middleware('throttle:90,1')
-        ->name('draft.store');
-
-    Route::put(
-        '/drafts/{post}',
-        [DraftController::class, 'updateDraft']
-    )
-        ->middleware('throttle:90,1')
-        ->name('draft.update');
-
-    Route::put(
-        '/posts/{post}',
-        [PostController::class, 'update']
-    )->name('post.update');
-
-    Route::delete(
-        '/posts/{post}',
-        [PostController::class, 'destroy']
-    )->name('post.destroy');
-
-    Route::get(
-        '/posts/{post}',
-        [PostController::class, 'view']
-    )->name('post.view');
-
-    Route::get(
-        '/posts/attachments/{attachment}/download',
-        [PostAttachmentController::class, 'downloadAttachment']
-    )->name('post.download');
-    
+Route::get(
+    '/posts/attachments/{attachment}/download',
+    [PostAttachmentController::class, 'downloadAttachment']
+)->name('post.download');    
     Route::post(
         '/profile/update-images',
          [ProfileController::class, 'updateImage']

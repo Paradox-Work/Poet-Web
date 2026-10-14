@@ -19,6 +19,7 @@ import {
 } from 'vue';
 
 import {
+    router,
     usePage
 } from '@inertiajs/vue3';
 
@@ -451,6 +452,7 @@ function onCommentDelete(
 >
     <!-- New comment / reply -->
     <div
+        v-if="authUser"
         :class="[
             'flex min-w-0 gap-2',
             parentComment
@@ -461,7 +463,7 @@ function onCommentDelete(
         ]"
     >
         <img
-            v-if="authUser.avatar_url"
+            v-if="authUser?.avatar_url"
             :src="authUser.avatar_url"
             :class="[
                 'shrink-0 rounded-full object-cover',
@@ -650,9 +652,9 @@ function onCommentDelete(
                         <button
                             type="button"
                             @click="
-                                sendCommentReaction(
-                                    comment
-                                )
+                                authUser
+                                    ? sendCommentReaction(comment)
+                                    : router.visit(route('login'))
                             "
                             :disabled="
                                 reactingCommentId ===
@@ -677,9 +679,11 @@ function onCommentDelete(
                             </span>
 
                             {{
-                                comment.current_user_has_reaction
-                                    ? 'Unlike'
-                                    : 'Like'
+                                !authUser
+                                    ? 'Sign in to like'
+                                    : comment.current_user_has_reaction
+                                        ? 'Unlike'
+                                        : 'Like'
                             }}
                         </button>
 

@@ -9,16 +9,17 @@ use Illuminate\Validation\Rule;
 
 class ProfileUpdateRequest extends FormRequest
 {
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'username' => ['required', 'string', 'max:255', 'regex:/^[\w\-\.]+$/i'],
+            'username' => [
+                'required',
+                'string',
+                'max:255',
+                'regex:/^[\w\-\.]+$/i',
+                Rule::unique(User::class, 'username')->ignore($this->user()->id),
+            ],
             'email' => [
                 'required',
                 'string',
@@ -29,11 +30,12 @@ class ProfileUpdateRequest extends FormRequest
             ],
         ];
     }
+
     public function messages(): array
     {
         return [
-            'username.not_regex' => 'The username can only contain letters, numbers, and the characters _, -, and .',
-            
+            'username.regex' => 'The username can only contain letters, numbers, and the characters _, -, and .',
+            'username.unique' => 'That username is already in use.',
         ];
     }
 }

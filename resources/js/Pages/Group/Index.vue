@@ -7,7 +7,8 @@ import {
 import {
     Head,
     Link,
-    router
+    router,
+    usePage
 } from '@inertiajs/vue3';
 
 import {
@@ -54,6 +55,10 @@ const props = defineProps({
         default: ''
     }
 });
+
+const authUser = computed(
+    () => usePage().props.auth.user
+);
 
 const searchInput =
     ref(props.search);
@@ -150,6 +155,11 @@ function goToPage(page) {
 }
 
 function joinGroup(group) {
+    if (!authUser.value) {
+        router.visit(route('login'));
+        return;
+    }
+
     if (
         joiningGroupId.value ||
         group.status === 'pending'
@@ -256,6 +266,7 @@ function membershipLabel(group) {
                     </div>
 
                     <button
+                        v-if="authUser"
                         type="button"
                         @click="
                             showGroupModal = true

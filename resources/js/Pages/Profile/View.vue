@@ -170,8 +170,16 @@
                             v-if="!isMyProfile"
                             class="sm:pb-1"
                         >
+                            <Link
+                                v-if="!authUser"
+                                :href="route('login')"
+                                class="inline-flex items-center rounded-md border border-transparent bg-[var(--poet-accent)] px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-[var(--poet-accent-strong)]"
+                            >
+                                Sign in to follow
+                            </Link>
+
                             <PrimaryButton
-                                v-if="!isCurrentUserFollower"
+                                v-else-if="!isCurrentUserFollower"
                                 @click="followUser"
                             >
                                 Follow
