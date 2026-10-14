@@ -18,7 +18,7 @@ private group
 → approved members only
 ```
 
-Drafts are never part of public timelines.
+Drafts are never part of public timelines. A draft may be edited by its owner or an explicitly attached collaborator, but publishing remains owner-controlled.
 
 The rule is represented by:
 
@@ -90,6 +90,38 @@ Tests cover:
 - outsiders being unable to view/interact with protected content.
 
 A former group member loses interaction access even if they know an old post or comment ID.
+
+## Direct-message security
+
+Conversation routes require authentication and then independently verify participant membership.
+
+A non-participant receives 404 even when they know a conversation ID.
+
+Message bodies are limited to 5000 characters and whitespace-only messages are rejected.
+
+## Bookmark security
+
+Bookmark toggles first verify that the publication is visible to the current user.
+
+Saved-page queries begin from the same visibility query, so losing access to protected content removes it from the returned reading list.
+
+## Reporting and site-admin security
+
+Post/comment reports require visibility of the target.
+
+Site moderation is protected by a separate `users.is_admin` flag, not by group-admin status.
+
+The moderation controller rechecks site-admin status on both dashboard and resolution actions.
+
+## Collaborative-draft security
+
+A collaborator must be explicitly listed in `post_collaborators`.
+
+Only the draft owner can add/remove collaborators and publish the draft.
+
+For group drafts, collaborators must already be approved members of that group.
+
+Collaborators cannot change a shared draft's existing group/type scope during autosave.
 
 ## Attachment security
 
@@ -168,4 +200,5 @@ SearchTest
 VisibilitySecurityTest
 GroupVisibilityTest
 PresentationDemoSeederTest
+ProductionPolishTest
 ```
