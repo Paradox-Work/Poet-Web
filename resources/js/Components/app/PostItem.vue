@@ -728,7 +728,7 @@ async function sendReaction() {
             />
         </button>
 
-        <div class="flex items-end justify-center gap-8">
+        <div class="flex items-end justify-center gap-3 sm:gap-6 lg:gap-8">
             <button
                 type="button"
                 @click="sendReaction"
