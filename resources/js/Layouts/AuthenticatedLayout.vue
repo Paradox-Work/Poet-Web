@@ -67,6 +67,12 @@ const flashError = computed(
     () => page.props.flash?.error ?? null
 );
 
+const unreadMessages = computed(
+    () => Number(
+        page.props.messages?.unread_count ?? 0
+    )
+);
+
 const showCreatePostModal = ref(false);
 const isNavigating = ref(false);
 
@@ -443,6 +449,12 @@ function search() {
                                             :href="route('messages.index')"
                                         >
                                             {{ locale === 'lv' ? 'Ziņas' : 'Messages' }}
+                                            <span
+                                                v-if="unreadMessages"
+                                                class="ms-1 rounded-full bg-[var(--poet-accent)] px-1.5 py-0.5 text-[10px] font-bold text-white"
+                                            >
+                                                {{ unreadMessages }}
+                                            </span>
                                         </DropdownLink>
                                         <DropdownLink
                                             :href="route('collaborations.index')"
@@ -652,7 +664,15 @@ function search() {
                             :href="route('messages.index')"
                             :active="route().current('messages.*')"
                         >
-                            {{ locale === 'lv' ? 'Ziņas' : 'Messages' }}
+                            <span class="inline-flex items-center gap-2">
+                                {{ locale === 'lv' ? 'Ziņas' : 'Messages' }}
+                                <span
+                                    v-if="unreadMessages"
+                                    class="rounded-full bg-[var(--poet-accent)] px-1.5 py-0.5 text-[10px] font-bold text-white"
+                                >
+                                    {{ unreadMessages }}
+                                </span>
+                            </span>
                         </ResponsiveNavLink>
 
                         <ResponsiveNavLink
