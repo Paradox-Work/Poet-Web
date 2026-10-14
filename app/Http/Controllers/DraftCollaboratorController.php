@@ -26,6 +26,18 @@ class DraftCollaboratorController extends Controller
             'You are already the owner of this draft.'
         );
 
+        if (
+            $post->group_id &&
+            !$post->group?->hasApprovedUser(
+                $user->id
+            )
+        ) {
+            abort(
+                422,
+                'Collaborators on a group draft must be approved members of that group.'
+            );
+        }
+
         $post->collaborators()->syncWithoutDetaching([
             $user->id => [
                 'added_by' => $request->user()->id,
