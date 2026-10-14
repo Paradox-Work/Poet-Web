@@ -26,7 +26,7 @@ class PresentationDemoSeeder extends Seeder
 
         DB::transaction(function () {
             $users = collect([
-                ['name' => 'Elza Ozola', 'email' => 'elza@poetweb.lv'],
+                ['name' => 'Elza Ozola', 'email' => 'elza@poetweb.lv', 'is_admin' => true],
                 ['name' => 'Jānis Vējš', 'email' => 'janis@poetweb.lv'],
                 ['name' => 'Marta Liepa', 'email' => 'marta@poetweb.lv'],
                 ['name' => 'Rihards Kalns', 'email' => 'rihards@poetweb.lv'],
@@ -39,6 +39,7 @@ class PresentationDemoSeeder extends Seeder
                         'name' => $data['name'],
                         'password' => 'Demo1234!',
                         'email_verified_at' => now(),
+                        'is_admin' => $data['is_admin'] ?? false,
                     ]
                 );
 
