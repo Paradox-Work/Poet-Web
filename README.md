@@ -182,7 +182,7 @@ Build production frontend assets:
 ./vendor/bin/sail npm run build
 ```
 
-The current qualification-presentation build is verified with 70 passing tests and 286 assertions, plus a successful Vite production build in GitHub Actions.
+The current qualification-presentation build is verified with 86 passing tests and 357 assertions, plus a successful Vite production build in GitHub Actions.
 
 See [docs/testing-and-quality-assurance.md](docs/testing-and-quality-assurance.md).
 
