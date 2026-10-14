@@ -54,6 +54,10 @@ import TabPhotos
 import UserListItem
     from '@/Components/app/UserListItem.vue';
 
+import { useI18n } from '@/i18n';
+
+const { locale, t } = useI18n();
+
 const props = defineProps({
     group: Object,
 
@@ -174,6 +178,9 @@ const groupSettingsForm = useForm({
     auto_approval:
         Boolean(props.group.auto_approval),
 
+    visibility:
+        props.group.visibility ?? 'private',
+
     about:
         props.group.about ?? ''
 });
@@ -234,6 +241,9 @@ function cancelGroupEdit() {
         Boolean(
             props.group.auto_approval
         );
+
+    groupSettingsForm.visibility =
+        props.group.visibility ?? 'private';
 
     groupSettingsForm.about =
         props.group.about ?? '';
@@ -578,7 +588,17 @@ function joinToGroup() {
                                     "
                                     class="rounded-full bg-[var(--poet-accent-soft)] px-2.5 py-1 text-[11px] font-medium text-[var(--poet-accent)]"
                                 >
-                                    Admin
+                                    {{ t('groups.admin') }}
+                                </span>
+
+                                <span
+                                    class="rounded-full border border-[var(--poet-border)] px-2 py-0.5"
+                                >
+                                    {{
+                                        group.visibility === 'public'
+                                            ? t('groups.public')
+                                            : t('groups.private')
+                                    }}
                                 </span>
                             </div>
 
@@ -586,15 +606,14 @@ function joinToGroup() {
                                 class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--poet-muted)] sm:text-sm"
                             >
                                 <span>
-                                    {{ memberCount }}
-                                    member{{ memberCount === 1 ? '' : 's' }}
+                                    {{ t('group.members', { count: memberCount }) }}
                                 </span>
 
                                 <span>
                                     {{
                                         group.auto_approval
-                                            ? 'Open membership'
-                                            : 'Approval required'
+                                            ? t('groups.open_membership')
+                                            : t('groups.approval_required')
                                     }}
                                 </span>
                             </div>
@@ -621,7 +640,7 @@ function joinToGroup() {
                                 <UserPlusIcon
                                     class="h-4 w-4"
                                 />
-                                Invite
+                                {{ locale === 'lv' ? 'Uzaicināt' : 'Invite' }}
                             </button>
 
                             <Link
@@ -629,7 +648,7 @@ function joinToGroup() {
                                 :href="route('login')"
                                 class="rounded-full bg-[var(--poet-accent)] px-4 py-2 text-sm font-medium text-white"
                             >
-                                Login to join
+                                {{ t('group.sign_in_join') }}
                             </Link>
 
                             <button
@@ -644,8 +663,8 @@ function joinToGroup() {
                             >
                                 {{
                                     joinForm.processing
-                                        ? 'Joining...'
-                                        : 'Join group'
+                                        ? t('groups.joining')
+                                        : t('group.join')
                                 }}
                             </button>
 
@@ -661,8 +680,8 @@ function joinToGroup() {
                             >
                                 {{
                                     joinForm.processing
-                                        ? 'Sending...'
-                                        : 'Request to join'
+                                        ? t('groups.sending')
+                                        : t('groups.request_join')
                                 }}
                             </button>
 
@@ -673,7 +692,7 @@ function joinToGroup() {
                                 "
                                 class="rounded-full bg-amber-500/10 px-3 py-2 text-sm font-medium text-amber-500"
                             >
-                                Membership pending
+                                {{ t('groups.pending') }}
                             </span>
                         </div>
                     </div>
@@ -1059,13 +1078,13 @@ function joinToGroup() {
                                             <div
                                                 class="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--poet-muted)]"
                                             >
-                                                Settings
+                                                {{ locale === 'lv' ? 'Iestatījumi' : 'Settings' }}
                                             </div>
 
                                             <h3
                                                 class="mt-1 font-serif text-xl font-semibold text-[var(--poet-text)]"
                                             >
-                                                Edit group
+                                                {{ locale === 'lv' ? 'Rediģēt grupu' : 'Edit group' }}
                                             </h3>
                                         </div>
 
@@ -1074,7 +1093,7 @@ function joinToGroup() {
                                             @click="cancelGroupEdit"
                                             class="rounded-full border border-[var(--poet-border)] px-3 py-2 text-sm text-[var(--poet-muted)] transition hover:bg-[var(--poet-surface-soft)] hover:text-[var(--poet-text)]"
                                         >
-                                            Cancel
+                                            {{ t('group.cancel') }}
                                         </button>
                                     </div>
 
@@ -1083,7 +1102,7 @@ function joinToGroup() {
                                             for="group-name"
                                             class="block text-sm font-medium text-[var(--poet-text)]"
                                         >
-                                            Group name
+                                            {{ t('group.name') }}
                                         </label>
 
                                         <input
@@ -1123,14 +1142,53 @@ function joinToGroup() {
                                             <span
                                                 class="text-sm font-medium text-[var(--poet-text)]"
                                             >
-                                                Automatically approve new members
+                                                {{ t('group.auto_approve') }}
                                             </span>
                                         </label>
 
                                         <p
                                             class="mt-1 text-xs text-[var(--poet-muted)]"
                                         >
-                                            When disabled, new members must be approved by a group administrator.
+                                            {{ locale === 'lv'
+                                                ? 'Ja opcija ir izslēgta, jaunos dalībniekus apstiprina grupas administrators.'
+                                                : 'When disabled, new members must be approved by a group administrator.' }}
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <label
+                                            for="group-visibility"
+                                            class="block text-sm font-medium text-[var(--poet-text)]"
+                                        >
+                                            {{ t('groups.visibility') }}
+                                        </label>
+
+                                        <select
+                                            id="group-visibility"
+                                            v-model="groupSettingsForm.visibility"
+                                            class="mt-2 block w-full rounded-xl border border-[var(--poet-border)] bg-[var(--poet-bg)] text-[var(--poet-text)] focus:border-[var(--poet-accent)] focus:ring-[var(--poet-accent)]"
+                                        >
+                                            <option value="private">
+                                                {{ t('groups.private') }}
+                                            </option>
+                                            <option value="public">
+                                                {{ t('groups.public') }}
+                                            </option>
+                                        </select>
+
+                                        <p class="mt-1 text-xs text-[var(--poet-muted)]">
+                                            {{
+                                                groupSettingsForm.visibility === 'public'
+                                                    ? t('groups.public_help')
+                                                    : t('groups.private_help')
+                                            }}
+                                        </p>
+
+                                        <p
+                                            v-if="groupSettingsForm.errors.visibility"
+                                            class="mt-1 text-sm text-red-500"
+                                        >
+                                            {{ groupSettingsForm.errors.visibility }}
                                         </p>
                                     </div>
 
@@ -1139,7 +1197,7 @@ function joinToGroup() {
                                             for="group-about"
                                             class="block text-sm font-medium text-[var(--poet-text)]"
                                         >
-                                            About group
+                                            {{ t('group.about') }}
                                         </label>
 
                                         <textarea
@@ -1171,8 +1229,8 @@ function joinToGroup() {
                                     >
                                         {{
                                             groupSettingsForm.processing
-                                                ? 'Saving...'
-                                                : 'Save changes'
+                                                ? (locale === 'lv' ? 'Saglabā...' : 'Saving...')
+                                                : (locale === 'lv' ? 'Saglabāt izmaiņas' : 'Save changes')
                                         }}
                                     </button>
                                 </form>
