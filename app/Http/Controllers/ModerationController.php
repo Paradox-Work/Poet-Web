@@ -39,15 +39,28 @@ class ModerationController extends Controller
         return Inertia::render('Admin/Moderation', [
             'metrics' => [
                 'users' => User::query()->count(),
+                'new_users_7d' => User::query()
+                    ->where('created_at', '>=', now()->subDays(7))
+                    ->count(),
                 'published_posts' => Post::query()
                     ->where('status', 'published')
                     ->count(),
+                'publications_7d' => Post::query()
+                    ->where('status', 'published')
+                    ->where('created_at', '>=', now()->subDays(7))
+                    ->count(),
                 'groups' => Group::query()->count(),
                 'comments' => Comment::query()->count(),
+                'comments_7d' => Comment::query()
+                    ->where('created_at', '>=', now()->subDays(7))
+                    ->count(),
                 'pending_reports' => Report::query()
                     ->where('status', 'pending')
                     ->count(),
                 'messages' => DB::table('messages')->count(),
+                'messages_7d' => DB::table('messages')
+                    ->where('created_at', '>=', now()->subDays(7))
+                    ->count(),
                 'bookmarks' => DB::table('bookmarks')->count(),
             ],
             'reports' => $reports,
