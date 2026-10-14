@@ -1,4 +1,19 @@
 <template>
+    <Head :title="`${user.name} · Poet-Web`">
+        <meta
+            name="description"
+            :content="`Poet-Web profile for ${user.name} (@${user.username}).`"
+        />
+        <meta property="og:title" :content="`${user.name} · Poet-Web`" />
+        <meta
+            property="og:description"
+            :content="`Read poetry and publications by ${user.name} on Poet-Web.`"
+        />
+        <meta property="og:type" content="profile" />
+        <meta property="og:url" :content="route('profile', user.username)" />
+        <meta property="og:image" :content="user.avatar_url" />
+    </Head>
+
     <AuthenticatedLayout>
         <div
             class="h-full overflow-hidden bg-[var(--poet-bg)]"
@@ -508,6 +523,7 @@ import {
 } from 'vue';
 
 import {
+    Head,
     router,
     useForm,
     usePage
