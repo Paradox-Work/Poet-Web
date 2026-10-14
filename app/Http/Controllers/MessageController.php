@@ -63,7 +63,12 @@ class MessageController extends Controller
         $this->ensureParticipant($conversation, $request->user()->id);
 
         $data = $request->validate([
-            'body' => ['required', 'string', 'max:5000'],
+            'body' => [
+                'required',
+                'string',
+                'max:5000',
+                'regex:/\S/u',
+            ],
         ]);
 
         $message = Message::query()->create([
