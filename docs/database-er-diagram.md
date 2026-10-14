@@ -1,6 +1,6 @@
 # Poet-Web ER Diagram
 
-The following diagram focuses on the project-domain tables that are most useful in a qualification presentation. Framework/support tables are intentionally omitted.
+The following diagram focuses on project-domain tables that are useful in the qualification presentation. Laravel framework/support tables are intentionally omitted.
 
 ```mermaid
 erDiagram
@@ -10,19 +10,35 @@ erDiagram
     USERS ||--o{ GROUP_USERS : joins
     GROUPS ||--o{ GROUP_USERS : contains
     GROUPS ||--o{ POSTS : contains
+
     POSTS ||--o{ POST_ATTACHMENTS : has
     POSTS ||--o{ COMMENTS : receives
     COMMENTS ||--o{ COMMENTS : replies
+
     USERS ||--o{ FOLLOWERS : follows
     USERS ||--o{ REACTIONS : creates
     POSTS ||--o{ REACTIONS : reacts_to
     COMMENTS ||--o{ REACTIONS : reacts_to
+
+    USERS ||--o{ BOOKMARKS : saves
+    POSTS ||--o{ BOOKMARKS : saved_as
+
+    USERS ||--o{ POST_COLLABORATORS : collaborates
+    POSTS ||--o{ POST_COLLABORATORS : shared_with
+
+    CONVERSATIONS ||--o{ CONVERSATION_USER : participants
+    USERS ||--o{ CONVERSATION_USER : participates
+    CONVERSATIONS ||--o{ MESSAGES : contains
+    USERS ||--o{ MESSAGES : sends
+
+    USERS ||--o{ REPORTS : submits
 
     USERS {
         bigint id PK
         string name
         string username UK
         string email UK
+        boolean is_admin
         string avatar_path
         string cover_path
         bigint pinned_post_id
@@ -100,86 +116,137 @@ erDiagram
         bigint user_id FK
         bigint follower_id FK
     }
+
+    BOOKMARKS {
+        bigint id PK
+        bigint user_id FK
+        bigint post_id FK
+    }
+
+    POST_COLLABORATORS {
+        bigint id PK
+        bigint post_id FK
+        bigint user_id FK
+        bigint added_by FK
+    }
+
+    CONVERSATIONS {
+        bigint id PK
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    CONVERSATION_USER {
+        bigint id PK
+        bigint conversation_id FK
+        bigint user_id FK
+        timestamp last_read_at
+    }
+
+    MESSAGES {
+        bigint id PK
+        bigint conversation_id FK
+        bigint user_id FK
+        text body
+    }
+
+    REPORTS {
+        bigint id PK
+        bigint reporter_id FK
+        string reportable_type
+        bigint reportable_id
+        string reason
+        string status
+        bigint reviewed_by FK
+        timestamp reviewed_at
+    }
 ```
 
-## Important relationships to explain
+## Core relationships to explain
 
-### Users and publications
+For the presentation, do not try to explain every line of the diagram.
 
-A user can create many publications.
-
-A publication may be:
-
-- a standalone public publication;
-- a publication inside a group.
-
-### Groups and memberships
-
-`group_users` represents membership and stores:
-
-- membership status;
-- member/admin role;
-- invitation token information.
-
-The pair `group_id + user_id` is unique.
-
-### Group visibility
-
-`groups.visibility` is:
-
-```text
-public
-private
-```
-
-Public group publications can be read by guests.
-
-Private group publications require approved membership.
-
-### Comments
-
-Comments belong to both a user and a post.
-
-`parent_id` is self-referencing, allowing replies/threading.
-
-### Reactions
-
-Reactions are polymorphic:
-
-```text
-object_type
-object_id
-```
-
-This allows the same reaction table to support both posts and comments.
-
-### Followers
-
-The followers table represents user-to-user relationships:
-
-```text
-user_id
-→ followed user
-
-follower_id
-→ user who follows
-```
-
-## Presentation advice
-
-Use the diagram to explain relationships, not every field.
-
-The most useful sequence is:
+### Publishing
 
 ```text
 users
 → posts
 → comments / reactions / attachments
+```
 
+A publication may be standalone or belong to a group.
+
+### Groups
+
+```text
 users
 → group_users
 → groups
 → group posts
 ```
 
-That is enough to show database depth without spending several presentation slides zooming into the same schema.
+`group_users` stores membership status/role.
+
+Group visibility and membership approval are separate controls.
+
+### Social reading
+
+```text
+users
+→ followers
+
+users
+→ bookmarks
+→ posts
+```
+
+Bookmarks are private reading-list entries.
+
+### Collaborative drafts
+
+```text
+post
+→ post_collaborators
+→ users
+```
+
+The post owner stays the publishing authority while collaborators may edit/autosave an explicitly shared draft.
+
+### Direct messages
+
+```text
+users
+→ conversation_user
+→ conversations
+→ messages
+```
+
+`last_read_at` on the participant pivot supports unread counts.
+
+### Moderation
+
+Reports use:
+
+```text
+reportable_type
+reportable_id
+```
+
+to identify a reported post/comment/user.
+
+The report also stores the reporter and optional reviewing site administrator.
+
+## Presentation advice
+
+The main ER slide can emphasize only these areas:
+
+```text
+Users / Posts
+Groups / Membership
+Comments / Reactions
+Bookmarks
+Messages
+Reports
+```
+
+Keep the complete diagram available for questions, but do not spend several slides zooming into every field.
