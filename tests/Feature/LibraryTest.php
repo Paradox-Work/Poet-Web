@@ -3,6 +3,7 @@
 use App\Models\Bookmark;
 use App\Models\ReadingList;
 use App\Models\User;
+use Inertia\Testing\AssertableInertia as Assert;
 
 test('users can toggle bookmarks on visible publications', function () {
     $user = User::factory()->create();
@@ -76,4 +77,37 @@ test('reading lists are private to their owner', function () {
             ])
         )
         ->assertForbidden();
+});
+
+
+test('library page renders bookmarks and personal reading lists', function () {
+    $user = User::factory()->create();
+    $author = User::factory()->create();
+    $post = poetTestPost($author, ['title' => 'Saved poem']);
+
+    Bookmark::query()->create([
+        'user_id' => $user->id,
+        'post_id' => $post->id,
+    ]);
+
+    $list = ReadingList::query()->create([
+        'user_id' => $user->id,
+        'name' => 'Read later',
+    ]);
+
+    $list->posts()->attach($post->id);
+
+    $this
+        ->actingAs($user)
+        ->get(route('library.index'))
+        ->assertOk()
+        ->assertInertia(
+            fn (Assert $page) =>
+                $page
+                    ->component('Library/Index')
+                    ->has('bookmarks.data', 1)
+                    ->has('lists', 1)
+                    ->where('lists.0.name', 'Read later')
+                    ->has('lists.0.posts', 1)
+        );
 });
