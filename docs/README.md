@@ -61,10 +61,19 @@ The application code and automated tests remain the source of truth. When routes
 - [Group publication flow](group-post-flow.md)
 - [Group settings update](group-update-flow.md)
 
-## Social and notifications
+## Social, library, collaboration, and messaging
 
 - [User follow flow](user-follow-flow.md)
 - [Content notification flow](content-notification-flow.md)
+- [Direct messaging](direct-messaging-flow.md)
+- [Bookmarks and reading lists](library-reading-lists.md)
+- [Poem collaboration](collaboration-flow.md)
+
+## Production-style platform features
+
+- [Reporting, moderation, and admin analytics](moderation-admin-analytics.md)
+- [Discovery, SEO, sharing, and accessibility](discovery-seo-accessibility.md)
+- [Legal, community, and error pages](legal-error-pages.md)
 
 ## Development tools
 
