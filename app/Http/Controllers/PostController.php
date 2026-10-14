@@ -242,8 +242,9 @@ class PostController extends Controller
     
     
                 foreach ($attachmentsToDelete as $attachment) {
-                    Storage::disk('local')
-                        ->delete($attachment->path);
+                    $this->deleteAttachmentFile(
+                        $attachment->path
+                    );
                 }
     
             } catch (\Throwable $exception) {

@@ -375,13 +375,13 @@ function membershipLabel(group) {
                         <div
                             class="mt-2 font-medium text-[var(--poet-text)]"
                         >
-                            You haven't joined a group yet.
+                            {{ authUser ? "You haven't joined a group yet." : "Sign in to join writing groups." }}
                         </div>
 
                         <p
                             class="mt-1 text-sm text-[var(--poet-muted)]"
                         >
-                            Discover a writing space below or start your own.
+                            {{ authUser ? 'Discover a writing space below or start your own.' : 'You can browse groups below before creating an account.' }}
                         </p>
                     </div>
                 </section>
@@ -592,6 +592,7 @@ function membershipLabel(group) {
         </div>
 
         <GroupModal
+            v-if="authUser"
             v-model="showGroupModal"
             @created="onGroupCreated"
         />

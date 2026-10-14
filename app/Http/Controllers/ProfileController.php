@@ -369,6 +369,11 @@ class ProfileController extends Controller
 
         $user = $request->user();
 
+        $profileImagePaths = array_filter([
+            $user->cover_path,
+            $user->avatar_path,
+        ]);
+
         DB::transaction(function () use ($user) {
             Follower::query()
                 ->where('user_id', $user->id)
@@ -416,6 +421,10 @@ class ProfileController extends Controller
 
             $user->delete();
         });
+
+        foreach ($profileImagePaths as $path) {
+            Storage::disk('public')->delete($path);
+        }
 
         Auth::logout();
 
