@@ -5,6 +5,17 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
         <title inertia>{{ config('app.name', 'Poet-Web') }}</title>
+        <meta
+            name="description"
+            content="Poet-Web — a Latvian-first platform for reading, publishing, discussing, and organizing poetry."
+        >
+        <meta property="og:site_name" content="Poet-Web">
+        <meta property="og:type" content="website">
+        <meta
+            property="og:description"
+            content="Read, write, discuss, and organize poetry in Poet-Web."
+        >
+        <meta name="twitter:card" content="summary">
 
         <script>
             (() => {
@@ -47,6 +58,13 @@
         @inertiaHead
     </head>
     <body class="bg-[var(--poet-bg)] font-sans text-[var(--poet-text)] antialiased lg:h-full lg:overflow-hidden">
+        <a
+            href="#main-content"
+            class="poet-skip-link"
+        >
+            Skip to main content
+        </a>
+
         @inertia
     </body>
 </html>
