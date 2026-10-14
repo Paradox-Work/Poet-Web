@@ -1,5 +1,6 @@
 <script setup>
 import {
+    computed,
     onBeforeUnmount,
     onMounted,
     ref
@@ -54,7 +55,17 @@ const showingNavigationDropdown = ref(false);
 
 const isDark = ref(false);
 
-const authUser = usePage().props.auth.user;
+const page = usePage();
+
+const authUser = page.props.auth.user;
+
+const flashSuccess = computed(
+    () => page.props.flash?.success ?? null
+);
+
+const flashError = computed(
+    () => page.props.flash?.error ?? null
+);
 
 const showCreatePostModal = ref(false);
 const isNavigating = ref(false);
@@ -157,6 +168,23 @@ function search() {
         >
             {{ locale === 'lv' ? 'Pāriet uz saturu' : 'Skip to content' }}
         </a>
+
+        <div
+            v-if="flashSuccess || flashError"
+            class="pointer-events-none fixed right-4 top-20 z-[180] max-w-sm"
+            aria-live="polite"
+        >
+            <div
+                :class="[
+                    'rounded-xl px-4 py-3 text-sm font-medium text-white shadow-xl',
+                    flashError
+                        ? 'bg-red-500'
+                        : 'bg-emerald-500'
+                ]"
+            >
+                {{ flashError || flashSuccess }}
+            </div>
+        </div>
 
         <div
             v-if="isNavigating"
