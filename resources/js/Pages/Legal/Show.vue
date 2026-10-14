@@ -96,7 +96,12 @@ const content = computed(() => {
 </script>
 
 <template>
-    <Head :title="content.title" />
+    <Head :title="content.title">
+        <meta name="description" :content="content.intro" />
+        <meta property="og:title" :content="`${content.title} · Poet-Web`" />
+        <meta property="og:description" :content="content.intro" />
+        <meta property="og:type" content="website" />
+    </Head>
 
     <AuthenticatedLayout>
         <div class="mx-auto max-w-4xl px-4 py-8">
