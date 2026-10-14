@@ -27,6 +27,16 @@ class HomeController extends Controller
             $source = 'for_you';
         }
 
+        $sort = $request->string('sort')->toString();
+
+        if (!in_array(
+            $sort,
+            ['newest', 'popular', 'discussed', 'trending'],
+            true
+        )) {
+            $sort = 'newest';
+        }
+
         $genre = trim($request->string('genre')->toString());
         if (mb_strlen($genre) > 50) {
             $genre = mb_substr($genre, 0, 50);
@@ -71,8 +81,32 @@ class HomeController extends Controller
                 ->whereJsonContains('posts.poem_genres', $genre);
         }
 
+        if ($sort !== 'newest') {
+            $postsQuery->withCount('comments');
+        }
+
+        if ($sort === 'popular') {
+            $postsQuery
+                ->reorder()
+                ->orderByDesc('reactions_count')
+                ->orderByDesc('posts.created_at');
+        } elseif ($sort === 'discussed') {
+            $postsQuery
+                ->reorder()
+                ->orderByDesc('comments_count')
+                ->orderByDesc('posts.created_at');
+        } elseif ($sort === 'trending') {
+            $postsQuery
+                ->reorder()
+                ->orderByDesc('reactions_count')
+                ->orderByDesc('comments_count')
+                ->orderByDesc('posts.created_at');
+        }
+
         $posts = PostResource::collection(
-            $postsQuery->paginate(10)->withQueryString()
+            $postsQuery
+                ->paginate(10)
+                ->withQueryString()
         );
 
         if ($request->wantsJson()) {
@@ -85,6 +119,7 @@ class HomeController extends Controller
                 'feed' => $feed,
                 'source' => $source,
                 'genre' => $genre !== '' ? $genre : null,
+                'sort' => $sort,
             ],
             'genreCounts' => $genreCounts,
         ]);
