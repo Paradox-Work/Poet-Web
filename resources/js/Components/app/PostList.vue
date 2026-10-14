@@ -9,6 +9,9 @@ import {
 } from 'vue';
 
 import axios from 'axios';
+import { useI18n } from '@/i18n';
+
+const { locale } = useI18n();
 
 import PostItem
     from '@/Components/app/PostItem.vue';
@@ -720,7 +723,11 @@ function removePost(postId) {
             v-else
             class="m-auto rounded-2xl border border-dashed border-[var(--poet-border)] bg-[var(--poet-surface)] px-6 py-16 text-center text-sm text-[var(--poet-muted)]"
         >
-            Nothing in your feed yet.
+            {{
+                locale === 'lv'
+                    ? 'Šajā plūsmā vēl nav publikāciju.'
+                    : 'Nothing in this feed yet.'
+            }}
         </div>
 
         <div
@@ -736,14 +743,22 @@ function removePost(postId) {
             <span
                 class="ml-3 hidden sm:inline"
             >
-                swipe · wheel · arrow keys
+                {{
+                    locale === 'lv'
+                        ? 'velc · ritenītis · bulttaustiņi'
+                        : 'swipe · wheel · arrow keys'
+                }}
             </span>
 
             <span
                 v-if="loadingMore"
                 class="ml-3"
             >
-                loading more…
+                {{
+                    locale === 'lv'
+                        ? 'ielādē vēl…'
+                        : 'loading more…'
+                }}
             </span>
         </div>
 
@@ -802,7 +817,11 @@ function removePost(postId) {
             v-if="loadingMore"
             class="py-3 text-center text-sm text-gray-400"
         >
-            Loading more posts...
+            {{
+                locale === 'lv'
+                    ? 'Ielādē vēl publikācijas...'
+                    : 'Loading more publications...'
+            }}
         </div>
 
         <PostModal
