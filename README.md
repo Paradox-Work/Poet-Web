@@ -27,18 +27,26 @@ Visitors can browse public standalone publications and public-group content befo
 - User registration, authentication, password reset, and email verification
 - User profiles with cover and avatar images
 - Follow / unfollow users
+- One-to-one direct messaging with unread counts and live polling
+- Saved publications / personal reading list
 - Create, edit, pin, and soft-delete posts and poems
+- Shared poem drafts with explicit collaborators and owner-controlled publishing
 - Rich-text poem/post content with server-side sanitization
 - Private attachment storage with authorization-controlled view/download routes
 - Nested comments and replies
 - Comment and post reactions
 - Groups, invitations, join requests, roles, and moderation
+- User reporting, site-wide moderation queue, and site-admin overview metrics
 - Public and private groups with independent membership approval
 - Private group publications restricted to approved members
 - Notifications
 - Photo galleries
 - Dark and light themes
 - Global search for users, groups, and visible publications
+- Non-AI discovery sorting by newest, most liked, and most discussed
+- Public Privacy, Terms, Community Guidelines, and Copyright pages
+- Branded 403/404/419/429/500 error pages
+- Sitemap, robots.txt, publication social metadata, skip navigation, and reduced-motion support
 - Automated Laravel feature tests and GitHub Actions CI
 
 ## Access Model
@@ -76,22 +84,20 @@ See:
 
 ## Pulling the Latest Version
 
-If the repository is already cloned:
+If the repository is already cloned and your current branch already tracks the project branch you use locally:
 
 ```bash
 git status
-git switch main
-git pull origin main
+git pull
 ```
 
-If `git status` shows local changes you want to keep, commit or stash them before pulling.
+If `git status` shows local changes you want to keep, commit or stash them before pulling. Check `git branch --show-current` before changing branches; switching branches is not required for an ordinary pull when you are already on the correct branch.
 
 After pulling the current qualification-project hardening changes, run:
 
 ```bash
 ./vendor/bin/sail up -d
 ./vendor/bin/sail artisan migrate
-./vendor/bin/sail npm ci
 ./vendor/bin/sail npm run dev
 ```
 
@@ -170,7 +176,7 @@ Build production frontend assets:
 ./vendor/bin/sail npm run build
 ```
 
-The current qualification-presentation build is verified with 70 passing tests and 286 assertions, plus a successful Vite production build in GitHub Actions.
+The current production-polish build is verified with 79 passing tests and 368 assertions, plus successful database migrations and a Vite production build in GitHub Actions.
 
 See [docs/testing-and-quality-assurance.md](docs/testing-and-quality-assurance.md).
 
@@ -203,6 +209,11 @@ Start with:
 - [Testing and quality assurance](docs/testing-and-quality-assurance.md)
 - [Presentation demo guide](docs/presentation-demo-guide.md)
 - [ER diagram for presentation](docs/database-er-diagram.md)
+- [Direct messaging](docs/direct-messaging-flow.md)
+- [Bookmarks / reading list](docs/bookmarks-reading-list.md)
+- [Reporting and moderation](docs/reporting-and-moderation.md)
+- [Collaborative drafts](docs/collaborative-drafts.md)
+- [SEO, accessibility, and production polish](docs/seo-accessibility-production-polish.md)
 
 ## Repository
 
