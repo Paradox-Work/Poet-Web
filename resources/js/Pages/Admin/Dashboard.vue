@@ -7,6 +7,10 @@ import { useI18n } from '@/i18n';
 const props = defineProps({
     stats: Object,
     reports: Object,
+    suspendedUsers: {
+        type: Array,
+        default: () => [],
+    },
 });
 
 const { locale } = useI18n();
@@ -66,6 +70,40 @@ function unsuspend(userId) {
                         {{ key.replaceAll('_', ' ') }}
                     </div>
                     <div class="mt-1 text-3xl font-bold">{{ value }}</div>
+                </div>
+            </section>
+
+            <section
+                v-if="suspendedUsers.length"
+                class="mb-8"
+            >
+                <div class="mb-3">
+                    <div class="poet-kicker">
+                        {{ locale === 'lv' ? 'Konti' : 'Accounts' }}
+                    </div>
+                    <h2 class="font-serif text-2xl font-semibold">
+                        {{ locale === 'lv' ? 'Apturētie lietotāji' : 'Suspended users' }}
+                    </h2>
+                </div>
+
+                <div class="grid gap-3 md:grid-cols-2">
+                    <article
+                        v-for="user in suspendedUsers"
+                        :key="user.id"
+                        class="poet-card flex items-center justify-between gap-4 p-4"
+                    >
+                        <div class="min-w-0">
+                            <div class="truncate font-semibold">{{ user.name }}</div>
+                            <div class="truncate text-xs text-[var(--poet-muted)]">@{{ user.username }}</div>
+                        </div>
+                        <button
+                            type="button"
+                            class="rounded-lg border border-[var(--poet-border)] px-3 py-1.5 text-xs font-semibold"
+                            @click="unsuspend(user.id)"
+                        >
+                            {{ locale === 'lv' ? 'Atjaunot piekļuvi' : 'Unsuspend' }}
+                        </button>
+                    </article>
                 </div>
             </section>
 
