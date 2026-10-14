@@ -386,8 +386,8 @@ See [Presentation demo guide](presentation-demo-guide.md).
 The current main qualification build is verified by GitHub Actions with:
 
 ```text
-86 tests passed
-357 assertions
+90 tests passed
+415 assertions
 0 failures
 ```
 
