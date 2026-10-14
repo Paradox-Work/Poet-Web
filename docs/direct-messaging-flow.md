@@ -92,6 +92,8 @@ A failed polling request is silent and retried on the next interval.
 
 `conversation_user.last_read_at` tracks when each participant last viewed the conversation.
 
+The shared Inertia layout also calculates an authenticated user's total unread direct-message count. Navigation shows a badge while unread messages exist, and opening/polling the conversation updates read state.
+
 Conversation summaries count messages:
 
 ```text
