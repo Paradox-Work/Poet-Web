@@ -24,6 +24,7 @@ class Group extends Model
         'name',
         'user_id',
         'auto_approval',
+        'visibility',
         'about',
         'cover_path',
         'thumbnail_path',

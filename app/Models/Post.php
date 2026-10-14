@@ -86,22 +86,21 @@ class Post extends Model
             return true;
         }
 
+        $group = $this->group()->first();
+
+        if (!$group) {
+            return false;
+        }
+
+        if ($group->visibility === 'public') {
+            return true;
+        }
+
         if (!$userId) {
             return false;
         }
 
-        return $this->group()
-            ->whereHas(
-                'groupUsers',
-                fn (Builder $query) =>
-                    $query
-                        ->where('user_id', $userId)
-                        ->where(
-                            'status',
-                            GroupUserStatus::APPROVED->value
-                        )
-            )
-            ->exists();
+        return $group->hasApprovedUser($userId);
     }
 
     public static function postsForTimeline(?int $userId): Builder
@@ -109,7 +108,16 @@ class Post extends Model
         return static::query()
             ->where('posts.status', 'published')
             ->where(function (Builder $query) use ($userId) {
-                $query->whereNull('posts.group_id');
+                $query
+                    ->whereNull('posts.group_id')
+                    ->orWhereHas(
+                        'group',
+                        fn (Builder $groupQuery) =>
+                            $groupQuery->where(
+                                'visibility',
+                                'public'
+                            )
+                    );
 
                 if ($userId) {
                     $query->orWhereHas(

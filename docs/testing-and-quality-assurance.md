@@ -19,8 +19,8 @@ Feature tests act like automated HTTP clients. They create test data, authentica
 At the qualification hardening checkpoint, GitHub Actions completed successfully with:
 
 ```text
-63 tests passed
-244 assertions
+70 tests passed
+286 assertions
 0 failures
 ```
 
@@ -52,6 +52,10 @@ The Vite production build also completed successfully.
 
 ### Groups
 
+- public vs private group publication visibility;
+- guest access to public group content;
+- denial of private group content to guests/outsiders;
+- admin visibility updates and validation;
 - join request status;
 - admin-only approval;
 - approved-member publication;
@@ -81,10 +85,17 @@ The Vite production build also completed successfully.
 
 ### Guest access
 
+- Latvian-first guest interface with English switch (frontend build verified);
 - public Home feed;
 - public search;
 - public profile publications;
 - no private user fields.
+
+### Presentation demo data
+
+- local presentation seeder executes successfully;
+- public and private demo groups are created;
+- Latvian demo publication data is created.
 
 ### Revoked group access
 

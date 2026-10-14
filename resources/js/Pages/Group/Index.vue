@@ -26,6 +26,10 @@ import CompactPaginator
 import GroupModal
     from '@/Components/app/GroupModal.vue';
 
+import { useI18n } from '@/i18n';
+
+const { locale, t } = useI18n();
+
 const props = defineProps({
     joinedGroups: {
         type: Array,
@@ -203,30 +207,30 @@ function groupActionLabel(group) {
         group.id
     ) {
         return group.auto_approval
-            ? 'Joining...'
-            : 'Sending...';
+            ? t('groups.joining')
+            : t('groups.sending');
     }
 
     if (group.status === 'pending') {
-        return 'Pending';
+        return t('groups.pending');
     }
 
     return group.auto_approval
-        ? 'Join'
-        : 'Request to join';
+        ? t('groups.join')
+        : t('groups.request_join');
 }
 
 function membershipLabel(group) {
     if (group.role === 'admin') {
-        return 'Admin';
+        return t('groups.admin');
     }
 
-    return 'Member';
+    return t('groups.member');
 }
 </script>
 
 <template>
-    <Head title="Groups" />
+    <Head :title="t('groups.kicker')" />
 
     <AuthenticatedLayout>
         <div
@@ -249,19 +253,21 @@ function membershipLabel(group) {
                         <div
                             class="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--poet-muted)]"
                         >
-                            Groups
+                            {{ t('groups.kicker') }}
                         </div>
 
                         <h1
                             class="mt-1 font-serif text-3xl font-semibold text-[var(--poet-text)]"
                         >
-                            Your writing spaces.
+                            {{ t('groups.title') }}
                         </h1>
 
                         <p
                             class="mt-1 max-w-xl text-sm text-[var(--poet-muted)]"
                         >
-                            Return to the groups you know, or find a new place to write with others.
+                            {{ locale === 'lv'
+                                ? 'Atgriezies pazīstamajās kopienās vai atrodi jaunu vietu, kur rakstīt kopā ar citiem.'
+                                : 'Return to the groups you know, or find a new place to write with others.' }}
                         </p>
                     </div>
 
@@ -274,7 +280,7 @@ function membershipLabel(group) {
                         class="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--poet-accent)] px-4 py-2.5 text-sm font-medium text-white transition hover:-translate-y-0.5 hover:shadow-md"
                     >
                         <PlusIcon class="h-4 w-4" />
-                        New group
+                        {{ t('groups.new') }}
                     </button>
                 </header>
 
@@ -286,14 +292,13 @@ function membershipLabel(group) {
                             <h2
                                 class="font-serif text-xl font-semibold text-[var(--poet-text)]"
                             >
-                                Your groups
+                                {{ t('groups.yours') }}
                             </h2>
 
                             <p
                                 class="text-xs text-[var(--poet-muted)]"
                             >
-                                {{ joinedCount }}
-                                joined writing space{{ joinedCount === 1 ? '' : 's' }}
+                                {{ t('groups.joined_spaces', { count: joinedCount }) }}
                             </p>
                         </div>
                     </div>
@@ -346,8 +351,7 @@ function membershipLabel(group) {
                                     class="mt-1 flex items-center justify-between gap-2 text-[11px] text-[var(--poet-muted)]"
                                 >
                                     <span>
-                                        {{ group.member_count }}
-                                        member{{ group.member_count === 1 ? '' : 's' }}
+                                        {{ t('group.members', { count: group.member_count }) }}
                                     </span>
 
                                     <span
@@ -375,13 +379,13 @@ function membershipLabel(group) {
                         <div
                             class="mt-2 font-medium text-[var(--poet-text)]"
                         >
-                            {{ authUser ? "You haven't joined a group yet." : "Sign in to join writing groups." }}
+                            {{ authUser ? t('groups.none_member') : t('groups.none_guest') }}
                         </div>
 
                         <p
                             class="mt-1 text-sm text-[var(--poet-muted)]"
                         >
-                            {{ authUser ? 'Discover a writing space below or start your own.' : 'You can browse groups below before creating an account.' }}
+                            {{ authUser ? t('groups.none_member_hint') : t('groups.none_guest_hint') }}
                         </p>
                     </div>
                 </section>
@@ -394,13 +398,13 @@ function membershipLabel(group) {
                             <h2
                                 class="font-serif text-xl font-semibold text-[var(--poet-text)]"
                             >
-                                Discover
+                                {{ t('groups.discover') }}
                             </h2>
 
                             <p
                                 class="text-xs text-[var(--poet-muted)]"
                             >
-                                Find groups by name or what they write about.
+                                {{ t('groups.discover_hint') }}
                             </p>
                         </div>
 
@@ -418,7 +422,7 @@ function membershipLabel(group) {
                                 <input
                                     v-model="searchInput"
                                     type="search"
-                                    placeholder="Search groups..."
+                                    :placeholder="t('groups.search')"
                                     class="w-full rounded-full border border-[var(--poet-border)] bg-[var(--poet-surface)] py-2 pl-9 pr-4 text-sm text-[var(--poet-text)] placeholder:text-[var(--poet-muted)] focus:border-[var(--poet-accent)] focus:ring-[var(--poet-accent)]"
                                 />
                             </div>
@@ -427,7 +431,7 @@ function membershipLabel(group) {
                                 type="submit"
                                 class="rounded-full bg-[var(--poet-accent)] px-4 py-2 text-sm font-medium text-white transition hover:-translate-y-0.5 hover:shadow"
                             >
-                                Search
+                                {{ locale === 'lv' ? 'Meklēt' : 'Search' }}
                             </button>
 
                             <button
@@ -436,7 +440,7 @@ function membershipLabel(group) {
                                 @click="clearSearch"
                                 class="rounded-full border border-[var(--poet-border)] px-3 py-2 text-sm text-[var(--poet-muted)] transition hover:bg-[var(--poet-surface-soft)] hover:text-[var(--poet-text)]"
                             >
-                                Clear
+                                {{ locale === 'lv' ? 'Notīrīt' : 'Clear' }}
                             </button>
                         </form>
                     </div>
@@ -502,10 +506,20 @@ function membershipLabel(group) {
                                         </Link>
 
                                         <div
-                                            class="mt-1 text-xs text-[var(--poet-muted)]"
+                                            class="mt-1 flex flex-wrap items-center gap-2 text-xs text-[var(--poet-muted)]"
                                         >
-                                            {{ group.member_count }}
-                                            member{{ group.member_count === 1 ? '' : 's' }}
+                                            <span>
+                                                {{ t('group.members', { count: group.member_count }) }}
+                                            </span>
+                                            <span
+                                                class="rounded-full border border-[var(--poet-border)] px-2 py-0.5"
+                                            >
+                                                {{
+                                                    group.visibility === 'public'
+                                                        ? t('groups.public')
+                                                        : t('groups.private')
+                                                }}
+                                            </span>
                                         </div>
                                     </div>
 
@@ -513,7 +527,7 @@ function membershipLabel(group) {
                                         v-if="group.status === 'pending'"
                                         class="shrink-0 rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-500"
                                     >
-                                        Pending
+                                        {{ t('groups.pending') }}
                                     </span>
                                 </div>
 
@@ -522,7 +536,7 @@ function membershipLabel(group) {
                                 >
                                     {{
                                         group.description ||
-                                        'No description yet.'
+                                        (locale === 'lv' ? 'Apraksta vēl nav.' : 'No description yet.')
                                     }}
                                 </p>
 
@@ -538,7 +552,7 @@ function membershipLabel(group) {
                                         "
                                         class="text-sm font-medium text-[var(--poet-text)] transition hover:text-[var(--poet-accent)]"
                                     >
-                                        View group
+                                        {{ locale === 'lv' ? 'Skatīt grupu' : 'View group' }}
                                     </Link>
 
                                     <button
@@ -568,13 +582,13 @@ function membershipLabel(group) {
                         <div
                             class="font-serif text-lg font-semibold text-[var(--poet-text)]"
                         >
-                            No groups found.
+                            {{ locale === 'lv' ? 'Grupas netika atrastas.' : 'No groups found.' }}
                         </div>
 
                         <p
                             class="mt-1 text-sm text-[var(--poet-muted)]"
                         >
-                            Try another search or create a new writing space.
+                            {{ locale === 'lv' ? 'Pamēģini citu meklējumu vai izveido jaunu rakstīšanas kopienu.' : 'Try another search or create a new writing space.' }}
                         </p>
                     </div>
 

@@ -18,6 +18,10 @@ import CompactPaginator
 import AuthenticatedLayout
     from '@/Layouts/AuthenticatedLayout.vue';
 
+import { useI18n } from '@/i18n';
+
+const { t } = useI18n();
+
 const props = defineProps({
     users: Object,
     groups: Object,
@@ -75,13 +79,13 @@ function goToPage(
                     <div
                         class="poet-kicker"
                     >
-                        Search
+                        {{ t('search.kicker') }}
                     </div>
 
                     <h1
                         class="poet-title mt-1 text-2xl"
                     >
-                        Results for “{{ search }}”
+                        {{ t('search.results', { query: search }) }}
                     </h1>
                 </div>
 
@@ -100,7 +104,7 @@ function goToPage(
                             <h2
                                 class="font-serif text-lg font-semibold"
                             >
-                                Users
+                                {{ t('search.users') }}
                             </h2>
                         </div>
 
@@ -119,7 +123,7 @@ function goToPage(
                                 "
                                 class="py-8 text-center text-sm text-[var(--poet-muted)]"
                             >
-                                No users were found.
+                                {{ t('search.no_users') }}
                             </div>
                         </div>
 
@@ -152,7 +156,7 @@ function goToPage(
                             <h2
                                 class="font-serif text-lg font-semibold"
                             >
-                                Groups
+                                {{ t('search.groups') }}
                             </h2>
                         </div>
 
@@ -171,7 +175,7 @@ function goToPage(
                                 "
                                 class="py-8 text-center text-sm text-[var(--poet-muted)]"
                             >
-                                No groups were found.
+                                {{ t('search.no_groups') }}
                             </div>
                         </div>
 
@@ -202,7 +206,7 @@ function goToPage(
                     <h2
                         class="mb-2 font-serif text-lg font-semibold"
                     >
-                        Publications
+                        {{ t('search.publications') }}
                     </h2>
 
                     <PostList
@@ -215,7 +219,7 @@ function goToPage(
                         v-else
                         class="poet-card py-10 text-center text-sm text-[var(--poet-muted)]"
                     >
-                        No publications were found.
+                        {{ t('search.no_publications') }}
                     </div>
                 </section>
             </div>

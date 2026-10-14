@@ -25,7 +25,10 @@ import axios from 'axios';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import TiptapEditor from '@/Components/app/TiptapEditor.vue';
 import { getPoemForm, poemForms } from '@/data/poemForms.js';
+import { useI18n } from '@/i18n';
 import { poemGenres } from '@/data/poemGenres.js';
+
+const { locale } = useI18n();
 
 const props = defineProps({
     drafts: {
@@ -413,7 +416,7 @@ if (props.editPoem) {
 </script>
 
 <template>
-    <Head title="Write poem" />
+    <Head :title="locale === 'lv' ? 'Rakstīt dzejoli' : 'Write poem'" />
 
     <AuthenticatedLayout>
         <div class="h-full overflow-y-auto bg-stone-50 dark:bg-gray-900">
@@ -429,19 +432,19 @@ if (props.editPoem) {
 
                         <div>
                             <h1 class="font-serif text-xl font-semibold text-gray-900 dark:text-gray-100">
-                                Write poem
+                                {{ locale === 'lv' ? 'Rakstīt dzejoli' : 'Write poem' }}
                             </h1>
                             <div class="text-xs text-gray-400">
                                 {{
                                     editingPostId
-                                        ? 'Editing published poem'
+                                        ? (locale === 'lv' ? 'Rediģē publicētu dzejoli' : 'Editing published poem')
                                         : saveState === 'saving'
-                                            ? 'Saving...'
+                                            ? (locale === 'lv' ? 'Saglabā...' : 'Saving...')
                                             : saveState === 'saved'
-                                                ? 'Saved'
+                                                ? (locale === 'lv' ? 'Saglabāts' : 'Saved')
                                                 : saveState === 'error'
-                                                    ? 'Save failed'
-                                                    : 'Autosave ready'
+                                                    ? (locale === 'lv' ? 'Saglabāšana neizdevās' : 'Save failed')
+                                                    : (locale === 'lv' ? 'Automātiskā saglabāšana gatava' : 'Autosave ready')
                                 }}
                                 <template v-if="savedAt">
                                     · {{ new Date(savedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}
@@ -457,7 +460,7 @@ if (props.editPoem) {
                             class="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
                         >
                             <PlusIcon class="h-4 w-4" />
-                            New poem
+                            {{ locale === 'lv' ? 'Jauns dzejolis' : 'New poem' }}
                         </button>
 
                         <div class="relative">
@@ -467,7 +470,7 @@ if (props.editPoem) {
                                 class="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
                             >
                                 <DocumentTextIcon class="h-4 w-4" />
-                                Open draft
+                                {{ locale === 'lv' ? 'Atvērt melnrakstu' : 'Open draft' }}
                                 <ChevronDownIcon class="h-4 w-4" />
                             </button>
 
@@ -487,7 +490,7 @@ if (props.editPoem) {
                                         class="block w-full rounded-lg px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700"
                                     >
                                         <div class="truncate text-sm font-medium text-gray-800 dark:text-gray-100">
-                                            {{ draft.title || 'Untitled poem' }}
+                                            {{ draft.title || (locale === 'lv' ? 'Dzejolis bez nosaukuma' : 'Untitled poem') }}
                                         </div>
                                         <div class="mt-1 text-xs capitalize text-gray-400">
                                             {{ (draft.poem_form || 'free_verse').replaceAll('_', ' ') }}
@@ -496,14 +499,14 @@ if (props.editPoem) {
                                 </div>
 
                                 <div v-else class="p-4 text-sm text-gray-400">
-                                    No saved drafts yet.
+                                    {{ locale === 'lv' ? 'Saglabātu melnrakstu vēl nav.' : 'No saved drafts yet.' }}
                                 </div>
 
                                 <Link
                                     :href="route('draft.index')"
                                     class="block border-t border-gray-100 px-4 py-3 text-sm font-medium text-indigo-600 hover:bg-gray-50 dark:border-gray-700 dark:text-indigo-300 dark:hover:bg-gray-700"
                                 >
-                                    View all drafts
+                                    {{ locale === 'lv' ? 'Skatīt visus melnrakstus' : 'View all drafts' }}
                                 </Link>
                             </div>
                         </div>
@@ -518,13 +521,13 @@ if (props.editPoem) {
                                 form.processing
                                     ? (
                                         editingPostId
-                                            ? 'Saving...'
+                                            ? (locale === 'lv' ? 'Saglabā...' : 'Saving...')
                                             : 'Publishing...'
                                     )
                                     : (
                                         editingPostId
-                                            ? 'Save changes'
-                                            : 'Publish'
+                                            ? (locale === 'lv' ? 'Saglabāt izmaiņas' : 'Save changes')
+                                            : (locale === 'lv' ? 'Publicēt' : 'Publish')
                                     )
                             }}
                         </button>
@@ -535,7 +538,7 @@ if (props.editPoem) {
                     <div class="ml-10 flex flex-wrap items-center gap-2">
                         <div class="flex items-center gap-2">
                             <span class="text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">
-                                Form
+                                {{ locale === 'lv' ? 'Forma' : 'Form' }}
                             </span>
 
                             <select
@@ -556,7 +559,7 @@ if (props.editPoem) {
 
                         <div class="flex items-center gap-2">
                             <span class="text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">
-                                Rating
+                                {{ locale === 'lv' ? 'Vērtējums' : 'Rating' }}
                             </span>
 
                             <select
@@ -564,11 +567,11 @@ if (props.editPoem) {
                                 class="rounded-lg border border-[var(--poet-border)] bg-[var(--poet-surface)] py-1.5 pl-3 pr-8 text-sm text-[var(--poet-text)] shadow-sm focus:border-[var(--poet-accent)] focus:ring-[var(--poet-accent)]"
                             >
                                 <option value="general">
-                                    General
+                                    {{ locale === 'lv' ? 'Vispārīgs' : 'General' }}
                                 </option>
 
                                 <option value="mature">
-                                    Mature
+                                    {{ locale === 'lv' ? 'Pieaugušajiem' : 'Mature' }}
                                 </option>
                             </select>
                         </div>
@@ -576,21 +579,21 @@ if (props.editPoem) {
                         <div class="h-5 w-px bg-stone-200 dark:bg-gray-700"></div>
 
                         <div class="flex items-center gap-1.5 rounded-lg bg-stone-100 px-2.5 py-1.5 text-xs dark:bg-gray-900/60">
-                            <span class="text-gray-400">Lines</span>
+                            <span class="text-gray-400">{{ locale === 'lv' ? 'Rindas' : 'Lines' }}</span>
                             <span class="font-semibold text-gray-700 dark:text-gray-100">
                                 {{ lineProgress }}
                             </span>
                         </div>
 
                         <div class="flex items-center gap-1.5 rounded-lg bg-stone-100 px-2.5 py-1.5 text-xs dark:bg-gray-900/60">
-                            <span class="text-gray-400">Stanzas</span>
+                            <span class="text-gray-400">{{ locale === 'lv' ? 'Panti' : 'Stanzas' }}</span>
                             <span class="font-semibold text-gray-700 dark:text-gray-100">
                                 {{ stanzaCount }}
                             </span>
                         </div>
 
                         <div class="flex items-center gap-1.5 rounded-lg bg-stone-100 px-2.5 py-1.5 text-xs dark:bg-gray-900/60">
-                            <span class="text-gray-400">Genres</span>
+                            <span class="text-gray-400">{{ locale === 'lv' ? 'Žanri' : 'Genres' }}</span>
                             <span class="font-semibold text-gray-700 dark:text-gray-100">
                                 {{ form.poem_genres.length }}
                             </span>
@@ -602,7 +605,7 @@ if (props.editPoem) {
                                 @click="formGuideOpen = !formGuideOpen"
                                 class="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
                             >
-                                Form guide
+                                {{ locale === 'lv' ? 'Forma' : 'Form' }} guide
                             </button>
 
                             <div
@@ -633,7 +636,7 @@ if (props.editPoem) {
                                     class="mt-3 border-t border-gray-100 pt-3 dark:border-gray-700"
                                 >
                                     <div class="text-xs font-semibold uppercase tracking-wide text-gray-400">
-                                        Rhyme scheme
+                                        {{ locale === 'lv' ? 'Atskaņu shēma' : 'Rhyme scheme' }}
                                     </div>
                                     <div class="mt-1 font-mono text-sm text-gray-700 dark:text-gray-200">
                                         {{ selectedForm.rhymeScheme }}
@@ -650,17 +653,17 @@ if (props.editPoem) {
                     <div class="space-y-5">
                         <div>
                             <div class="text-xs font-semibold uppercase tracking-[0.16em] text-gray-400">
-                                Poem details
+                                {{ locale === 'lv' ? 'Dzejoļa informācija' : 'Poem details' }}
                             </div>
                             <p class="mt-1 text-xs leading-5 text-gray-400">
-                                Optional publishing details that stay out of the writing area.
+                                {{ locale === 'lv' ? 'Papildu publicēšanas informācija, kas netraucē rakstīšanas laukam.' : 'Optional publishing details that stay out of the writing area.' }}
                             </p>
                         </div>
 
                         <section>
                             <div class="mb-2 flex items-center justify-between">
                                 <label class="block text-xs font-semibold uppercase tracking-[0.16em] text-gray-400">
-                                    Genres
+                                    {{ locale === 'lv' ? 'Žanri' : 'Genres' }}
                                 </label>
                                 <span class="text-xs text-gray-400">
                                     {{ form.poem_genres.length }}/8
@@ -676,8 +679,8 @@ if (props.editPoem) {
                                     <span>
                                         {{
                                             form.poem_genres.length
-                                                ? 'Edit genres'
-                                                : 'Choose genres'
+                                                ? (locale === 'lv' ? 'Rediģēt žanrus' : 'Edit genres')
+                                                : (locale === 'lv' ? 'Izvēlēties žanrus' : 'Choose genres')
                                         }}
                                     </span>
 
@@ -714,7 +717,7 @@ if (props.editPoem) {
                                     v-model="customGenreInput"
                                     type="text"
                                     maxlength="50"
-                                    placeholder="Custom genre"
+                                    :placeholder="locale === 'lv' ? 'Savs žanrs' : 'Custom genre'"
                                     class="min-w-0 flex-1 rounded-lg border-gray-300 bg-white text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
                                     @keyup.enter.prevent="addCustomGenre"
                                 />
@@ -723,7 +726,7 @@ if (props.editPoem) {
                                     @click="addCustomGenre"
                                     class="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
                                 >
-                                    Add
+                                    {{ locale === 'lv' ? 'Pievienot' : 'Add' }}
                                 </button>
                             </div>
 
@@ -746,31 +749,31 @@ if (props.editPoem) {
 
                         <section>
                             <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-400">
-                                Caption
+                                {{ locale === 'lv' ? 'Apraksts' : 'Caption' }}
                             </label>
 
                             <textarea
                                 v-model="form.caption"
                                 rows="4"
                                 maxlength="500"
-                                placeholder="Context, dedication, or a note about the piece..."
+                                :placeholder="locale === 'lv' ? 'Konteksts, veltījums vai piezīme par darbu...' : 'Context, dedication, or a note about the piece...'"
                                 class="block w-full resize-none rounded-lg border-gray-300 bg-white text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
                             />
                         </section>
 
                         <section>
                             <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-400">
-                                Hashtags
+                                {{ locale === 'lv' ? 'Tēmturi' : 'Hashtags' }}
                             </label>
 
                             <input
                                 v-model="hashtagsInput"
                                 type="text"
-                                placeholder="night, memory, city"
+                                :placeholder="locale === 'lv' ? 'nakts, atmiņas, pilsēta' : 'night, memory, city'"
                                 class="block w-full rounded-lg border-gray-300 bg-white text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
                             />
                             <p class="mt-2 text-xs text-gray-400">
-                                Up to 10 tags. Spaces or commas both work.
+                                {{ locale === 'lv' ? 'Līdz 10 tēmturiem. Var izmantot atstarpes vai komatus.' : 'Up to 10 tags. Spaces or commas both work.' }}
                             </p>
                         </section>
                     </div>
@@ -783,7 +786,7 @@ if (props.editPoem) {
                                 v-model="form.title"
                                 type="text"
                                 maxlength="160"
-                                placeholder="Untitled poem"
+                                :placeholder="locale === 'lv' ? 'Dzejolis bez nosaukuma' : 'Untitled poem'"
                                 class="w-full border-0 border-b border-stone-100 bg-transparent px-8 py-6 font-serif text-3xl font-semibold text-gray-900 placeholder:text-gray-300 focus:ring-0 dark:border-gray-700 dark:text-gray-100 dark:placeholder:text-gray-600"
                             />
 
@@ -796,7 +799,7 @@ if (props.editPoem) {
                         </div>
 
                         <div class="mt-4 text-center text-xs text-gray-400">
-                            Your poem stays private as a draft until you publish it.
+                            {{ locale === 'lv' ? 'Dzejolis paliek privāts kā melnraksts, līdz to publicē.' : 'Your poem stays private as a draft until you publish it.' }}
                         </div>
                     </div>
                 </main>

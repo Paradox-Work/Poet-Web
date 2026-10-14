@@ -47,6 +47,9 @@ class GroupResource extends JsonResource
                         ->url($this->cover_path)
                     : null,
 
+            'visibility' =>
+                $this->visibility,
+
             'auto_approval' =>
                 $this->auto_approval,
 

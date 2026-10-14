@@ -36,6 +36,8 @@ import PostModal
 import NotificationDropdown
     from '@/Components/app/NotificationDropdown.vue';
 
+import { useI18n } from '@/i18n';
+
 import {
     Link,
     router,
@@ -44,6 +46,8 @@ import {
 
 
 
+
+const { locale, t, setLocale } = useI18n();
 
 const showingNavigationDropdown = ref(false);
 
@@ -92,6 +96,9 @@ onMounted(() => {
         document.documentElement
             .classList
             .contains('dark');
+
+    document.documentElement.lang =
+        locale.value;
 });
 
 const keywords =
@@ -150,7 +157,7 @@ function search() {
                                         <span
                                             class="hidden text-[8px] font-semibold uppercase tracking-[0.22em] text-[var(--poet-gold)] xl:block"
                                         >
-                                            Read · Write · Belong
+                                            {{ t('nav.tagline') }}
                                         </span>
                                     </span>
                                 </Link>
@@ -175,6 +182,13 @@ function search() {
                                     "
                                 >
                                     Groups
+                                </NavLink>
+
+                                <NavLink
+                                    :href="route('about')"
+                                    :active="route().current('about')"
+                                >
+                                    {{ t('nav.about') }}
                                 </NavLink>
 
                                 <NavLink
@@ -221,7 +235,7 @@ function search() {
                                                     </div>
 
                                                     <div class="text-xs text-[var(--poet-muted)]">
-                                                        Share a quick thought
+                                                        {{ locale === 'lv' ? 'Dalies ar īsu domu' : 'Share a quick thought' }}
                                                     </div>
                                                 </div>
                                             </button>
@@ -240,7 +254,7 @@ function search() {
                                                         </span>
 
                                                         <span class="block text-xs text-[var(--poet-muted)]">
-                                                            Open the writing studio
+                                                            {{ locale === 'lv' ? 'Atver rakstīšanas studiju' : 'Open the writing studio' }}
                                                         </span>
                                                     </span>
                                                 </span>
@@ -258,7 +272,7 @@ function search() {
                             >
                                 <TextInput
                                     v-model="keywords"
-                                    placeholder="Search poems, people, or groups..."
+                                    :placeholder="t('nav.search')"
                                     class="w-full !rounded-full"
                                     @keyup.enter="search"
                                 />
@@ -268,6 +282,36 @@ function search() {
                                 v-if="authUser"
                                 class="mr-1"
                             />
+
+                            <div
+                                class="mr-2 flex items-center rounded-full border border-[var(--poet-border)] bg-[var(--poet-surface)] p-0.5 text-[11px] font-semibold"
+                                aria-label="Language"
+                            >
+                                <button
+                                    type="button"
+                                    @click="setLocale('lv')"
+                                    :class="[
+                                        'rounded-full px-2 py-1 transition',
+                                        locale === 'lv'
+                                            ? 'bg-[var(--poet-accent)] text-white'
+                                            : 'text-[var(--poet-muted)]'
+                                    ]"
+                                >
+                                    LV
+                                </button>
+                                <button
+                                    type="button"
+                                    @click="setLocale('en')"
+                                    :class="[
+                                        'rounded-full px-2 py-1 transition',
+                                        locale === 'en'
+                                            ? 'bg-[var(--poet-accent)] text-white'
+                                            : 'text-[var(--poet-muted)]'
+                                    ]"
+                                >
+                                    EN
+                                </button>
+                            </div>
 
                             <button
                                 type="button"
@@ -321,14 +365,14 @@ function search() {
                                         <DropdownLink
                                             :href="route('profile', {username: authUser.username})"
                                         >
-                                            Profile
+                                            {{ t('nav.profile') }}
                                         </DropdownLink>
                                         <DropdownLink
                                             :href="route('logout')"
                                             method="post"
                                             as="button"
                                         >
-                                            Log Out
+                                            {{ t('nav.logout') }}
                                         </DropdownLink>
                                     </template>
                                 </Dropdown>
@@ -337,13 +381,13 @@ function search() {
                                         :href="route('login')"
                                         class="text-sm text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
                                     >
-                                        Log in
+                                        {{ t('nav.login') }}
                                     </Link>
                                     <Link
                                         :href="route('register')"
                                         class="ms-4 text-sm text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
                                     >
-                                        Register
+                                        {{ t('nav.register') }}
                                     </Link>
                                 </div>
                             </div>
@@ -406,6 +450,25 @@ function search() {
                     class="sm:hidden"
                 >
                     <div class="space-y-1 pb-3 pt-2">
+                        <div class="flex items-center gap-2 px-4 py-2 text-sm text-[var(--poet-muted)]">
+                            <span>Valoda / Language</span>
+                            <button
+                                type="button"
+                                @click="setLocale('lv')"
+                                :class="locale === 'lv' ? 'font-bold text-[var(--poet-accent)]' : ''"
+                            >
+                                LV
+                            </button>
+                            <span>/</span>
+                            <button
+                                type="button"
+                                @click="setLocale('en')"
+                                :class="locale === 'en' ? 'font-bold text-[var(--poet-accent)]' : ''"
+                            >
+                                EN
+                            </button>
+                        </div>
+
                         <button
                             type="button"
                             @click="toggleTheme"
@@ -423,8 +486,8 @@ function search() {
 
                             {{
                                 isDark
-                                    ? 'Light mode'
-                                    : 'Dark mode'
+                                    ? t('nav.light_mode')
+                                    : t('nav.dark_mode')
                             }}
                         </button>
 
@@ -447,14 +510,14 @@ function search() {
                             <DocumentTextIcon
                                 class="h-5 w-5"
                             />
-                            Create post
+                            {{ t('nav.create_post') }}
                         </button>
 
                         <ResponsiveNavLink
                             v-if="authUser"
                             :href="route('poem.write')"
                         >
-                            Write poem
+                            {{ t('nav.write_poem') }}
                         </ResponsiveNavLink>
 
                         <ResponsiveNavLink
@@ -465,6 +528,13 @@ function search() {
                             "
                         >
                             Groups
+                        </ResponsiveNavLink>
+
+                        <ResponsiveNavLink
+                            :href="route('about')"
+                            :active="route().current('about')"
+                        >
+                            {{ t('nav.about') }}
                         </ResponsiveNavLink>
 
                         <ResponsiveNavLink
@@ -494,14 +564,14 @@ function search() {
 
                         <div class="mt-3 space-y-1">
                             <ResponsiveNavLink :href="route('profile', {username: authUser.username})">
-                                Profile
+                                {{ t('nav.profile') }}
                             </ResponsiveNavLink>
                             <ResponsiveNavLink
                                 :href="route('logout')"
                                 method="post"
                                 as="button"
                             >
-                                Log Out
+                                {{ t('nav.logout') }}
                             </ResponsiveNavLink>
                         </div>
                     </div>

@@ -59,6 +59,9 @@ class GroupSummaryResource extends JsonResource
                     )
                     : null,
 
+            'visibility' =>
+                $this->visibility,
+
             'auto_approval' =>
                 (bool)
                 $this->auto_approval,

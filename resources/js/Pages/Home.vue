@@ -15,6 +15,8 @@ import AuthenticatedLayout
 import PostList
     from '@/Components/app/PostList.vue';
 
+import { useI18n } from '@/i18n';
+
 const props = defineProps({
     posts: Object,
 
@@ -34,23 +36,24 @@ const props = defineProps({
 });
 
 const authUser = usePage().props.auth.user;
+const { t } = useI18n();
 
 const allSourceOptions = [
     {
         value: 'for_you',
-        label: 'For You'
+        label: 'home.for_you'
     },
     {
         value: 'following',
-        label: 'Following'
+        label: 'home.following'
     },
     {
         value: 'groups',
-        label: 'Groups'
+        label: 'home.groups'
     },
     {
         value: 'mine',
-        label: 'My Art'
+        label: 'home.mine'
     }
 ];
 
@@ -60,7 +63,7 @@ const sourceOptions = computed(() =>
         : [
             {
                 value: 'for_you',
-                label: 'Explore'
+                label: 'home.explore'
             }
         ]
 );
@@ -89,25 +92,25 @@ const publicationWord =
             props.feedFilters.feed ===
             'posts'
         ) {
-            return 'post';
+            return t('home.post');
         }
 
         if (
             props.feedFilters.feed ===
             'all'
         ) {
-            return 'publication';
+            return t('home.publication');
         }
 
-        return 'poem';
+        return t('home.poem');
     });
 
 const feedLabel =
     computed(() => {
         const typeLabel = {
-            poems: 'Poems',
-            posts: 'Posts',
-            all: 'Everything'
+            poems: t('home.poems'),
+            posts: t('home.posts'),
+            all: t('home.everything')
         }[
             props.feedFilters.feed
                 ?? 'poems'
@@ -190,7 +193,7 @@ function changeSource(source) {
 </script>
 
 <template>
-    <Head title="Home" />
+    <Head :title="t('nav.home')" />
 
     <AuthenticatedLayout>
         <div
@@ -206,15 +209,13 @@ function changeSource(source) {
                         <div
                             class="truncate text-xs font-semibold uppercase tracking-[0.22em] text-[var(--poet-muted)]"
                         >
-                            Feed · {{ feedLabel }}
+                            {{ t('home.feed') }} · {{ feedLabel }}
                         </div>
 
                         <div
                             class="mt-1 font-serif text-2xl font-semibold text-[var(--poet-text)]"
                         >
-                            Read one
-                            {{ publicationWord }}
-                            at a time.
+                            {{ t('home.title', { item: publicationWord }) }}
                         </div>
                     </div>
 
@@ -225,7 +226,7 @@ function changeSource(source) {
                             class="sr-only"
                             for="feed-type"
                         >
-                            Feed type
+                            {{ t('home.feed_type') }}
                         </label>
 
                         <select
@@ -235,15 +236,15 @@ function changeSource(source) {
                             class="w-full rounded-full border border-[var(--poet-border)] bg-[var(--poet-surface)] py-2 pl-3 pr-9 text-sm font-medium text-[var(--poet-text)] shadow-sm transition hover:border-[var(--poet-border-strong)] focus:border-[var(--poet-accent)] focus:ring-[var(--poet-accent)] md:w-32"
                         >
                             <option value="poems">
-                                Poems
+                                {{ t('home.poems') }}
                             </option>
 
                             <option value="posts">
-                                Posts
+                                {{ t('home.posts') }}
                             </option>
 
                             <option value="all">
-                                Everything
+                                {{ t('home.everything') }}
                             </option>
                         </select>
 
@@ -251,7 +252,7 @@ function changeSource(source) {
                             class="sr-only"
                             for="feed-genre"
                         >
-                            Poem genre
+                            {{ t('home.genre') }}
                         </label>
 
                         <select
@@ -310,7 +311,7 @@ function changeSource(source) {
                                     : 'text-[var(--poet-muted)] hover:text-[var(--poet-text)]'
                             ]"
                         >
-                            {{ source.label }}
+                            {{ t(source.label) }}
                         </button>
 
                         <span

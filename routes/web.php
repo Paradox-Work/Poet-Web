@@ -16,9 +16,13 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 Route::get('/', [HomeController::class, 'index'])
     ->name('dashboard');
+
+Route::get('/about', fn () => Inertia::render('About'))
+    ->name('about');
 
 Route::get('/u/{user:username}', [ProfileController::class, 'index'])
     ->name('profile');
