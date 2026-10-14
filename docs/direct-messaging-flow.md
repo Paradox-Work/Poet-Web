@@ -149,6 +149,8 @@ conversation_user.last_read_at
 
 Unread counts compare incoming message timestamps against that value.
 
+The shared Inertia middleware also calculates the authenticated user's total unread direct-message count so navigation can display a badge outside the messaging page.
+
 ## Deleted accounts
 
 Conversation users are loaded with trashed users so historical message threads can retain an anonymized participant after account deletion.
