@@ -41,6 +41,9 @@ import {
 
 import PostUserHeader from '@/Components/app/PostUserHeader.vue';
 import axios from 'axios';
+import { useI18n } from '@/i18n';
+
+const { locale } = useI18n();
 
 const props = defineProps({
     post: Object,
@@ -419,7 +422,7 @@ async function sendReaction() {
             deckPreview
                 ? 'h-[min(46vh,430px)] overflow-hidden px-4 py-4'
                 : deckNavigation
-                    ? 'flex h-full min-h-0 flex-col px-5 py-5 lg:mb-5 lg:h-auto lg:min-h-[clamp(380px,48vh,560px)]'
+                    ? 'deck-navigation-card flex h-full min-h-0 flex-col px-5 py-5 lg:mb-5 lg:h-auto lg:min-h-[clamp(380px,48vh,560px)]'
                     : 'mb-5 px-5 py-5'
         ]"
     >
@@ -470,7 +473,7 @@ async function sendReaction() {
                 deckPreview
                     ? 'max-h-[300px] overflow-hidden'
                     : deckNavigation
-                        ? 'deck-card-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1'
+                        ? 'relative min-h-0 flex-1 overflow-hidden pr-1'
                         : ''
             ]"
         >
@@ -640,6 +643,23 @@ async function sendReaction() {
                     :attachments="post.attachments"
                     @attachmentClick="openAttachment"
                 />
+            </div>
+
+            <div
+                v-if="deckNavigation"
+                class="compact-height-reading-cta pointer-events-none absolute inset-x-0 bottom-0 z-20 hidden items-end justify-center bg-gradient-to-t from-[var(--poet-surface)] via-[var(--poet-surface)]/95 to-transparent px-3 pb-2 pt-10"
+            >
+                <Link
+                    :href="route('post.view', post.id)"
+                    class="pointer-events-auto inline-flex items-center gap-2 rounded-full border border-[var(--poet-border)] bg-[var(--poet-surface)] px-4 py-2 text-xs font-semibold text-[var(--poet-accent-strong)] shadow-md transition hover:-translate-y-0.5 hover:border-[var(--poet-border-strong)]"
+                >
+                    <EyeIcon class="h-4 w-4" />
+                    {{
+                        locale === 'lv'
+                            ? 'Atver pilno skatu, lai turpinātu lasīt'
+                            : 'Open full view to continue reading'
+                    }}
+                </Link>
             </div>
 
         </div>
