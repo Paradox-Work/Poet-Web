@@ -6,6 +6,7 @@ namespace App\Models;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,7 +16,15 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Sluggable\HasSlug;
 use Spatie\Sluggable\SlugOptions;
 
-#[Fillable(['name', 'username', 'email', 'password', 'username', 'cover_path', 'avatar_path',])]
+#[Fillable([
+    'name',
+    'username',
+    'email',
+    'password',
+    'cover_path',
+    'avatar_path',
+    'is_admin',
+])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -33,6 +42,7 @@ class User extends Authenticatable implements MustVerifyEmail
           
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_admin' => 'boolean',
             
         ];
     }
@@ -64,6 +74,30 @@ class User extends Authenticatable implements MustVerifyEmail
             'follower_id',
             'user_id'
         );
+    }
+
+    public function bookmarks(): HasMany
+    {
+        return $this->hasMany(Bookmark::class);
+    }
+
+    public function conversations(): BelongsToMany
+    {
+        return $this->belongsToMany(Conversation::class)
+            ->withPivot('last_read_at')
+            ->withTimestamps();
+    }
+
+    public function messages(): HasMany
+    {
+        return $this->hasMany(Message::class);
+    }
+
+    public function collaborations(): BelongsToMany
+    {
+        return $this->belongsToMany(Post::class, 'post_collaborators')
+            ->withPivot('added_by')
+            ->withTimestamps();
     }
 
 }
