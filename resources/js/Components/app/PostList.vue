@@ -741,16 +741,6 @@ function removePost(postId) {
             </span>
 
             <span
-                class="ml-3 hidden sm:inline"
-            >
-                {{
-                    locale === 'lv'
-                        ? 'velc · ritenītis · bulttaustiņi'
-                        : 'swipe · wheel · arrow keys'
-                }}
-            </span>
-
-            <span
                 v-if="loadingMore"
                 class="ml-3"
             >
