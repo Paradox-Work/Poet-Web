@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use App\Rules\TotalAttachmentSize;
+use App\Models\PostCollaborator;
 
 class UpdatePostRequest extends FormRequest
 {
@@ -17,7 +18,20 @@ class UpdatePostRequest extends FormRequest
     {
         $post = $this->route('post');
 
-        return $post && $post->user_id === Auth::id();
+        if (!$post || !Auth::id()) {
+            return false;
+        }
+
+        if ($post->user_id === Auth::id()) {
+            return true;
+        }
+
+        return $post->type === 'poem'
+            && PostCollaborator::query()
+                ->where('post_id', $post->id)
+                ->where('user_id', Auth::id())
+                ->where('status', 'accepted')
+                ->exists();
     }
 
     /**
