@@ -50,7 +50,9 @@ test('deleting an established account anonymizes it and hides its publications',
 
     $this->assertGuest();
 
-    expect($user->fresh())->toBeNull();
+    expect(
+        User::query()->find($user->id)
+    )->toBeNull();
 
     expect(
         User::withTrashed()
