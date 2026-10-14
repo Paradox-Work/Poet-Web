@@ -1,5 +1,6 @@
 <script setup>
-import { Head, router, useForm } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import { Head, router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import CompactPaginator from '@/Components/app/CompactPaginator.vue';
 import { useI18n } from '@/i18n';
@@ -7,6 +8,10 @@ import { useI18n } from '@/i18n';
 const props = defineProps({
     stats: Object,
     reports: Object,
+    activity7d: {
+        type: Array,
+        default: () => [],
+    },
     suspendedUsers: {
         type: Array,
         default: () => [],
@@ -14,6 +19,25 @@ const props = defineProps({
 });
 
 const { locale } = useI18n();
+
+const activityMax = computed(() =>
+    Math.max(
+        1,
+        ...props.activity7d.flatMap(day => [
+            day.users,
+            day.publications,
+            day.messages,
+            day.reports,
+        ])
+    )
+);
+
+function barHeight(value) {
+    return Math.max(
+        value ? 8 : 2,
+        Math.round((value / activityMax.value) * 100)
+    );
+}
 
 function goReportPage(page) {
     router.get(
@@ -70,6 +94,61 @@ function unsuspend(userId) {
                         {{ key.replaceAll('_', ' ') }}
                     </div>
                     <div class="mt-1 text-3xl font-bold">{{ value }}</div>
+                </div>
+            </section>
+
+            <section
+                v-if="activity7d.length"
+                class="poet-card mb-8 p-5"
+            >
+                <div class="mb-4">
+                    <div class="poet-kicker">
+                        {{ locale === 'lv' ? '7 dienas' : '7 days' }}
+                    </div>
+                    <h2 class="font-serif text-2xl font-semibold">
+                        {{ locale === 'lv' ? 'Platformas aktivitāte' : 'Platform activity' }}
+                    </h2>
+                </div>
+
+                <div class="grid grid-cols-7 gap-2">
+                    <div
+                        v-for="day in activity7d"
+                        :key="day.date"
+                        class="min-w-0"
+                    >
+                        <div class="flex h-36 items-end justify-center gap-1 rounded-xl bg-[var(--poet-surface-soft)] px-1 py-2">
+                            <div
+                                class="w-2 rounded-t bg-emerald-500"
+                                :style="{ height: barHeight(day.users) + '%' }"
+                                :title="`Users: ${day.users}`"
+                            />
+                            <div
+                                class="w-2 rounded-t bg-[var(--poet-accent)]"
+                                :style="{ height: barHeight(day.publications) + '%' }"
+                                :title="`Publications: ${day.publications}`"
+                            />
+                            <div
+                                class="w-2 rounded-t bg-sky-500"
+                                :style="{ height: barHeight(day.messages) + '%' }"
+                                :title="`Messages: ${day.messages}`"
+                            />
+                            <div
+                                class="w-2 rounded-t bg-amber-500"
+                                :style="{ height: barHeight(day.reports) + '%' }"
+                                :title="`Reports: ${day.reports}`"
+                            />
+                        </div>
+                        <div class="mt-1 truncate text-center text-[10px] text-[var(--poet-muted)]">
+                            {{ day.date.slice(5) }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs text-[var(--poet-muted)]">
+                    <span>● {{ locale === 'lv' ? 'Lietotāji' : 'Users' }}</span>
+                    <span>● {{ locale === 'lv' ? 'Publikācijas' : 'Publications' }}</span>
+                    <span>● {{ locale === 'lv' ? 'Ziņas' : 'Messages' }}</span>
+                    <span>● {{ locale === 'lv' ? 'Ziņojumi' : 'Reports' }}</span>
                 </div>
             </section>
 
