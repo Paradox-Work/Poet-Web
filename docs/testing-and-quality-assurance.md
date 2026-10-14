@@ -19,8 +19,8 @@ Feature tests create test data, authenticate when needed, call real Laravel rout
 The current qualification build on `main` is verified by GitHub Actions with:
 
 ```text
-79 tests passed
-368 assertions
+82 tests passed
+377 assertions
 0 failures
 ```
 
