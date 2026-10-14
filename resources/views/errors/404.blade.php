@@ -1,0 +1,6 @@
+@extends('errors.layout')
+@section('title', 'Lapa nav atrasta')
+@section('code', '404')
+@section('heading', 'Šeit nekā nav.')
+@section('message', 'Lapa var būt pārvietota, dzēsta vai arī saturs nav pieejams tavam kontam.')
+@section('action', 'Atgriezties sākumā')

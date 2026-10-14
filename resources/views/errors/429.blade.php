@@ -1,0 +1,6 @@
+@extends('errors.layout')
+@section('title', 'Par daudz pieprasījumu')
+@section('code', '429')
+@section('heading', 'Nedaudz par ātru.')
+@section('message', 'Drošības ierobežojums īslaicīgi apturēja pieprasījumus. Pagaidi brīdi un mēģini vēlreiz.')
+@section('action', 'Atgriezties sākumā')

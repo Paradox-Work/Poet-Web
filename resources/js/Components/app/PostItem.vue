@@ -22,11 +22,15 @@ import {
     ChevronLeftIcon,
     ChevronRightIcon,
     EyeIcon,
-    MapPinIcon
+    MapPinIcon,
+    BookmarkIcon
 } from '@heroicons/vue/24/outline';
 
 import EditDeleteDropdown
     from '@/Components/app/EditDeleteDropdown.vue';
+
+import ReportButton
+    from '@/Components/app/ReportButton.vue';
 
 import {
     computed,
@@ -196,6 +200,41 @@ const isPinned = computed(() => {
 });
 
 const pinPending = ref(false);
+
+const bookmarkPending = ref(false);
+const bookmarked = ref(
+    Boolean(props.post.current_user_has_bookmark)
+);
+
+async function toggleBookmark() {
+    if (!authUser.value) {
+        router.visit(route('login'));
+        return;
+    }
+
+    if (bookmarkPending.value) {
+        return;
+    }
+
+    bookmarkPending.value = true;
+
+    try {
+        const response = await axios.post(
+            route('post.bookmark', props.post.id),
+            {},
+            {
+                headers: {
+                    Accept: 'application/json'
+                }
+            }
+        );
+
+        bookmarked.value =
+            Boolean(response.data.bookmarked);
+    } finally {
+        bookmarkPending.value = false;
+    }
+}
 
 function openAttachment(index) {
     emit(
@@ -696,7 +735,7 @@ async function sendReaction() {
             />
         </button>
 
-        <div class="flex items-end justify-center gap-8">
+        <div class="flex items-end justify-center gap-6 sm:gap-8">
             <button
                 type="button"
                 @click="sendReaction"
@@ -768,6 +807,38 @@ async function sendReaction() {
                     View
                 </span>
             </Link>
+
+            <button
+                v-if="authUser"
+                type="button"
+                @click="toggleBookmark"
+                :disabled="bookmarkPending"
+                class="group flex flex-col items-center gap-1 text-xs text-[var(--poet-muted)] transition disabled:opacity-50"
+                :aria-label="
+                    bookmarked
+                        ? (locale === 'lv' ? 'Noņemt no saglabātajiem' : 'Remove bookmark')
+                        : (locale === 'lv' ? 'Saglabāt darbu' : 'Save publication')
+                "
+                :aria-pressed="bookmarked"
+            >
+                <span
+                    :class="[
+                        'flex h-11 w-11 items-center justify-center rounded-full border transition group-hover:-translate-y-0.5 group-hover:shadow-md',
+                        bookmarked
+                            ? 'border-[var(--poet-accent)] bg-[var(--poet-accent-soft)] text-[var(--poet-accent)]'
+                            : 'border-gray-200 bg-white text-gray-700 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100'
+                    ]"
+                >
+                    <BookmarkIcon
+                        class="h-5 w-5"
+                        :class="bookmarked ? 'fill-current' : ''"
+                    />
+                </span>
+
+                <span class="font-medium">
+                    {{ locale === 'lv' ? 'Saglabāt' : 'Save' }}
+                </span>
+            </button>
 
             <button
                 v-if="deckNavigation"
@@ -852,6 +923,16 @@ async function sendReaction() {
     </DisclosurePanel>
 
 </Disclosure>
+
+        <div
+            v-if="authUser && !deckPreview && authUser.id !== post.user?.id"
+            class="mt-3 flex justify-end"
+        >
+            <ReportButton
+                type="post"
+                :target-id="post.id"
+            />
+        </div>
     </article>
 </template>
 

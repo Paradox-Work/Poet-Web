@@ -168,7 +168,7 @@
 
                         <div
                             v-if="!isMyProfile"
-                            class="sm:pb-1"
+                            class="flex flex-wrap items-center gap-2 sm:pb-1"
                         >
                             <Link
                                 v-if="!authUser"
@@ -191,6 +191,23 @@
                             >
                                 {{ locale === 'lv' ? 'Pārtraukt sekot' : 'Unfollow' }}
                             </DangerButton>
+
+                            <Link
+                                v-if="authUser"
+                                :href="route('messages.start', user.id)"
+                                method="post"
+                                as="button"
+                                class="inline-flex items-center rounded-md border border-[var(--poet-border)] px-4 py-2 text-xs font-semibold uppercase tracking-widest text-[var(--poet-text)] transition hover:bg-[var(--poet-surface-soft)]"
+                            >
+                                {{ locale === 'lv' ? 'Ziņa' : 'Message' }}
+                            </Link>
+
+                            <ReportButton
+                                v-if="authUser"
+                                type="user"
+                                :target-id="user.id"
+                                compact
+                            />
                         </div>
                     </div>
                 </section>
@@ -491,6 +508,7 @@ import {
 } from 'vue';
 
 import {
+    Link,
     router,
     useForm,
     usePage
@@ -529,6 +547,9 @@ import PrimaryButton
 
 import DangerButton
     from '@/Components/DangerButton.vue';
+
+import ReportButton
+    from '@/Components/app/ReportButton.vue';
 
 import { useI18n } from '@/i18n';
 

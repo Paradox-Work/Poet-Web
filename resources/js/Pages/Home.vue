@@ -25,7 +25,8 @@ const props = defineProps({
         default: () => ({
             feed: 'poems',
             source: 'for_you',
-            genre: null
+            genre: null,
+            sort: 'latest'
         })
     },
 
@@ -140,11 +141,16 @@ function navigateFilters({
 
     genre =
         props.feedFilters.genre
-            ?? null
+            ?? null,
+
+    sort =
+        props.feedFilters.sort
+            ?? 'latest'
 } = {}) {
     const query = {
         feed,
-        source
+        source,
+        sort
     };
 
     if (
@@ -183,6 +189,12 @@ function changeGenre(event) {
         genre:
             event.target.value ||
             null
+    });
+}
+
+function changeSort(event) {
+    navigateFilters({
+        sort: event.target.value
     });
 }
 
@@ -231,7 +243,7 @@ function changeSource(source) {
                     </div>
 
                     <div
-                        class="grid w-full shrink-0 grid-cols-1 gap-2 sm:grid-cols-2 lg:flex lg:w-auto lg:items-center"
+                        class="grid w-full shrink-0 grid-cols-1 gap-2 sm:grid-cols-3 lg:flex lg:w-auto lg:items-center"
                     >
                         <label
                             class="sr-only"
@@ -256,6 +268,30 @@ function changeSource(source) {
 
                             <option value="all">
                                 {{ t('home.everything') }}
+                            </option>
+                        </select>
+
+                        <label
+                            class="sr-only"
+                            for="feed-sort"
+                        >
+                            {{ locale === 'lv' ? 'Kārtošana' : 'Sort' }}
+                        </label>
+
+                        <select
+                            id="feed-sort"
+                            :value="feedFilters.sort ?? 'latest'"
+                            @change="changeSort"
+                            class="w-full rounded-full border border-[var(--poet-border)] bg-[var(--poet-surface)] py-2 pl-3 pr-9 text-sm text-[var(--poet-text)] shadow-sm transition hover:border-[var(--poet-border-strong)] focus:border-[var(--poet-accent)] focus:ring-[var(--poet-accent)] lg:w-40"
+                        >
+                            <option value="latest">
+                                {{ locale === 'lv' ? 'Jaunākie' : 'Newest' }}
+                            </option>
+                            <option value="popular">
+                                {{ locale === 'lv' ? 'Populārākie' : 'Most liked' }}
+                            </option>
+                            <option value="discussed">
+                                {{ locale === 'lv' ? 'Apspriestākie' : 'Most discussed' }}
                             </option>
                         </select>
 
@@ -336,7 +372,7 @@ function changeSource(source) {
                 <div class="min-h-0 flex-1">
                     <PostList
                         :key="
-                            `${feedFilters.source}-${feedFilters.feed}-${feedFilters.genre ?? 'all'}`
+                            `${feedFilters.source}-${feedFilters.feed}-${feedFilters.genre ?? 'all'}-${feedFilters.sort ?? 'latest'}`
                         "
                         :posts="posts"
                         mode="deck"

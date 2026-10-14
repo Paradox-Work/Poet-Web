@@ -1,5 +1,6 @@
 <script setup>
 import {
+    computed,
     onMounted,
     ref
 } from 'vue';
@@ -35,6 +36,27 @@ const props = defineProps({
 
 const authUser =
     usePage().props.auth.user;
+
+const pageTitle = computed(() =>
+    props.post.title
+        ? `${props.post.title} — Poet-Web`
+        : `${props.post.user?.name ?? 'Poet-Web'} publication — Poet-Web`
+);
+
+const pageDescription = computed(() => {
+    const source =
+        props.post.caption
+        || props.post.body
+        || '';
+
+    const plain = source
+        .replace(/<[^>]*>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    return plain.slice(0, 180)
+        || 'Read this publication on Poet-Web.';
+});
 
 const showEditModal =
     ref(false);
@@ -122,7 +144,28 @@ function onModalHide() {
 </script>
 
 <template>
-    <Head title="Post" />
+    <Head :title="pageTitle">
+        <meta
+            head-key="description"
+            name="description"
+            :content="pageDescription"
+        />
+        <meta
+            head-key="og:title"
+            property="og:title"
+            :content="pageTitle"
+        />
+        <meta
+            head-key="og:description"
+            property="og:description"
+            :content="pageDescription"
+        />
+        <meta
+            head-key="og:type"
+            property="og:type"
+            content="article"
+        />
+    </Head>
 
     <AuthenticatedLayout>
         <div

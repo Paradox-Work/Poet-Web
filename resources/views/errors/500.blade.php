@@ -1,0 +1,6 @@
+@extends('errors.layout')
+@section('title', 'Servera kļūda')
+@section('code', '500')
+@section('heading', 'Kaut kas nogāja greizi.')
+@section('message', 'Radās neparedzēta servera kļūda. Tavi dati netiek mainīti tikai tāpēc, ka redzi šo lapu.')
+@section('action', 'Atgriezties sākumā')

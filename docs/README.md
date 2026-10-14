@@ -30,6 +30,7 @@ The application code and automated tests remain the source of truth. When routes
 ## Publishing and drafts
 
 - [Post modal flow](post-modal-flow.md)
+- [Collaborative drafts](collaborative-drafts.md)
 - [Local writing suggestions](local-writing-suggestions.md)
 - [Post moderation](post-moderation-flow.md)
 
@@ -61,10 +62,17 @@ The application code and automated tests remain the source of truth. When routes
 - [Group publication flow](group-post-flow.md)
 - [Group settings update](group-update-flow.md)
 
-## Social and notifications
+## Social, saved content, messaging, and moderation
 
 - [User follow flow](user-follow-flow.md)
 - [Content notification flow](content-notification-flow.md)
+- [Bookmarks / reading list](bookmarks-reading-list.md)
+- [Direct messaging](direct-messaging-flow.md)
+- [Reporting and moderation](reporting-and-moderation.md)
+
+## Production web polish
+
+- [SEO, accessibility, error pages, and product polish](seo-accessibility-production-polish.md)
 
 ## Development tools
 

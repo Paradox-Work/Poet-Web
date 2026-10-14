@@ -88,8 +88,13 @@ class PostResource extends JsonResource
                 $this->relationLoaded('reactions')
                     && $this->reactions->isNotEmpty(),
 
+            'current_user_has_bookmark' =>
+                $this->relationLoaded('bookmarks')
+                    && $this->bookmarks->isNotEmpty(),
+
             'num_of_comments' =>
-                $comments->count(),
+                $this->comments_count
+                    ?? $comments->count(),
 
             'comments' =>
                 $commentTree,

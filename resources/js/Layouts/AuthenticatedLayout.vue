@@ -193,6 +193,38 @@ function search() {
 
                                 <NavLink
                                     v-if="authUser"
+                                    :href="route('saved.index')"
+                                    :active="route().current('saved.index')"
+                                >
+                                    {{ locale === 'lv' ? 'Saglabātie' : 'Saved' }}
+                                </NavLink>
+
+                                <NavLink
+                                    v-if="authUser"
+                                    :href="route('messages.show')"
+                                    :active="route().current('messages.*')"
+                                >
+                                    <span class="inline-flex items-center gap-1.5">
+                                        {{ locale === 'lv' ? 'Ziņas' : 'Messages' }}
+                                        <span
+                                            v-if="$page.props.messages?.unread_count"
+                                            class="rounded-full bg-[var(--poet-accent)] px-1.5 py-0.5 text-[10px] font-bold leading-none text-white"
+                                        >
+                                            {{ $page.props.messages.unread_count }}
+                                        </span>
+                                    </span>
+                                </NavLink>
+
+                                <NavLink
+                                    v-if="authUser?.is_admin"
+                                    :href="route('admin.moderation')"
+                                    :active="route().current('admin.*')"
+                                >
+                                    {{ locale === 'lv' ? 'Moderācija' : 'Moderation' }}
+                                </NavLink>
+
+                                <NavLink
+                                    v-if="authUser"
                                     :href="route('draft.index')"
                                     :active="route().current('draft.index')"
                                 >
@@ -366,6 +398,22 @@ function search() {
                                             :href="route('profile', {username: authUser.username})"
                                         >
                                             {{ t('nav.profile') }}
+                                        </DropdownLink>
+                                        <DropdownLink
+                                            :href="route('saved.index')"
+                                        >
+                                            {{ locale === 'lv' ? 'Saglabātie darbi' : 'Saved publications' }}
+                                        </DropdownLink>
+                                        <DropdownLink
+                                            :href="route('messages.show')"
+                                        >
+                                            {{ locale === 'lv' ? 'Tiešās ziņas' : 'Direct messages' }}
+                                        </DropdownLink>
+                                        <DropdownLink
+                                            v-if="authUser?.is_admin"
+                                            :href="route('admin.moderation')"
+                                        >
+                                            {{ locale === 'lv' ? 'Moderācija' : 'Moderation' }}
                                         </DropdownLink>
                                         <DropdownLink
                                             :href="route('logout')"
@@ -551,6 +599,38 @@ function search() {
 
                         <ResponsiveNavLink
                             v-if="authUser"
+                            :href="route('saved.index')"
+                            :active="route().current('saved.index')"
+                        >
+                            {{ locale === 'lv' ? 'Saglabātie' : 'Saved' }}
+                        </ResponsiveNavLink>
+
+                        <ResponsiveNavLink
+                            v-if="authUser"
+                            :href="route('messages.show')"
+                            :active="route().current('messages.*')"
+                        >
+                            <span class="inline-flex items-center gap-2">
+                                {{ locale === 'lv' ? 'Ziņas' : 'Messages' }}
+                                <span
+                                    v-if="$page.props.messages?.unread_count"
+                                    class="rounded-full bg-[var(--poet-accent)] px-1.5 py-0.5 text-[10px] font-bold text-white"
+                                >
+                                    {{ $page.props.messages.unread_count }}
+                                </span>
+                            </span>
+                        </ResponsiveNavLink>
+
+                        <ResponsiveNavLink
+                            v-if="authUser?.is_admin"
+                            :href="route('admin.moderation')"
+                            :active="route().current('admin.*')"
+                        >
+                            {{ locale === 'lv' ? 'Moderācija' : 'Moderation' }}
+                        </ResponsiveNavLink>
+
+                        <ResponsiveNavLink
+                            v-if="authUser"
                             :href="route('draft.index')"
                             :active="route().current('draft.index')"
                         >
@@ -601,7 +681,11 @@ function search() {
             </header>
 
             <!-- Page Content -->
-            <main class="flex-1 min-h-0">
+            <main
+                id="main-content"
+                tabindex="-1"
+                class="flex-1 min-h-0"
+            >
                 <slot />
             </main>
 

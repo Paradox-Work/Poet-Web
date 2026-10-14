@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Post extends Model
@@ -76,6 +77,33 @@ class Post extends Model
         return $this->hasMany(Comment::class)->latest();
     }
 
+    public function bookmarks(): HasMany
+    {
+        return $this->hasMany(Bookmark::class);
+    }
+
+    public function collaborators(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'post_collaborators')
+            ->withPivot('added_by')
+            ->withTimestamps();
+    }
+
+    public function canEditDraft(?int $userId): bool
+    {
+        if (!$userId || $this->status !== 'draft') {
+            return false;
+        }
+
+        if ($this->user_id === $userId) {
+            return true;
+        }
+
+        return $this->collaborators()
+            ->where('users.id', $userId)
+            ->exists();
+    }
+
     public function isVisibleTo(?int $userId): bool
     {
         if ($this->status !== 'published') {
@@ -138,7 +166,7 @@ class Post extends Model
                 'group.currentUserGroup',
                 'attachments',
             ])
-            ->withCount('reactions')
+            ->withCount(['reactions', 'comments'])
             ->with([
                 'comments' => function ($query) use ($userId) {
                     $query
@@ -153,6 +181,13 @@ class Post extends Model
                                 }
                             },
                         ]);
+                },
+                'bookmarks' => function ($query) use ($userId) {
+                    if ($userId) {
+                        $query->where('user_id', $userId);
+                    } else {
+                        $query->whereRaw('1 = 0');
+                    }
                 },
                 'reactions' => function ($query) use ($userId) {
                     if ($userId) {

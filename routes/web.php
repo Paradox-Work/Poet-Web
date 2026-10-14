@@ -1,6 +1,11 @@
 <?php
 
+use App\Http\Controllers\BookmarkController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\DraftCollaboratorController;
+use App\Http\Controllers\MessageController;
+use App\Http\Controllers\ModerationController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\DraftController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\GroupImageController;
@@ -14,6 +19,7 @@ use App\Http\Controllers\PostController;
 use App\Http\Controllers\PostInteractionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\SeoController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -21,8 +27,23 @@ use Inertia\Inertia;
 Route::get('/', [HomeController::class, 'index'])
     ->name('dashboard');
 
+Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])
+    ->name('sitemap');
+
 Route::get('/about', fn () => Inertia::render('About'))
     ->name('about');
+
+Route::get('/privacy', fn () => Inertia::render('Legal', ['page' => 'privacy']))
+    ->name('privacy');
+
+Route::get('/terms', fn () => Inertia::render('Legal', ['page' => 'terms']))
+    ->name('terms');
+
+Route::get('/community-guidelines', fn () => Inertia::render('Legal', ['page' => 'community']))
+    ->name('community');
+
+Route::get('/copyright', fn () => Inertia::render('Legal', ['page' => 'copyright']))
+    ->name('copyright');
 
 Route::get('/u/{user:username}', [ProfileController::class, 'index'])
     ->name('profile');
@@ -50,6 +71,41 @@ Route::get('/posts/{post}', [PostController::class, 'view'])
     ->name('post.view');
 
 Route::middleware('auth')->group(function () {
+    Route::get('/saved', [BookmarkController::class, 'index'])
+        ->name('saved.index');
+
+    Route::post('/posts/{post}/bookmark', [BookmarkController::class, 'toggle'])
+        ->name('post.bookmark');
+
+    Route::get('/messages/{conversation?}', [MessageController::class, 'index'])
+        ->name('messages.show');
+
+    Route::post('/messages/start/{user}', [MessageController::class, 'start'])
+        ->name('messages.start');
+
+    Route::post('/messages/{conversation}', [MessageController::class, 'store'])
+        ->middleware('throttle:60,1')
+        ->name('messages.store');
+
+    Route::get('/messages/{conversation}/items', [MessageController::class, 'messages'])
+        ->name('messages.items');
+
+    Route::post('/reports', [ReportController::class, 'store'])
+        ->middleware('throttle:10,1')
+        ->name('reports.store');
+
+    Route::get('/admin/moderation', [ModerationController::class, 'index'])
+        ->name('admin.moderation');
+
+    Route::post('/admin/reports/{report}/resolve', [ModerationController::class, 'resolve'])
+        ->name('admin.reports.resolve');
+
+    Route::post('/drafts/{post}/collaborators', [DraftCollaboratorController::class, 'store'])
+        ->name('draft.collaborators.store');
+
+    Route::delete('/drafts/{post}/collaborators/{user}', [DraftCollaboratorController::class, 'destroy'])
+        ->name('draft.collaborators.destroy');
+
     Route::post('/posts', [PostController::class, 'store'])
         ->middleware('throttle:20,1')
         ->name('post.create');

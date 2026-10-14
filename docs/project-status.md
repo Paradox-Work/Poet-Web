@@ -16,7 +16,15 @@ Poet-Web is a Laravel + Vue/Inertia platform for:
 - attachments;
 - search;
 - notifications;
-- guest browsing.
+- guest browsing;
+- saved publications;
+- one-to-one direct messaging;
+- reporting/site moderation;
+- collaborative poem drafts;
+- non-AI discovery sorting;
+- public legal/community pages;
+- sitemap/social metadata;
+- branded production error pages.
 
 The current interface is Latvian-first with an English alternative for the main presentation flow.
 
@@ -71,7 +79,11 @@ An authenticated user can additionally:
 - react;
 - join/request to join groups;
 - accept/decline invitations;
-- update their profile.
+- update their profile;
+- save visible publications;
+- exchange direct messages;
+- report visible users/posts/comments;
+- collaborate on drafts explicitly shared with them.
 
 ### Approved group member
 
@@ -148,6 +160,34 @@ Automatic approval controls how a user becomes an approved member.
 
 Publishing into a group always requires approved membership.
 
+## Direct messaging
+
+Authenticated users can start one-to-one private conversations from another user's profile.
+
+Conversation access is participant-only. Open conversations poll the message endpoint every five seconds, providing live updates without requiring a websocket server.
+
+Unread state is tracked with `conversation_user.last_read_at`.
+
+See [Direct messaging](direct-messaging-flow.md).
+
+## Saved reading list
+
+Authenticated users can bookmark visible publications.
+
+Bookmark access reuses publication visibility, so private-group content cannot be saved by an outsider through a guessed ID.
+
+See [Bookmarks / reading list](bookmarks-reading-list.md).
+
+## Reporting and site moderation
+
+Authenticated users can report posts, comments, and users for defined reasons.
+
+A separate `users.is_admin` site role protects the moderation dashboard. Administrators can review reports, dismiss them, or remove reported posts/comments.
+
+The dashboard also shows basic product metrics.
+
+See [Reporting and moderation](reporting-and-moderation.md).
+
 ## Publication system
 
 Publications support:
@@ -163,6 +203,7 @@ Publications support:
 - general/mature content rating;
 - attachments;
 - draft/autosave workflow;
+- explicit shared draft collaborators;
 - editing;
 - soft deletion;
 - pinning.
@@ -220,6 +261,18 @@ Private account fields such as email are not exposed to other viewers.
 
 Usernames are unique at both validation and database levels.
 
+## Discovery
+
+Home can sort visible content without AI:
+
+```text
+latest
+popular (reaction count)
+discussed (comment count)
+```
+
+No AI recommendation or AI translation system is part of the current scope.
+
 ## Search
 
 Global search covers:
@@ -246,6 +299,20 @@ Account deletion:
 - invalidates the session.
 
 The soft-delete approach preserves foreign-key integrity for historical relationships.
+
+## Production web polish
+
+Poet-Web now also includes:
+
+- public Privacy/Terms/Community Guidelines/Copyright pages;
+- sitemap.xml and robots.txt;
+- publication-level Open Graph metadata;
+- branded 403/404/419/429/500 pages;
+- keyboard skip navigation;
+- reduced-motion support;
+- improved loading/empty states.
+
+See [SEO, accessibility, and production polish](seo-accessibility-production-polish.md).
 
 ## Localization
 
@@ -293,8 +360,8 @@ See [Presentation demo guide](presentation-demo-guide.md).
 The current main qualification build is verified by GitHub Actions with:
 
 ```text
-70 tests passed
-286 assertions
+82 tests passed
+399 assertions
 0 failures
 ```
 

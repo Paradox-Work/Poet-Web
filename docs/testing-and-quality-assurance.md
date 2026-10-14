@@ -19,8 +19,8 @@ Feature tests create test data, authenticate when needed, call real Laravel rout
 The current qualification build on `main` is verified by GitHub Actions with:
 
 ```text
-70 tests passed
-286 assertions
+82 tests passed
+399 assertions
 0 failures
 ```
 
@@ -85,6 +85,38 @@ The same CI run also completed:
 - guest denial for protected private-group attachments.
 
 Public standalone/public-group attachment access inherits the shared publication visibility policy.
+
+### Bookmarks
+
+- visible publication bookmark/unbookmark;
+- saved reading-list rendering;
+- private-group outsider denial.
+
+### Direct messaging
+
+- starting/reusing a private conversation;
+- message storage/retrieval;
+- non-participant denial.
+
+### Reporting / moderation
+
+- report submission for visible content;
+- non-admin moderation denial;
+- site-admin report resolution;
+- soft-deleted moderated posts.
+
+### Collaborative drafts
+
+- owner adds collaborator;
+- collaborator autosaves shared draft;
+- outsider cannot edit;
+- group membership restriction for group-draft collaborators.
+
+### Discovery sorting
+
+- reaction-count ordering;
+- comment-count ordering;
+- no AI recommendation dependency.
 
 ### Search
 
@@ -182,7 +214,16 @@ Before presentation/submission, manually verify:
 17. comments/replies/reactions;
 18. profile update/images;
 19. search pagination;
-20. responsive layout and dark/light theme.
+20. responsive layout and dark/light theme;
+21. bookmark/unbookmark and Saved page;
+22. direct message from a profile, receive/send/poll;
+23. report a post/comment/user;
+24. grant a throwaway/demo user site-admin access and review report queue;
+25. collaborative poem draft shared with another account;
+26. Home newest/most-liked/most-discussed sorting;
+27. public Privacy/Terms/Guidelines/Copyright pages;
+28. invalid URL branded 404 behavior in a production-like environment;
+29. skip-link keyboard navigation and reduced-motion preference.
 
 ## What passing tests mean
 

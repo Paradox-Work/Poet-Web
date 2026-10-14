@@ -1,0 +1,6 @@
+@extends('errors.layout')
+@section('title', 'Piekļuve liegta')
+@section('code', '403')
+@section('heading', 'Tev nav piekļuves šai lapai.')
+@section('message', 'Šis saturs vai darbība nav pieejama tavam kontam. Ja tā ir privāta grupa, pārbaudi dalības statusu.')
+@section('action', 'Atgriezties sākumā')

@@ -132,13 +132,22 @@ function savedLabel(value) {
 
                             <div class="min-w-0">
                                 <div
-                                    class="mb-1 text-xs font-medium uppercase tracking-wide text-gray-400"
+                                    class="mb-1 flex flex-wrap items-center gap-2 text-xs font-medium uppercase tracking-wide text-gray-400"
                                 >
-                                    {{
-                                        draft.type === 'poem'
-                                            ? 'Poem draft'
-                                            : 'Post draft'
-                                    }}
+                                    <span>
+                                        {{
+                                            draft.type === 'poem'
+                                                ? 'Poem draft'
+                                                : 'Post draft'
+                                        }}
+                                    </span>
+
+                                    <span
+                                        v-if="draft.owner_id !== authUser?.id"
+                                        class="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-300"
+                                    >
+                                        Shared with you
+                                    </span>
                                 </div>
 
                                 <h2
@@ -221,6 +230,7 @@ function savedLabel(value) {
                         </Link>
 
                         <button
+                            v-if="draft.owner_id === authUser?.id"
                             type="button"
                             @click="deleteDraft(draft)"
                             class="inline-flex items-center justify-center rounded-lg border border-gray-200 px-3 py-2 text-gray-500 hover:border-red-200 hover:bg-red-50 hover:text-red-600 dark:border-gray-600 dark:text-gray-300 dark:hover:border-red-900 dark:hover:bg-red-950/30 dark:hover:text-red-300"

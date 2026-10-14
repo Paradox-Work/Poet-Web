@@ -13,11 +13,19 @@ class DraftController extends Controller
             Request $request
         ) {
             $drafts = Post::query()
-                ->with('group')
-                ->where(
-                    'user_id',
-                    $request->user()->id
-                )
+                ->with(['group', 'collaborators'])
+                ->where(function ($query) use ($request) {
+                    $query
+                        ->where('user_id', $request->user()->id)
+                        ->orWhereHas(
+                            'collaborators',
+                            fn ($collaboratorQuery) =>
+                                $collaboratorQuery->where(
+                                    'users.id',
+                                    $request->user()->id
+                                )
+                        );
+                })
                 ->where(
                     'status',
                     'draft'
@@ -79,6 +87,15 @@ class DraftController extends Controller
                             'draft_saved_at' =>
                                 $draft->draft_saved_at
                                     ?->toISOString(),
+                            'owner_id' => $draft->user_id,
+                            'collaborators' =>
+                                $draft->collaborators
+                                    ->map(fn ($user) => [
+                                        'id' => $user->id,
+                                        'name' => $user->name,
+                                        'username' => $user->username,
+                                    ])
+                                    ->values(),
                         ];
                     }
                 );
@@ -197,9 +214,9 @@ class DraftController extends Controller
             Post $post
         ) {
             if (
-                $post->user_id !==
-                    $request->user()->id ||
-                $post->status !== 'draft'
+                !$post->canEditDraft(
+                    $request->user()->id
+                )
             ) {
                 abort(
                     403,
@@ -211,6 +228,17 @@ class DraftController extends Controller
                 $this->validateDraft(
                     $request
                 );
+
+            if (
+                $post->user_id !==
+                    $request->user()->id
+            ) {
+                $data['group_id'] =
+                    $post->group_id;
+
+                $data['type'] =
+                    $post->type;
+            }
     
             $post->update([
                 ...$data,

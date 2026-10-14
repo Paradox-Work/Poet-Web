@@ -56,6 +56,7 @@ This query is reused by the Home feed, search, dedicated publication pages, atta
 feed:   poems | posts | all
 source: for_you | following | groups | mine
 genre:  optional poem genre
+sort:   latest | popular | discussed
 ```
 
 Guests are forced to `source=for_you`. Authenticated users can use personalized source filters.
@@ -63,6 +64,18 @@ Guests are forced to `source=for_you`. Authenticated users can use personalized 
 Results are paginated in groups of 10 and JSON responses are supported for infinite loading.
 
 See [Home feed flow](home-feed-flow.md).
+
+## Discovery sorting
+
+The Home feed provides deterministic, non-AI sorting:
+
+```text
+latest
+popular   → reactions_count
+discussed → comments_count
+```
+
+No recommendation model is required.
 
 ## Rich text
 
@@ -87,7 +100,7 @@ GET /posts/attachments/{attachment}
 GET /posts/attachments/{attachment}/download
 ```
 
-`PostAttachmentController` verifies publication visibility before serving a published attachment. Draft attachments are available only to their owner.
+`PostAttachmentController` verifies publication visibility before serving a published attachment. Draft attachment access remains owner-controlled through the attachment endpoint. Collaborative draft editing currently concerns draft text/metadata; attachment-sharing for collaborative drafts has not been expanded beyond the existing attachment authorization.
 
 A migration moves existing post attachments from public storage to private storage when possible.
 
@@ -113,6 +126,30 @@ remaining existing attachments
 The resulting publication may contain at most 10 attachments and at most 90 MB total.
 
 See [Attachment size validation](attachment-size-validation.md).
+
+## Collaborative drafts
+
+Draft owners can explicitly attach collaborators through `post_collaborators`.
+
+The draft list/writing studio include owned drafts and drafts shared with the current user.
+
+Collaborators may edit/autosave. The owner retains publishing and collaborator-management authority.
+
+For group drafts, an added collaborator must already be an approved group member.
+
+See [Collaborative drafts](collaborative-drafts.md).
+
+## Saved publications
+
+Bookmarks create a private reading list for authenticated users while reusing the central publication-visibility rule.
+
+See [Bookmarks / reading list](bookmarks-reading-list.md).
+
+## Direct messaging
+
+Private one-to-one conversations use participant authorization and five-second HTTP polling for live updates.
+
+See [Direct messaging](direct-messaging-flow.md).
 
 ## Comments and reactions
 
@@ -192,6 +229,18 @@ Hashtag searches additionally use the JSON `hashtags` field.
 Post search begins with `Post::postsForTimeline($request->user()?->id)`, which prevents private group results from leaking into guest or outsider searches.
 
 See [Global search flow](global-search-flow.md).
+
+## Reporting and site moderation
+
+Users can report visible posts, comments, and users. Site administrators review reports through a separate moderation dashboard and can dismiss reports or remove reported post/comment content.
+
+See [Reporting and moderation](reporting-and-moderation.md).
+
+## Production web behavior
+
+Poet-Web includes public policy pages, crawler metadata, public sitemap generation, publication social metadata, branded production error pages, skip navigation, and reduced-motion support.
+
+See [SEO, accessibility, and production polish](seo-accessibility-production-polish.md).
 
 ## Continuous integration
 
