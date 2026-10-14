@@ -156,12 +156,12 @@
 
                                 <span>
                                     {{ followerCount }}
-                                    follower{{ followerCount === 1 ? '' : 's' }}
+                                    {{ locale === 'lv' ? 'sekotāji' : (followerCount === 1 ? 'follower' : 'followers') }}
                                 </span>
 
                                 <span>
                                     {{ followingCount }}
-                                    following
+                                    {{ locale === 'lv' ? 'seko' : 'following' }}
                                 </span>
                             </div>
                         </div>
@@ -175,21 +175,21 @@
                                 :href="route('login')"
                                 class="inline-flex items-center rounded-md border border-transparent bg-[var(--poet-accent)] px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-[var(--poet-accent-strong)]"
                             >
-                                Sign in to follow
+                                {{ locale === 'lv' ? 'Piesakies, lai sekotu' : 'Sign in to follow' }}
                             </Link>
 
                             <PrimaryButton
                                 v-else-if="!isCurrentUserFollower"
                                 @click="followUser"
                             >
-                                Follow
+                                {{ locale === 'lv' ? 'Sekot' : 'Follow' }}
                             </PrimaryButton>
 
                             <DangerButton
                                 v-else
                                 @click="followUser"
                             >
-                                Unfollow
+                                {{ locale === 'lv' ? 'Pārtraukt sekot' : 'Unfollow' }}
                             </DangerButton>
                         </div>
                     </div>
@@ -217,7 +217,7 @@
                                         : 'text-[var(--poet-muted)] hover:text-[var(--poet-text)]'
                                 ]"
                             >
-                                {{ tab.label }}
+                                {{ tabLabel(tab) }}
 
                                 <span
                                     v-if="
@@ -242,7 +242,7 @@
                                 <input
                                     v-model="peopleSearchInput"
                                     type="search"
-                                    placeholder="Search name or @username"
+                                    :placeholder="locale === 'lv' ? 'Meklēt vārdu vai @lietotājvārdu' : 'Search name or @username'"
                                     class="w-full rounded-full border border-[var(--poet-border)] bg-[var(--poet-surface)] py-2 pl-9 pr-4 text-sm text-[var(--poet-text)] placeholder:text-[var(--poet-muted)] focus:border-[var(--poet-accent)] focus:ring-[var(--poet-accent)]"
                                 />
                             </div>
@@ -253,7 +253,7 @@
                                 aria-label="Search people"
                             >
                                 <MagnifyingGlassIcon class="h-4 w-4 md:hidden" />
-                                <span class="hidden md:inline">Search</span>
+                                <span class="hidden md:inline">{{ locale === 'lv' ? 'Meklēt' : 'Search' }}</span>
                             </button>
 
                             <button
@@ -530,6 +530,10 @@ import PrimaryButton
 import DangerButton
     from '@/Components/DangerButton.vue';
 
+import { useI18n } from '@/i18n';
+
+const { locale } = useI18n();
+
 const props = defineProps({
     errors: Object,
     mustVerifyEmail: Boolean,
@@ -630,6 +634,18 @@ const allTabs = [
         ownerOnly: true
     }
 ];
+
+function tabLabel(tab) {
+    const labels = {
+        posts: locale.value === 'lv' ? 'Publikācijas' : 'Posts',
+        followers: locale.value === 'lv' ? 'Sekotāji' : 'Followers',
+        following: locale.value === 'lv' ? 'Seko' : 'Following',
+        photos: locale.value === 'lv' ? 'Fotoattēli' : 'Photos',
+        my_profile: locale.value === 'lv' ? 'Mans profils' : 'My Profile',
+    };
+
+    return labels[tab.value] ?? tab.label;
+}
 
 const visibleTabs =
     computed(() =>
