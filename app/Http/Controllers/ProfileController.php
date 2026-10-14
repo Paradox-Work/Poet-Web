@@ -388,6 +388,30 @@ class ProfileController extends Controller
                 ->where('user_id', $user->id)
                 ->delete();
 
+            DB::table('bookmarks')
+                ->where('user_id', $user->id)
+                ->delete();
+
+            $readingListIds =
+                DB::table('reading_lists')
+                    ->where('user_id', $user->id)
+                    ->pluck('id');
+
+            DB::table('reading_list_post')
+                ->whereIn(
+                    'reading_list_id',
+                    $readingListIds
+                )
+                ->delete();
+
+            DB::table('reading_lists')
+                ->where('user_id', $user->id)
+                ->delete();
+
+            DB::table('post_collaborators')
+                ->where('user_id', $user->id)
+                ->delete();
+
             DB::table('notifications')
                 ->where('notifiable_type', User::class)
                 ->where('notifiable_id', $user->id)
