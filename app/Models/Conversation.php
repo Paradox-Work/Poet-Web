@@ -13,6 +13,7 @@ class Conversation extends Model
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class)
+            ->withTrashed()
             ->withPivot('last_read_at')
             ->withTimestamps();
     }
