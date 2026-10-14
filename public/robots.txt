@@ -1,2 +1,9 @@
 User-agent: *
-Disallow:
+Allow: /
+Disallow: /admin/
+Disallow: /messages/
+Disallow: /drafts/
+Disallow: /saved/
+Disallow: /notifications/
+
+Sitemap: /sitemap.xml
