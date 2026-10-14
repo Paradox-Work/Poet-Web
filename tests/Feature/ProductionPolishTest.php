@@ -253,8 +253,6 @@ test('non collaborators cannot edit another users draft', function () {
 });
 
 test('discovery can sort by reactions and comments without recommendations', function () {
-    $this->withoutExceptionHandling();
-
     $author = User::factory()->create();
     $other = User::factory()->create();
 
