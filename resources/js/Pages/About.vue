@@ -1,9 +1,9 @@
 <script setup>
-import { Head } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { useI18n } from '@/i18n';
 
-const { t } = useI18n();
+const { locale, t } = useI18n();
 </script>
 
 <template>
@@ -59,6 +59,39 @@ const { t } = useI18n();
                         </p>
                     </section>
                 </div>
+
+                <section class="poet-card mt-6 p-5">
+                    <h2 class="font-serif text-xl font-semibold">
+                        {{ locale === 'lv' ? 'Noteikumi un kopiena' : 'Policies and community' }}
+                    </h2>
+
+                    <div class="mt-3 flex flex-wrap gap-3 text-sm">
+                        <Link
+                            :href="route('legal.show', 'guidelines')"
+                            class="text-[var(--poet-accent)] hover:underline"
+                        >
+                            {{ locale === 'lv' ? 'Kopienas vadlīnijas' : 'Community Guidelines' }}
+                        </Link>
+                        <Link
+                            :href="route('legal.show', 'copyright')"
+                            class="text-[var(--poet-accent)] hover:underline"
+                        >
+                            {{ locale === 'lv' ? 'Autortiesības' : 'Copyright' }}
+                        </Link>
+                        <Link
+                            :href="route('legal.show', 'privacy')"
+                            class="text-[var(--poet-accent)] hover:underline"
+                        >
+                            {{ locale === 'lv' ? 'Privātums' : 'Privacy' }}
+                        </Link>
+                        <Link
+                            :href="route('legal.show', 'terms')"
+                            class="text-[var(--poet-accent)] hover:underline"
+                        >
+                            {{ locale === 'lv' ? 'Lietošanas noteikumi' : 'Terms' }}
+                        </Link>
+                    </div>
+                </section>
             </div>
         </div>
     </AuthenticatedLayout>
