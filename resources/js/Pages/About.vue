@@ -1,9 +1,9 @@
 <script setup>
-import { Head } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { useI18n } from '@/i18n';
 
-const { t } = useI18n();
+const { locale, t } = useI18n();
 </script>
 
 <template>
@@ -59,6 +59,24 @@ const { t } = useI18n();
                         </p>
                     </section>
                 </div>
+
+                <nav
+                    class="mt-8 flex flex-wrap gap-x-4 gap-y-2 border-t border-[var(--poet-border)] pt-5 text-sm text-[var(--poet-accent-strong)]"
+                    aria-label="Policy pages"
+                >
+                    <Link :href="route('privacy')">
+                        {{ locale === 'lv' ? 'Privātums' : 'Privacy' }}
+                    </Link>
+                    <Link :href="route('terms')">
+                        {{ locale === 'lv' ? 'Lietošanas noteikumi' : 'Terms' }}
+                    </Link>
+                    <Link :href="route('community')">
+                        {{ locale === 'lv' ? 'Kopienas noteikumi' : 'Community guidelines' }}
+                    </Link>
+                    <Link :href="route('copyright')">
+                        {{ locale === 'lv' ? 'Autortiesības' : 'Copyright' }}
+                    </Link>
+                </nav>
             </div>
         </div>
     </AuthenticatedLayout>
