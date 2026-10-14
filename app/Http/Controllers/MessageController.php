@@ -114,7 +114,7 @@ class MessageController extends Controller
             $like = '%' . $search . '%';
 
             $userMatches = User::query()
-                ->whereKeyNot($user->id)
+                ->where('id', '!=', $user->id)
                 ->whereNull('suspended_at')
                 ->where(function ($query) use ($like) {
                     $query
