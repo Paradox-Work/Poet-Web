@@ -189,6 +189,11 @@ class CommentController extends Controller
     
         $post =
             $comment->post;
+
+        $this->ensureVisible(
+            $post,
+            $userId
+        );
     
         $isCommentOwner =
             $comment->user_id ===
