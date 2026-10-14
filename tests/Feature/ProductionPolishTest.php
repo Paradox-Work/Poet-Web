@@ -308,3 +308,55 @@ test('legal pages and sitemap are public and sitemap excludes private group post
         ->assertSee(route('post.view', $publicPost), false)
         ->assertDontSee(route('post.view', $privatePost), false);
 });
+
+
+test('users cannot report their own account', function () {
+    $user = User::factory()->create();
+
+    $this
+        ->actingAs($user)
+        ->postJson(
+            route('reports.store'),
+            [
+                'type' => 'user',
+                'id' => $user->id,
+                'reason' => 'other',
+            ]
+        )
+        ->assertUnprocessable();
+
+    expect(Report::query()->count())->toBe(0);
+});
+
+test('site admin access can be granted and removed with the artisan command', function () {
+    $user = User::factory()->create([
+        'is_admin' => false,
+    ]);
+
+    $this
+        ->artisan('app:make-admin', [
+            'username' => $user->username,
+        ])
+        ->assertSuccessful();
+
+    expect($user->fresh()->is_admin)->toBeTrue();
+
+    $this
+        ->artisan('app:make-admin', [
+            'username' => $user->username,
+            '--remove' => true,
+        ])
+        ->assertSuccessful();
+
+    expect($user->fresh()->is_admin)->toBeFalse();
+});
+
+test('production 404 uses the branded Poet-Web error page', function () {
+    config()->set('app.debug', false);
+
+    $this
+        ->get('/this-page-definitely-does-not-exist')
+        ->assertNotFound()
+        ->assertSee('Šeit nekā nav.')
+        ->assertSee('Poet-Web');
+});
