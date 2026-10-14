@@ -39,6 +39,15 @@ Visitors can browse public standalone publications and public-group content befo
 - Photo galleries
 - Dark and light themes
 - Global search for users, groups, and visible publications
+- Direct messaging with automatic live polling and unread state
+- Bookmarks and personal reading lists
+- Shared poem editing through accepted collaborators
+- Site-wide reporting, moderation queue, account suspension, and admin metrics
+- Trending / popular / most-discussed discovery sorting
+- Public privacy, terms, community-guideline, and copyright pages
+- SEO/social-sharing metadata, sitemap, and robots.txt
+- Branded 403/404/419/429/500 error pages
+- Accessibility improvements including skip navigation and reduced-motion support
 - Automated Laravel feature tests and GitHub Actions CI
 
 ## Access Model
@@ -55,7 +64,10 @@ Guests can browse public content, but actions that change data still require aut
 - reacting;
 - commenting;
 - editing;
-- moderation.
+- moderation;
+- messaging;
+- bookmarking and reading lists;
+- collaboration management.
 
 See [docs/security-and-access-control.md](docs/security-and-access-control.md).
 
@@ -67,7 +79,7 @@ A local presentation dataset can be created with:
 ./vendor/bin/sail artisan db:seed --class=PresentationDemoSeeder
 ```
 
-The seeder creates Latvian demo users, poems, comments, reactions, follow relationships, a public group, a private group, approved memberships, and a pending join request.
+The seeder creates Latvian demo users, poems, comments, reactions, follow relationships, public/private groups, memberships, a direct-message conversation, bookmarks/reading list data, an accepted poem collaboration, and a pending moderation report. Elza is configured as the demo site administrator.
 
 See:
 
@@ -201,6 +213,12 @@ Start with:
 - [Localization flow](docs/localization-flow.md)
 - [About and author-rights page](docs/about-rights-flow.md)
 - [Testing and quality assurance](docs/testing-and-quality-assurance.md)
+- [Direct messaging](docs/direct-messaging-flow.md)
+- [Bookmarks and reading lists](docs/library-reading-lists.md)
+- [Moderation and admin analytics](docs/moderation-admin-analytics.md)
+- [Poem collaboration](docs/collaboration-flow.md)
+- [Discovery / SEO / accessibility](docs/discovery-seo-accessibility.md)
+- [Legal and error pages](docs/legal-error-pages.md)
 - [Presentation demo guide](docs/presentation-demo-guide.md)
 - [ER diagram for presentation](docs/database-er-diagram.md)
 
