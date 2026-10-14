@@ -25,11 +25,12 @@ test('poem owners can invite collaborators who can accept and edit', function ()
     expect(
         $collaborator
             ->notifications()
-            ->where(
-                'data->kind',
-                'collaboration_invited'
+            ->get()
+            ->contains(
+                fn ($notification) =>
+                    ($notification->data['kind'] ?? null)
+                    === 'collaboration_invited'
             )
-            ->exists()
     )->toBeTrue();
 
     $this
@@ -54,11 +55,12 @@ test('poem owners can invite collaborators who can accept and edit', function ()
     expect(
         $owner
             ->notifications()
-            ->where(
-                'data->kind',
-                'collaboration_accepted'
+            ->get()
+            ->contains(
+                fn ($notification) =>
+                    ($notification->data['kind'] ?? null)
+                    === 'collaboration_accepted'
             )
-            ->exists()
     )->toBeTrue();
 });
 
