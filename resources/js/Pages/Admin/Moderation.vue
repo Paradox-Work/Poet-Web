@@ -1,5 +1,5 @@
 <script setup>
-import { Head, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { useI18n } from '@/i18n';
 
@@ -86,9 +86,19 @@ function resolve(report, action) {
                                     {{ report.details }}
                                 </p>
 
-                                <div class="mt-2 text-xs text-[var(--poet-muted)]">
-                                    {{ locale === 'lv' ? 'Ziņoja' : 'Reported by' }}:
-                                    @{{ report.reporter }}
+                                <div class="mt-2 flex flex-wrap items-center gap-3 text-xs text-[var(--poet-muted)]">
+                                    <span>
+                                        {{ locale === 'lv' ? 'Ziņoja' : 'Reported by' }}:
+                                        @{{ report.reporter }}
+                                    </span>
+
+                                    <Link
+                                        v-if="report.target_url"
+                                        :href="report.target_url"
+                                        class="font-medium text-[var(--poet-accent-strong)] hover:underline"
+                                    >
+                                        {{ locale === 'lv' ? 'Atvērt saturu' : 'Open target' }}
+                                    </Link>
                                 </div>
                             </div>
 
