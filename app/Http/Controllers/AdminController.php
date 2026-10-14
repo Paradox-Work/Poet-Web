@@ -115,6 +115,19 @@ class AdminController extends Controller
                             ->count(),
                 ],
                 'reports' => $reports,
+                'suspendedUsers' =>
+                    User::query()
+                        ->whereNotNull('suspended_at')
+                        ->orderByDesc('suspended_at')
+                        ->limit(20)
+                        ->get()
+                        ->map(fn (User $user) => [
+                            'id' => $user->id,
+                            'name' => $user->name,
+                            'username' => $user->username,
+                            'suspended_at' =>
+                                $user->suspended_at?->toISOString(),
+                        ]),
             ]
         );
     }
