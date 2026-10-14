@@ -22,7 +22,8 @@ Visitors can browse public poetry and posts before registering. Authenticated us
 
 ## Main Features
 
-- Guest browsing of public feed, search, profiles, groups, and standalone publications
+- Latvian-first interface with persistent LV / EN language switch
+- Guest browsing of public feed, search, profiles, groups, and public publications
 - User registration, authentication, password reset, and email verification
 - User profiles with cover and avatar images
 - Follow / unfollow users
@@ -32,7 +33,8 @@ Visitors can browse public poetry and posts before registering. Authenticated us
 - Nested comments and replies
 - Comment and post reactions
 - Groups, invitations, join requests, roles, and moderation
-- Group publications restricted to approved members
+- Public and private groups with independent membership approval
+- Private group publications restricted to approved members
 - Notifications
 - Photo galleries
 - Dark and light themes
@@ -43,7 +45,7 @@ Visitors can browse public poetry and posts before registering. Authenticated us
 
 Standalone published posts are public.
 
-Group publications are visible only to approved group members. This rule is enforced by the backend and reused by the home feed, search, dedicated publication pages, reactions, comments, and attachment access.
+Group visibility is explicit. Public group publications are readable by guests; private group publications require approved membership. This rule is enforced by the backend and reused by the home feed, search, dedicated publication pages, reactions, comments, and attachment access.
 
 Guests can browse public content, but actions that change data still require authentication, including:
 
@@ -56,6 +58,21 @@ Guests can browse public content, but actions that change data still require aut
 - moderation.
 
 See [docs/security-and-access-control.md](docs/security-and-access-control.md).
+
+## Qualification Presentation Demo
+
+A local presentation dataset can be created with:
+
+```bash
+./vendor/bin/sail artisan db:seed --class=PresentationDemoSeeder
+```
+
+The seeder creates Latvian demo users, poems, comments, reactions, follow relationships, a public group, a private group, approved memberships, and a pending join request.
+
+See:
+
+- [Presentation demo guide](docs/presentation-demo-guide.md)
+- [Presentation ER diagram](docs/database-er-diagram.md)
 
 ## Pulling the Latest Version
 
@@ -181,6 +198,8 @@ Start with:
 - [Implementation notes](docs/implementation-notes.md)
 - [Security and access control](docs/security-and-access-control.md)
 - [Testing and quality assurance](docs/testing-and-quality-assurance.md)
+- [Presentation demo guide](docs/presentation-demo-guide.md)
+- [ER diagram for presentation](docs/database-er-diagram.md)
 
 ## Repository
 
