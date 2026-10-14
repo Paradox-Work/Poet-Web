@@ -335,7 +335,7 @@ function onDeckWheel(event) {
 
     if (
         target?.closest(
-            'textarea, input, select, [contenteditable="true"], .comment-list, .deck-card-scroll'
+            'textarea, input, select, [contenteditable="true"], .comment-list'
         )
     ) {
         return;
@@ -578,7 +578,7 @@ function removePost(postId) {
     >
         <div
             v-if="feedState.posts.length"
-            class="flex min-h-0 flex-1 items-stretch overflow-y-auto min-[1400px]:items-center min-[1400px]:overflow-visible"
+            class="flex min-h-0 flex-1 items-stretch overflow-hidden min-[1400px]:items-center"
             tabindex="0"
             @wheel="onDeckWheel"
             @pointerdown="onPointerDown"
@@ -626,7 +626,7 @@ function removePost(postId) {
                         <div
                             v-if="activePost"
                             :key="activePost.id"
-                            class="mx-auto h-full min-h-0 w-full overflow-hidden rounded-2xl min-[1400px]:h-auto min-[1400px]:max-h-[calc(100vh-185px)] min-[1400px]:overflow-y-auto min-[1400px]:scrollbar-hidden"
+                            class="deck-active-shell mx-auto h-full min-h-0 w-full overflow-hidden rounded-2xl min-[1400px]:h-auto min-[1400px]:max-h-[calc(100vh-185px)]"
                         >
                             <PostItem
                                 :post="activePost"
