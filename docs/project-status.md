@@ -16,7 +16,15 @@ Poet-Web is a Laravel + Vue/Inertia platform for:
 - attachments;
 - search;
 - notifications;
-- guest browsing.
+- guest browsing;
+- direct messaging;
+- bookmarks and reading lists;
+- shared poem editing;
+- site-wide reporting/moderation;
+- admin analytics;
+- public legal/community pages;
+- discovery sorting;
+- SEO/share metadata and branded error pages.
 
 The current interface is Latvian-first with an English alternative for the main presentation flow.
 
@@ -71,7 +79,12 @@ An authenticated user can additionally:
 - react;
 - join/request to join groups;
 - accept/decline invitations;
-- update their profile.
+- update their profile;
+- send direct messages;
+- bookmark visible publications;
+- create reading lists;
+- report visible content/users;
+- accept shared-poem collaboration invitations.
 
 ### Approved group member
 
@@ -233,6 +246,86 @@ Users, groups, and publications have independent pagination parameters.
 
 Publication search starts from the shared visibility query so private-group content cannot leak through search.
 
+## Direct messaging
+
+Registered users can start one-to-one conversations.
+
+Conversation membership is enforced on the backend.
+
+Open threads refresh automatically using short polling and maintain unread state with `last_read_at`.
+
+The current implementation is intentionally lightweight for the Sail/demo environment and is not a WebSocket service.
+
+See [Direct messaging flow](direct-messaging-flow.md).
+
+## Bookmarks and reading lists
+
+Visible publications can be bookmarked and organized into private user-owned reading lists.
+
+Post visibility is rechecked both when saving and when rendering the personal library.
+
+See [Bookmarks and reading lists](library-reading-lists.md).
+
+## Shared poem editing
+
+Poem owners can invite another registered user as an editor.
+
+Accepted collaborators may update the poem while ownership/deletion remains with the original author.
+
+Group poems additionally require collaborators to remain approved group members.
+
+See [Poem collaboration](collaboration-flow.md).
+
+## Site moderation and analytics
+
+Users can report posts, comments, and profiles.
+
+Site administrators receive a separate moderation dashboard containing the report queue plus operational counts for users, publications, groups, conversations, messages, bookmarks, and recent activity.
+
+Site admins may dismiss reports, remove content, suspend users, and restore suspended accounts.
+
+See [Reporting, moderation, and site administration](moderation-admin-analytics.md).
+
+## Discovery and public-web polish
+
+Home/Explore supports:
+
+```text
+newest
+trending
+most liked
+most discussed
+```
+
+These are explicit count-based sorts, not AI recommendations.
+
+Public content includes Open Graph/share metadata. Poet-Web exposes a public sitemap and robots.txt, while private/account areas are excluded from crawler discovery.
+
+The shared layout includes skip navigation, reduced-motion support, navigation loading feedback, and global flash feedback.
+
+See [Discovery, SEO, sharing, and accessibility](discovery-seo-accessibility.md).
+
+## Legal/community and error pages
+
+Public pages cover:
+
+- privacy;
+- terms;
+- community guidelines;
+- copyright/author rights.
+
+Branded error pages cover:
+
+```text
+403
+404
+419
+429
+500
+```
+
+See [Legal, community, and error pages](legal-error-pages.md).
+
 ## Account deletion
 
 Account deletion:
@@ -293,8 +386,8 @@ See [Presentation demo guide](presentation-demo-guide.md).
 The current main qualification build is verified by GitHub Actions with:
 
 ```text
-70 tests passed
-286 assertions
+86 tests passed
+357 assertions
 0 failures
 ```
 
