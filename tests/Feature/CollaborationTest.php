@@ -82,3 +82,34 @@ test('private group poems can only invite approved group members', function () {
 
     expect(PostCollaborator::query()->count())->toBe(0);
 });
+
+
+test('collaborators cannot convert an owners poem into a normal post', function () {
+    $owner = User::factory()->create();
+    $collaborator = User::factory()->create();
+    $poem = poetTestPost($owner, [
+        'type' => 'poem',
+        'poem_form' => 'free_verse',
+    ]);
+
+    PostCollaborator::query()->create([
+        'post_id' => $poem->id,
+        'user_id' => $collaborator->id,
+        'invited_by' => $owner->id,
+        'status' => 'accepted',
+        'role' => 'editor',
+    ]);
+
+    $this
+        ->actingAs($collaborator)
+        ->put(
+            route('post.update', $poem),
+            poetTestPostPayload([
+                'type' => 'post',
+                'poem_form' => null,
+            ])
+        )
+        ->assertSessionHasErrors('type');
+
+    expect($poem->fresh()->type)->toBe('poem');
+});
