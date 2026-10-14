@@ -369,3 +369,39 @@ body {
     display:
         none;
 }
+
+
+/*
+ * Compact-height reading mode.
+ *
+ * The Home deck is intentionally non-scrollable. In very short browser
+ * viewports, the source tabs are folded into the feed kicker and the
+ * publication card shows a direct link to the dedicated full-page view.
+ * This avoids one mouse-wheel gesture both scrolling a card and changing
+ * the active publication.
+ */
+@media (max-height: 560px) {
+    .home-source-tabs {
+        display: none !important;
+    }
+
+    .compact-height-source {
+        display: inline !important;
+    }
+
+    .deck-active-shell {
+        height: 100% !important;
+        max-height: none !important;
+        overflow: hidden !important;
+    }
+
+    .deck-navigation-card {
+        height: 100% !important;
+        min-height: 0 !important;
+        margin-bottom: 0 !important;
+    }
+
+    .compact-height-reading-cta {
+        display: flex !important;
+    }
+}
