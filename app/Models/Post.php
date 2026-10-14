@@ -173,14 +173,7 @@ class Post extends Model
                         ->with('user')
                         ->withCount('reactions')
                         ->with([
-                            'bookmarks' => function ($query) use ($userId) {
-                    if ($userId) {
-                        $query->where('user_id', $userId);
-                    } else {
-                        $query->whereRaw('1 = 0');
-                    }
-                },
-                'reactions' => function ($query) use ($userId) {
+                            'reactions' => function ($query) use ($userId) {
                                 if ($userId) {
                                     $query->where('user_id', $userId);
                                 } else {
@@ -188,6 +181,13 @@ class Post extends Model
                                 }
                             },
                         ]);
+                },
+                'bookmarks' => function ($query) use ($userId) {
+                    if ($userId) {
+                        $query->where('user_id', $userId);
+                    } else {
+                        $query->whereRaw('1 = 0');
+                    }
                 },
                 'reactions' => function ($query) use ($userId) {
                     if ($userId) {
