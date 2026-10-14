@@ -71,6 +71,14 @@ class PoemController extends Controller
                             );
                     })
                     ->firstOrFail();
+
+                if (
+                    $post->user_id !== $request->user()->id
+                    && $post->group_id
+                    && !$post->group?->hasApprovedUser($request->user()->id)
+                ) {
+                    abort(403);
+                }
     
                 $editPoem = [
                     'id' => $post->id,
