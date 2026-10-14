@@ -436,3 +436,21 @@ body {
         transition-duration: 0.001ms !important;
     }
 }
+
+/* Gentle Inertia page entrance; maintain motion-accessibility preferences. */
+@keyframes poetPageEnter {
+    from { opacity: 0.62; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.poet-page-enter { animation: poetPageEnter 220ms ease-out both; }
+
+/* Search hints travel left only when they overflow their input. */
+.poet-search-hint-text { display: inline-block; max-width: none; animation: poetSearchReveal 3.3s ease-in-out both; }
+@keyframes poetSearchReveal {
+    0% { opacity: 0; transform: translateX(14px); }
+    15%, 62% { opacity: 1; transform: translateX(0); }
+    90%, 100% { opacity: 0; transform: translateX(-26px); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .poet-page-enter, .poet-search-hint-text { animation: none !important; }
+}
