@@ -119,7 +119,23 @@ Show:
 
 Mention that the backend checks visibility before protected interactions.
 
-### 6. Testing evidence
+### 6. Real-platform features
+
+For a stronger technical demonstration, briefly show two or three rather than every new feature:
+
+- Save a poem and open the Saved reading list;
+- open another writer's profile and start a direct message;
+- share a poem draft with a collaborator;
+- report a demo publication and open the moderation queue as Elza;
+- change Home sorting between newest, most liked, and most discussed.
+
+Elza from the demo seeder is a site administrator.
+
+Presentation point:
+
+> Poet-Web now includes the surrounding product features expected from a real user-generated-content platform: private messaging, saved reading, moderation, collaboration, discovery, policy pages, and production error/SEO behavior.
+
+### 7. Testing evidence
 
 Run:
 
@@ -146,7 +162,6 @@ Before the presentation:
 ```bash
 ./vendor/bin/sail up -d
 ./vendor/bin/sail artisan migrate
-./vendor/bin/sail npm ci
 ./vendor/bin/sail npm run build
 ./vendor/bin/sail artisan test
 ```
@@ -167,8 +182,9 @@ A compact presentation can use:
 8. Access model: guest / user / group member / admin
 9. Public vs private groups
 10. Security and validation
-11. Testing evidence
-12. Live demonstration
-13. Conclusions
+11. Real-platform features: messages / bookmarks / moderation
+12. Testing evidence
+13. Live demonstration
+14. Conclusions
 
 The live demo should carry more weight than additional filler slides.
