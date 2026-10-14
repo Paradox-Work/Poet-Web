@@ -176,7 +176,7 @@ Build production frontend assets:
 ./vendor/bin/sail npm run build
 ```
 
-The current production-polish build is verified with 79 passing tests and 368 assertions, plus successful database migrations and a Vite production build in GitHub Actions.
+The current production-polish build is verified with 82 passing tests and 377 assertions, plus successful database migrations and a Vite production build in GitHub Actions.
 
 See [docs/testing-and-quality-assurance.md](docs/testing-and-quality-assurance.md).
 
