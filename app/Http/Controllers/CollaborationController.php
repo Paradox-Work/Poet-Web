@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Post;
 use App\Models\PostCollaborator;
 use App\Models\User;
+use App\Notifications\CollaborationAccepted;
+use App\Notifications\CollaborationInvited;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -191,6 +193,13 @@ class CollaborationController extends Controller
                 ]
             );
 
+        $user->notify(
+            new CollaborationInvited(
+                $post,
+                $request->user()
+            )
+        );
+
         return back()->with(
             'success',
             'Collaboration invitation sent.'
@@ -211,6 +220,23 @@ class CollaborationController extends Controller
         $collaborator->update([
             'status' => 'accepted',
         ]);
+
+        $owner = $collaborator
+            ->post
+            ->user;
+
+        if (
+            $owner
+            && $owner->id !==
+                $request->user()->id
+        ) {
+            $owner->notify(
+                new CollaborationAccepted(
+                    $collaborator->post,
+                    $request->user()
+                )
+            );
+        }
 
         return to_route(
             'collaborations.manage',
