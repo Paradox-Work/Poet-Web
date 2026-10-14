@@ -665,7 +665,11 @@ function search() {
             </header>
 
             <!-- Page Content -->
-            <main class="flex-1 min-h-0">
+            <main
+                id="main-content"
+                tabindex="-1"
+                class="flex-1 min-h-0"
+            >
                 <slot />
             </main>
 
