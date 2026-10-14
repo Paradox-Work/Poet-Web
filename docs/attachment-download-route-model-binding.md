@@ -1,186 +1,133 @@
-# Laravel Attachment Downloads and Route Model Binding
+# Attachment Routes, Model Binding, and Authorization
 
 ## Overview
 
-Poet-Web allows authenticated users to download files attached to posts.
+Post attachments are private files served through Laravel after authorization.
 
-The download flow connects four pieces:
+They are not intended to be reachable through a direct `/storage/...` URL.
 
-1. the attachment ID used in the frontend route;
-2. Laravel route model binding;
-3. the `PostAttachment` database record;
-4. the physical file stored on Laravel's `public` disk.
+## Routes
 
----
+Inline view:
 
-## Route
+```text
+GET /posts/attachments/{attachment}
+route: post.attachment.view
+```
 
-The authenticated download route is:
+Download:
 
 ```text
 GET /posts/attachments/{attachment}/download
+route: post.download
 ```
 
-and is named:
+Both routes use Laravel route model binding for `PostAttachment`.
+
+## Model binding
+
+For an attachment with ID 12:
 
 ```text
-post.download
-```
-
-`PostAttachments.vue` generates the URL with the attachment ID:
-
-```vue
-:href="route('post.download', attachment.id)"
-```
-
-For example, attachment ID `12` produces a request for the route containing:
-
-```text
-{attachment} = 12
-```
-
----
-
-## Route Model Binding
-
-The controller method receives:
-
-```php
-public function downloadAttachment(
-    PostAttachment $attachment
-)
-```
-
-Because the route parameter is called `{attachment}` and the controller argument is type-hinted as `PostAttachment`, Laravel resolves the numeric route value into the matching database model.
-
-Conceptually:
-
-```text
-attachment.id = 12
-        ↓
-route('post.download', 12)
-        ↓
-GET /posts/attachments/12/download
+/posts/attachments/12
         ↓
 {attachment} = 12
         ↓
-PostAttachment::findOrFail(12)
+PostAttachment model is resolved
         ↓
-PostAttachment $attachment
+PostAttachmentController
 ```
 
-If the record does not exist, Laravel returns a 404 response before the controller can download anything.
+A missing database row returns 404.
 
----
+## Authorization
 
-## Database Metadata
+`PostAttachmentController::authorizeAttachment()` loads the parent post and applies different rules by post state.
 
-`PostAttachment` stores metadata including:
+### Draft attachment
 
 ```text
-post_id
-name
-path
-url
-mime
-size
-created_by
+request user exists
+AND post.user_id = request user ID
+→ allowed
+
+otherwise
+→ 404
 ```
 
-For downloading, the two important values are:
+### Published attachment
 
-```text
-path
-name
-```
-
-`path` identifies where the file is stored on disk.
-
-`name` contains the original filename that should be offered to the user when the browser downloads it.
-
----
-
-## Controller Download
-
-`PostController::downloadAttachment()` returns the file using:
+The controller calls:
 
 ```php
-return Storage::disk('public')->download(
-    $attachment->path,
-    $attachment->name
-);
+$post->isVisibleTo($userId)
 ```
 
-The complete flow is therefore:
-
-```mermaid
-flowchart TD
-    A[User clicks Download]
-    B[PostAttachments.vue]
-    C[post.download route with attachment ID]
-    D[Laravel route model binding]
-    E[PostAttachment model]
-    F[Read attachment path and original name]
-    G[Storage public disk]
-    H[Browser downloads file]
-
-    A --> B
-    B --> C
-    C --> D
-    D --> E
-    E --> F
-    F --> G
-    G --> H
-```
-
----
-
-## Preventing the Preview from Opening
-
-The download button exists inside a clickable attachment preview card.
-
-It uses:
-
-```vue
-@click.stop
-```
-
-This prevents the download click from propagating to the attachment card.
-
-Without `.stop`, one click could both:
+Therefore:
 
 ```text
-download the file
-+
-open the attachment preview
+standalone publication attachment
+→ visible to guests and authenticated users
+
+group publication attachment
+→ approved member only
 ```
 
-With `.stop`, only the download action occurs.
+This prevents an attachment URL or ID from bypassing publication access rules.
 
----
+## Storage lookup
 
-## Authentication and Access
+Current uploads use the private `local` disk.
 
-The download route is inside the authenticated route group, so the user must be logged in.
+The controller checks:
 
-The current implementation does not add an additional attachment ownership check inside `downloadAttachment()`; access is controlled by authentication and possession of a valid attachment route.
+1. `local`;
+2. `public`.
 
-If more restrictive attachment permissions are introduced later, authorization should be added before returning the file.
+The public fallback provides compatibility during/after migration of older files. New application code stores post attachments privately.
 
----
+## Response
 
-## Main Files
+Inline view uses the stored MIME type and includes:
+
+```text
+X-Content-Type-Options: nosniff
+```
+
+Download uses the original attachment name.
+
+## Resource URLs
+
+`PostAttachmentResource` generates:
+
+```text
+url          → post.attachment.view
+download_url → post.download
+```
+
+The database `url` column is no longer the access-control mechanism.
+
+## Migration
+
+`2026_10_14_000003_move_post_attachments_to_private_storage.php` moves existing physical post files from the public disk to the private local disk when possible.
+
+## Tests
+
+`AttachmentSecurityTest` verifies:
+
+- group members can access permitted attachments;
+- outsiders cannot;
+- draft attachments are owner-only;
+- new publication attachments are stored on the private disk;
+- guests cannot access group-only attachments.
+
+## Main files
 
 ```text
 routes/web.php
-└── defines post.download
-
-PostAttachments.vue
-└── creates the download URL and stops click propagation
-
-PostController.php
-└── receives the bound PostAttachment and returns the file
-
-PostAttachment.php
-└── represents the attachment metadata stored in the database
+app/Http/Controllers/PostAttachmentController.php
+app/Http/Resources/PostAttachmentResource.php
+app/Models/PostAttachment.php
+database/migrations/2026_10_14_000003_move_post_attachments_to_private_storage.php
+tests/Feature/AttachmentSecurityTest.php
 ```

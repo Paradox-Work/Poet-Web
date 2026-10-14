@@ -2,919 +2,119 @@
 
 ## Overview
 
-Poet-Web provides an authenticated global search system for:
+Global search is available to guests and authenticated users.
 
-```text
-users
-groups
-posts
-```
-
-The search field is located in the authenticated navigation bar.
-
-When the user enters a search term and presses Enter, Poet-Web navigates to:
-
-```text
-/search/{search}
-```
-
-The search page then displays matching users, groups, and visible posts.
-
----
-
-## Main Files
-
-```text
-app/Http/Controllers/SearchController.php
-resources/js/Layouts/AuthenticatedLayout.vue
-resources/js/Pages/Search.vue
-resources/js/Components/app/UserListItem.vue
-resources/js/Components/app/GroupItem.vue
-resources/js/Components/app/PostList.vue
-app/Models/Post.php
-routes/web.php
-```
-
----
-
-## Search Route
-
-The global search route is defined inside the authenticated route group:
+Route:
 
 ```text
 GET /search/{search?}
+route: search
 ```
 
-Route name:
+An empty search redirects to the dashboard.
 
-```text
-search
-```
+The search string is trimmed and limited to 100 characters.
 
-Because the route is inside:
+## Search targets
 
-```php
-Route::middleware('auth')->group(...)
-```
+### Users
 
-only authenticated users can use global search.
-
-If no search value is provided, `SearchController` redirects the user back to:
-
-```text
-dashboard
-```
-
----
-
-## Navigation Search Input
-
-The search input is located in:
-
-```text
-resources/js/Layouts/AuthenticatedLayout.vue
-```
-
-The component stores the current search value inside:
-
-```text
-keywords
-```
-
-The initial value is obtained from:
-
-```text
-usePage().props.search
-```
-
-This means the search term remains visible in the navigation field when the user is viewing search results.
-
----
-
-## Starting a Search
-
-The user enters text into the navigation search field.
-
-Pressing:
-
-```text
-Enter
-```
-
-calls:
-
-```text
-search()
-```
-
-The function:
-
-1. trims whitespace;
-2. ignores an empty search value;
-3. uses Inertia's router;
-4. opens the named `search` route.
-
-Conceptually:
-
-```text
-type search term
-        ↓
-press Enter
-        ↓
-trim value
-        ↓
-empty?
-├── yes → do nothing
-└── no
-        ↓
-router.get(...)
-        ↓
-GET /search/{search}
-```
-
-Because Inertia navigation is used, the page changes without requiring a traditional full browser reload.
-
----
-
-## SearchController
-
-Search requests are handled by:
-
-```text
-app/Http/Controllers/SearchController.php
-```
-
-The controller searches three separate model types:
-
-```text
-User
-Group
-Post
-```
-
-Each result type is then transformed for the frontend using Laravel API resources.
-
----
-
-## User Search
-
-Users are searched by:
-
-```text
-name
-username
-```
-
-The SQL-style matching pattern is:
-
-```text
-%search%
-```
-
-This allows partial matches.
-
-For example:
-
-```text
-search = "will"
-
-matches:
-William
-Will Endeavour
-@will_poetry
-```
-
-The query is conceptually:
+Matches:
 
 ```text
 name LIKE %search%
-OR
-username LIKE %search%
+OR username LIKE %search%
 ```
 
-Results are ordered using:
+User results are paginated with the independent page parameter:
 
 ```text
-latest()
+users_page
 ```
 
-and transformed through:
+### Groups
+
+Matches:
 
 ```text
-UserResource
+name LIKE %search%
+OR about LIKE %search%
 ```
 
----
-
-## Group Search
-
-Groups are searched using:
+Group results use:
 
 ```text
-name
-about
+groups_page
 ```
 
-This allows users to find groups either by their title or by text contained in the group's description/about content.
+### Publications
 
-Conceptually:
-
-```text
-group name LIKE %search%
-OR
-group about LIKE %search%
-```
-
-Results are ordered using:
-
-```text
-latest()
-```
-
-and transformed through:
-
-```text
-GroupResource
-```
-
----
-
-## Post Search
-
-Post search differs from users and groups because Poet-Web must preserve post visibility rules.
-
-Instead of starting from:
+Publication search starts from:
 
 ```php
-Post::query()
+Post::postsForTimeline($request->user()?->id)
 ```
 
-the search uses:
-
-```php
-Post::postsForTimeline(
-    $request->user()->id
-)
-```
-
-This ensures the search only includes posts the authenticated user is already allowed to view.
-
-The visible posts are then filtered by:
+Then matches:
 
 ```text
-body LIKE %search%
+body
+title
+caption
 ```
 
----
+When the search starts with `#`, it also checks the JSON `hashtags` field.
 
-## Post Visibility
-
-Using `postsForTimeline()` is important because Poet-Web supports private group content.
-
-Normal posts are visible to authenticated users.
-
-Group posts are only visible when the current user is an approved member of that group.
-
-Therefore:
+Publication results use:
 
 ```text
-normal post containing search term
-→ visible in search
-
-private group post containing search term
-+ viewer is approved member
-→ visible in search
-
-private group post containing search term
-+ viewer is not approved member
-→ not returned
+posts_page
 ```
 
-Global search therefore follows the same post-access rules used by the home timeline and profile pages.
+and are paginated by 20.
 
----
+## Guest visibility
 
-## Post Relationships
+Guests may search public standalone publications, users, and groups.
 
-`postsForTimeline()` also loads the relationships required by the existing post components.
+Because `postsForTimeline(null)` excludes group publications, guest search cannot reveal member-only group content.
 
-These include:
+## Authenticated visibility
+
+Authenticated users receive:
+
+- standalone public publications;
+- group publications for groups where they are approved members.
+
+Search does not provide a second path around group authorization.
+
+## Independent pagination
+
+Users, groups, and publications use separate pagination parameter names so moving to page 2 of one result type does not unintentionally move the other result types.
+
+This behavior is covered by automated tests.
+
+## Hashtags
+
+A hashtag such as:
 
 ```text
-user
-group
-attachments
-comments
-reactions
-reaction counts
+#poetry
 ```
 
-Because search reuses this query, search results can be rendered using the normal:
+must be URL encoded when placed into the route because `#` otherwise starts a browser fragment.
+
+The server removes the leading `#` before matching the `hashtags` JSON array.
+
+## Main files
 
 ```text
-PostList.vue
-```
-
-and:
-
-```text
-PostItem.vue
-```
-
-components without implementing separate search-specific post rendering.
-
----
-
-## Pagination
-
-Post results are paginated using:
-
-```text
-20 posts per page
-```
-
-The result is converted through:
-
-```text
-PostResource::collection(...)
-```
-
-The paginator therefore contains information such as:
-
-```text
-data
-links
-meta
-```
-
-The full paginator object is passed to:
-
-```text
-PostList.vue
-```
-
-instead of only passing:
-
-```text
-posts.data
-```
-
-This allows the existing infinite-scrolling system to continue working.
-
----
-
-## JSON Search Requests
-
-`PostList.vue` loads additional pages through Axios.
-
-These requests include:
-
-```text
-Accept: application/json
-```
-
-When `SearchController` detects:
-
-```php
-$request->wantsJson()
-```
-
-it returns only the paginated post resource collection.
-
-Conceptually:
-
-```text
-Search.vue
-        ↓
-PostList.vue
-        ↓
-user scrolls
-        ↓
-nextPageUrl
-        ↓
-Axios GET
-Accept: application/json
-        ↓
-SearchController
-        ↓
-return PostResource paginator
-        ↓
-append new posts
-```
-
-This reuses the same infinite-scroll mechanism already used elsewhere in Poet-Web.
-
----
-
-## Initial Search Page Response
-
-For a normal Inertia page request, `SearchController` returns:
-
-```text
-Search.vue
-```
-
-with the following props:
-
-```text
-posts
-search
-users
-groups
-```
-
-The data is structured as:
-
-```text
-Search.vue
-│
-├── search
-├── users[]
-├── groups[]
-└── posts
-    ├── data[]
-    ├── links
-    └── meta
-```
-
----
-
-## Search Results Page
-
-The search page is implemented in:
-
-```text
+routes/web.php
+app/Http/Controllers/SearchController.php
+app/Models/Post.php
+app/Http/Resources/PostResource.php
+app/Http/Resources/UserResource.php
+app/Http/Resources/GroupResource.php
+resources/js/Layouts/AuthenticatedLayout.vue
 resources/js/Pages/Search.vue
 ```
-
-It uses:
-
-```text
-AuthenticatedLayout
-```
-
-and displays three result sections.
-
-```text
-Search Results
-│
-├── Users
-├── Groups
-└── Posts
-```
-
-The page also shows the current query:
-
-```text
-Search results for "..."
-```
-
----
-
-## User Results
-
-User matches are rendered through:
-
-```text
-UserListItem.vue
-```
-
-This reuses the existing profile navigation and user presentation.
-
-Each result can therefore display:
-
-```text
-avatar
-name
-username
-profile link
-```
-
-If no users match, the page displays:
-
-```text
-No users were found.
-```
-
----
-
-## Group Results
-
-Group matches are rendered through:
-
-```text
-GroupItem.vue
-```
-
-This reuses the existing group-profile navigation.
-
-Each group can display information such as:
-
-```text
-thumbnail
-name
-description
-membership information
-```
-
-If no groups match, the page displays:
-
-```text
-No groups were found.
-```
-
----
-
-## Post Results
-
-Matching posts are rendered through:
-
-```text
-PostList.vue
-```
-
-Because the standard post-list component is reused, search results retain existing functionality including:
-
-```text
-post display
-comments
-reactions
-attachments
-editing
-deletion
-attachment preview
-infinite scrolling
-```
-
-If no visible posts match, the page displays:
-
-```text
-No posts were found.
-```
-
----
-
-## Complete Search Flow
-
-```text
-AuthenticatedLayout
-        ↓
-enter keywords
-        ↓
-press Enter
-        ↓
-router.get(search route)
-        ↓
-SearchController
-        ↓
-┌─────────────────────────────┐
-│ Search users                │
-│ name / username             │
-└─────────────────────────────┘
-        ↓
-┌─────────────────────────────┐
-│ Search groups               │
-│ name / about                │
-└─────────────────────────────┘
-        ↓
-┌─────────────────────────────┐
-│ Load visible posts          │
-│ through postsForTimeline()  │
-└─────────────────────────────┘
-        ↓
-filter post body
-        ↓
-paginate posts
-        ↓
-Search.vue
-        ↓
-Users | Groups | Posts
-```
-
----
-
-## Privacy and Authorization
-
-The global search route requires authentication.
-
-User and group searches currently search the stored user/group records directly.
-
-Post search additionally applies the existing timeline visibility rules.
-
-This prevents global search from becoming a way to discover private group posts that would otherwise be hidden.
-
----
-
-## Hashtag Search
-
-Post content supports clickable hashtags.
-
-Hashtags are detected when posts are rendered in:
-
-```text
-resources/js/Components/app/PostItem.vue
-```
-
-The original stored post body is not modified.
-
-Instead, Poet-Web creates a computed rendered version of the post body and converts hashtag text into search links.
-
-For example:
-
-```text
-#poetry
-```
-
-is rendered as a clickable link that points to:
-
-```text
-/search/%23poetry
-```
-
----
-
-## Hashtag Detection
-
-Hashtag detection is performed only on text content between HTML tags.
-
-This is important because post bodies are stored as rich-text HTML.
-
-The implementation avoids blindly replacing text throughout the complete HTML string, which could otherwise modify tag names or HTML attributes.
-
-Supported hashtag characters include:
-
-```text
-letters
-numbers
-underscore
-```
-
-Unicode letters are also supported.
-
-This allows hashtags such as:
-
-```text
-#poetry
-#poetry2026
-#my_poem
-#dzeja
-#mīlestība
-```
-
----
-
-## Hashtag Rendering
-
-Hashtags are converted into HTML links with the class:
-
-```text
-hashtag
-```
-
-The generated link is conceptually:
-
-```html
-<a href="/search/%23poetry" class="hashtag">
-    #poetry
-</a>
-```
-
-Hashtag styling is defined in:
-
-```text
-resources/css/app.css
-```
-
-under:
-
-```text
-.rich-text-output a.hashtag
-```
-
-This gives hashtag links a visually distinct appearance while still using the normal post rich-text renderer.
-
----
-
-## URL Encoding
-
-The `#` character has a special meaning in browser URLs.
-
-Without encoding, a URL such as:
-
-```text
-/search/#poetry
-```
-
-would treat:
-
-```text
-#poetry
-```
-
-as a browser fragment.
-
-Fragments are not sent to Laravel.
-
-That would cause the backend to receive the search route without a search term.
-
-To prevent this, Poet-Web uses:
-
-```text
-encodeURIComponent()
-```
-
-before placing search values inside the URL.
-
-For example:
-
-```text
-#poetry
-```
-
-becomes:
-
-```text
-%23poetry
-```
-
-and the complete path becomes:
-
-```text
-/search/%23poetry
-```
-
-Laravel then receives the decoded search value:
-
-```text
-#poetry
-```
-
----
-
-## Navbar Hashtag Search
-
-The authenticated navigation search also uses URL encoding.
-
-This means both of the following workflows behave consistently:
-
-```text
-click #poetry inside a post
-```
-
-and:
-
-```text
-type #poetry into global search
-```
-
-Both navigate to:
-
-```text
-/search/%23poetry
-```
-
-and both ultimately search for:
-
-```text
-#poetry
-```
-
----
-
-## Hashtag Search Results
-
-When a search value begins with:
-
-```text
-#
-```
-
-`Search.vue` hides the:
-
-```text
-Users
-Groups
-```
-
-sections.
-
-The page then focuses only on post results.
-
-Conceptually:
-
-```text
-normal search
-├── Users
-├── Groups
-└── Posts
-
-hashtag search
-└── Posts
-```
-
-This is implemented through:
-
-```text
-!search.startsWith('#')
-```
-
-around the Users and Groups result container.
-
----
-
-## Backend Search Behavior
-
-Hashtag search does not use a separate hashtag database table.
-
-Hashtags remain part of:
-
-```text
-posts.body
-```
-
-and the existing search query searches for the hashtag as text.
-
-For example:
-
-```text
-search = #poetry
-```
-
-results in a post body search equivalent to:
-
-```text
-body LIKE %#poetry%
-```
-
-The query still starts from:
-
-```php
-Post::postsForTimeline($userId)
-```
-
-so existing post-visibility restrictions remain active.
-
-Therefore:
-
-```text
-visible post containing #poetry
-→ included
-
-private group post containing #poetry
-+ approved member
-→ included
-
-private group post containing #poetry
-+ non-member
-→ excluded
-```
-
----
-
-## Complete Hashtag Flow
-
-```text
-Post contains #poetry
-        ↓
-PostItem.vue renders post
-        ↓
-hashtag detected
-        ↓
-convert to clickable link
-        ↓
-encode #
-        ↓
-/search/%23poetry
-        ↓
-Laravel receives #poetry
-        ↓
-SearchController
-        ↓
-postsForTimeline()
-        ↓
-body LIKE %#poetry%
-        ↓
-Search.vue
-        ↓
-Posts only
-```
-
-## Result
-
-Poet-Web now provides one search interface for several important content types.
-
-Users can:
-
-```text
-search once
-    ↓
-find matching users
-    ↓
-find matching groups
-    ↓
-find matching visible posts
-```
-
-The implementation reuses existing resources and components instead of creating separate search-only presentation logic.
-
-Post searching also preserves the same group-privacy rules already used elsewhere in the application.

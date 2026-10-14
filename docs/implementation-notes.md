@@ -2,399 +2,198 @@
 
 ## Overview
 
-This file summarizes the currently implemented Poet-Web features that affect the post feed and related social functionality.
+Poet-Web is implemented as a Laravel + Vue/Inertia social platform for poetry publishing and community groups.
 
-It is intended as a compact technical overview. More detailed flows are documented in the dedicated files under `docs/`.
+The current implementation distinguishes between:
 
----
+- public standalone publications;
+- member-only group publications;
+- authenticated write/interact actions;
+- guest read-only browsing.
 
-## Rich Text Editing with Tiptap
+The central rule is that backend authorization, not frontend visibility, decides whether protected data is accessible.
 
-Poet-Web uses Tiptap for post body editing.
+## Public and authenticated behavior
 
-- `TiptapEditor.vue` is reused inside `PostModal.vue`.
-- Post content is stored as HTML in `posts.body`.
-- The editor supports formatted rich text instead of a plain textarea.
-- `PostItem.vue` renders stored HTML when displaying the full post body.
+Guests may browse:
 
----
+- the public Home/Explore feed;
+- public standalone posts and poems;
+- public profiles and profile publications;
+- public profile photo galleries sourced from standalone publications;
+- group discovery and group profile metadata;
+- global search.
 
-## Unified Post Creation and Editing
+Authentication is required for state-changing actions such as publishing, following, joining groups, commenting, reacting, editing, invitations, and moderation.
 
-`PostModal.vue` is reused for both creating and updating posts.
+## Publication visibility
 
-The modal determines its mode from the post ID:
+`Post::isVisibleTo(?int $userId)` defines whether a specific published post is visible.
+
+`Post::postsForTimeline(?int $userId)` applies the same visibility model to collections:
 
 ```text
-post.id is null
-└── create post
+standalone published post
+→ public
 
-post.id exists
-└── edit existing post
+group published post
+→ approved member only
+
+draft
+→ not part of public timelines
 ```
 
-Both operations use Inertia's `form.post()` so attachments can be submitted as multipart `FormData`.
+This query is reused by the Home feed, search, dedicated publication pages, attachment authorization, and interaction checks.
 
-Create:
+## Feed filtering
+
+`HomeController::index()` accepts three filter concepts:
 
 ```text
-POST /posts
-_method = POST
+feed:   poems | posts | all
+source: for_you | following | groups | mine
+genre:  optional poem genre
 ```
 
-Update:
+Guests are forced to `source=for_you`. Authenticated users can use personalized source filters.
+
+Results are paginated in groups of 10 and JSON responses are supported for infinite loading.
+
+See [Home feed flow](home-feed-flow.md).
+
+## Rich text
+
+Poem/post body content is stored as HTML. `RichTextSanitizer` is applied through the Post model body attribute so unsafe markup is sanitized at the model boundary.
+
+The publication tests verify sanitized rich-text persistence.
+
+## Attachments
+
+New post attachments are stored on Laravel's private `local` disk:
 
 ```text
-POST /posts/{post}
-_method = PUT
+storage/app/private/attachments/{post_id}/...
 ```
 
-Laravel method spoofing routes the update request to the `PUT /posts/{post}` route.
+They are not served through `/storage`.
 
-See: [Post creation and editing flow](post-modal-flow.md)
-
----
-
-## Attachment Uploads
-
-Backend attachment upload is fully implemented.
-
-New attachments are stored under:
+`PostAttachmentResource` generates controlled application routes:
 
 ```text
-storage/app/public/attachments/{post_id}
-```
-
-A `PostAttachment` record stores metadata including:
-
-```text
-post_id
-name
-path
-url
-mime
-size
-created_by
-```
-
-The controller stores uploaded files only after Laravel validation succeeds.
-
-See: [Post attachment upload flow](attachment-flow.md)
-
----
-
-## Attachment Validation
-
-Create and update requests share the same allowed file-extension list.
-
-Current application rules include:
-
-```text
-maximum new files per request: 10
-maximum one-file size:         25 MB
-maximum combined size:         90 MB
-```
-
-The combined limit is implemented through `TotalAttachmentSize`.
-
-The allowed extension list is shared with Vue through Inertia so `PostModal.vue` can show an immediate warning when an unsupported extension is selected.
-
-See:
-
-- [Attachment validation flow](attachment-validation-flow.md)
-- [Attachment size validation](attachment-size-validation.md)
-
----
-
-## Attachment Editing
-
-When editing a post, `PostModal.vue` displays both:
-
-```text
-existing database attachments
-+
-newly selected files
-```
-
-Existing files selected for removal are tracked in:
-
-```text
-deleted_file_ids
-```
-
-New files are submitted through:
-
-```text
-attachments
-```
-
-The user can also undo a pending deletion before saving.
-
-After the database transaction succeeds, selected physical files are removed from storage.
-
----
-
-## Attachment Feed Component
-
-Attachment rendering has been extracted from `PostItem.vue` into:
-
-```text
-PostAttachments.vue
-```
-
-The component:
-
-- renders image previews;
-- renders video previews with a play indicator;
-- renders other files with an attachment icon and filename;
-- provides download links;
-- emits the clicked attachment index;
-- displays a maximum of four previews in the feed;
-- displays `+X more` on the fourth preview when additional attachments exist.
-
-Video and image detection is handled by:
-
-```text
-isImage()
-isVideo()
-```
-
-in:
-
-```text
-resources/js/helpers.js
-```
-
-See: [Post attachments display flow](post-attachments-flow.md)
-
----
-
-## Attachment Preview Modal
-
-Clicking an attachment eventually opens `AttachmentPreviewModal.vue`.
-
-The event chain is:
-
-```text
-PostAttachments.vue
-    ↓ index
-PostItem.vue
-    ↓ post + index
-PostList.vue
-    ↓
-AttachmentPreviewModal.vue
-```
-
-The modal receives the complete attachment array, so users can navigate to attachments that are not displayed in the four-item feed preview.
-
-The modal also supports playable video attachments.
-
-Videos are detected by MIME type and rendered with the native HTML video player using:
-
-```text
-controls
-autoplay
-playsinline
-```
-
-Images, videos, and generic files all reuse the same modal navigation flow.
-
-See: [Attachment preview flow](attachment-preview-flow.md)
-
----
-
-## Attachment Downloads
-
-The route:
-
-```text
+GET /posts/attachments/{attachment}
 GET /posts/attachments/{attachment}/download
 ```
 
-uses Laravel route model binding to resolve the attachment and `Storage::disk('public')->download()` to return the physical file using its original filename.
+`PostAttachmentController` verifies publication visibility before serving a published attachment. Draft attachments are available only to their owner.
 
-See: [Attachment downloads and route model binding](attachment-download-route-model-binding.md)
+A migration moves existing post attachments from public storage to private storage when possible.
 
----
+See [Attachment upload flow](attachment-flow.md) and [Attachment routes and authorization](attachment-download-route-model-binding.md).
 
-## Post and Comment Reactions
+## Attachment validation
 
-The original post-only reaction implementation has been refactored into a shared polymorphic system.
+Creation limits each request to:
 
-The `reactions` table identifies its target using:
+- at most 10 attachments;
+- at most 25 MB per attachment;
+- at most 90 MB total upload size;
+- allowed types from `StorePostRequest::$extensions`.
 
-```text
-object_id
-object_type
-```
-
-Both `Post` and `Comment` define a polymorphic `reactions()` relationship.
-
-Currently the supported reaction type is:
+Updates also calculate the final stored attachment set:
 
 ```text
-like
+remaining existing attachments
++ new attachments
+- deleted_file_ids
 ```
 
-Users can like and unlike both posts and comments without reloading the page.
+The resulting publication may contain at most 10 attachments and at most 90 MB total.
 
-See: [Reaction system flow](reaction-system-flow.md)
+See [Attachment size validation](attachment-size-validation.md).
 
----
+## Comments and reactions
 
-## Comments
+Guests can read comments attached to visible public publications.
 
-Authenticated users can:
+Creating, editing, deleting, replying, and reacting require authentication.
 
-- create comments;
-- view comments loaded with posts;
-- edit their own comments;
-- delete their own comments;
-- like and unlike comments.
+Protected group publication visibility is rechecked before interactions. A user who previously belonged to a group cannot keep interacting with an old group post merely because they know its post/comment ID.
 
-Comment creation uses:
+See [Comment update/delete flow](comment-management-flow.md).
 
-```text
-POST /posts/{post}/comments
-```
+## Profiles and privacy
 
-The comments table also now contains a nullable self-referencing `parent_id` column to prepare the database for threaded replies.
+Profile routes are public.
 
-The reply UI and reply-creation logic are not implemented yet; only the database field has been prepared.
+Guests can see standalone profile publications and photos. Group posts do not appear in public profile content.
 
-See:
+`UserResource` exposes public identity fields to other viewers, while private account fields such as email and email verification state are only included for the account owner.
 
-- [Post comments flow](post-comments-flow.md)
-- [Comment update and delete flow](comment-management-flow.md)
+Profile usernames are unique at both validation and database levels.
 
----
+## Account deletion
+
+Account deletion requires the current password.
+
+Deletion performs cleanup/anonymization, hides the user's authored publications and owned groups, replaces personally identifying account fields, then soft-deletes the user record. This preserves referential integrity while preventing the deleted account from remaining active or publicly identifiable.
+
+See [Security and access control](security-and-access-control.md).
 
 ## Groups
 
-Poet-Web currently supports:
+Groups support:
 
-- group creation;
-- creator membership as an approved admin;
-- loading authenticated-user groups;
-- client-side group search;
-- slug-based group profile pages;
-- cover and thumbnail uploads;
-- approved-admin authorization for group image changes.
+- creation;
+- approved/pending membership;
+- automatic or manual approval;
+- invitations;
+- admin/member roles;
+- member removal;
+- group publication restrictions;
+- group moderation;
+- cover and thumbnail images.
 
-See:
+Group publication content remains member-only even when a guest can browse group discovery/profile metadata.
 
-- [Group loading flow](group-loading-flow.md)
-- [Group profile flow](group-profile-flow.md)
+Image replacement stores the new file and updates the database before deleting the previous image.
 
----
+## Following
 
-## Following Users
+Follower relationships have both application-level duplicate handling and a database uniqueness guarantee.
 
-Authenticated users can follow and unfollow other users from profile pages.
+Users cannot follow themselves.
 
-The system provides:
+## Global search
 
-- follower count;
-- current-user follow state;
-- profile navigation from post authors;
-- backend self-follow protection;
-- application-level duplicate avoidance through `firstOrCreate()`.
-
-See: [User follow and unfollow flow](user-follow-flow.md)
-
----
-
-## Global Search
-
-Authenticated users can search across:
+Search is public and searches:
 
 ```text
-users
-groups
-posts
+users:  name, username
+groups: name, about
+posts:  body, title, caption
 ```
 
-The navigation bar contains a global search field that opens:
+Hashtag searches additionally use the JSON `hashtags` field.
 
-```text
-GET /search/{search?}
-```
+Post search begins with `Post::postsForTimeline($request->user()?->id)`, which prevents private group results from leaking into guest or outsider searches.
 
-User matches are based on:
+See [Global search flow](global-search-flow.md).
 
-```text
-name
-username
-```
+## Continuous integration
 
-Group matches are based on:
+`.github/workflows/tests.yml` runs on pushes and pull requests.
 
-```text
-name
-about
-```
+It:
 
-Post matches are based on:
+1. installs PHP dependencies;
+2. prepares a test environment;
+3. runs migrations;
+4. installs Node dependencies;
+5. builds the Vite frontend;
+6. runs the Laravel test suite.
 
-```text
-body
-```
+The hardening release passed 63 tests with 244 assertions.
 
-Post search starts from:
+## Documentation principle
 
-```php
-Post::postsForTimeline($userId)
-```
-
-so private group posts remain hidden from users who are not approved members.
-
-Post results are paginated in groups of 20 and reuse `PostList.vue`, including its existing JSON-based infinite scrolling.
-
-User and group results reuse:
-
-```text
-UserListItem.vue
-GroupItem.vue
-```
-
-See: [Global search flow](global-search-flow.md)
-
-Post content also supports hashtag-based search.
-
-Hashtags inside rendered post content are converted into clickable search links by `PostItem.vue`.
-
-For example:
-
-```text
-#poetry
-```
-
-links to:
-
-```text
-/search/%23poetry
-```
-
-Search values are URL encoded because `#` would otherwise be interpreted by the browser as a URL fragment and would not be sent to Laravel.
-
-The same encoding is applied when searching through the navigation search input.
-
-When the search value starts with `#`, `Search.vue` hides user and group results and displays post results only.
-
-Hashtag searching reuses the existing global post-search query and therefore continues to use:
-
-```php
-Post::postsForTimeline($userId)
-```
-
-so private group post visibility remains enforced.
-
-See: [Global search flow](global-search-flow.md)
-
----
-
-## Documentation Principle
-
-The current application code is the source of truth.
-
-When a feature changes, its related documentation should be updated so route names, request methods, component responsibilities, validation limits, and database relationships remain consistent with the implementation.
+Code is the source of truth. Documentation should describe the behavior that is actually enforced by current routes, controllers, requests, models, migrations, and tests.
