@@ -5,7 +5,9 @@ import {
 
 import {
     ClipboardIcon,
-    MapPinIcon
+    FlagIcon,
+    MapPinIcon,
+    UserGroupIcon
 } from '@heroicons/vue/24/outline';
 
 import {
@@ -72,7 +74,13 @@ const editAllowed =
 
         return (
             props.user?.id ===
-            authUser.value?.id
+                authUser.value?.id
+            ||
+            (
+                props.post &&
+                !props.comment &&
+                props.post.can_edit
+            )
         );
     });
 
@@ -139,6 +147,7 @@ const showMenu =
          * on management permissions.
          */
         return (
+            Boolean(authUser.value) ||
             editAllowed.value ||
             deleteAllowed.value
         );
@@ -223,6 +232,57 @@ async function copyPostUrl() {
 
                             Copy link
                         </button>
+                    </MenuItem>
+
+                    <MenuItem
+                        v-if="
+                            post &&
+                            !comment &&
+                            post.can_manage_collaborators
+                        "
+                        v-slot="{ active }"
+                    >
+                        <Link
+                            :href="route('collaborations.manage', post.id)"
+                            :class="[
+                                active
+                                    ? 'bg-indigo-500 text-white'
+                                    : 'text-gray-900 dark:text-gray-100',
+                                'group flex w-full items-center rounded-md px-2 py-2 text-sm'
+                            ]"
+                        >
+                            <UserGroupIcon class="mr-2 h-5 w-5" />
+                            Collaborators
+                        </Link>
+                    </MenuItem>
+
+                    <MenuItem
+                        v-if="
+                            authUser &&
+                            user?.id !== authUser.id
+                        "
+                        v-slot="{ active }"
+                    >
+                        <Link
+                            :href="
+                                route(
+                                    'reports.create',
+                                    {
+                                        type: comment ? 'comment' : 'post',
+                                        id: comment?.id ?? post?.id
+                                    }
+                                )
+                            "
+                            :class="[
+                                active
+                                    ? 'bg-red-500 text-white'
+                                    : 'text-red-600 dark:text-red-400',
+                                'group flex w-full items-center rounded-md px-2 py-2 text-sm'
+                            ]"
+                        >
+                            <FlagIcon class="mr-2 h-5 w-5" />
+                            Report
+                        </Link>
                     </MenuItem>
 
                     <MenuItem
