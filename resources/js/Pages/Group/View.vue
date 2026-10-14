@@ -398,7 +398,17 @@ function joinToGroup() {
 </script>
 
 <template>
-    <Head :title="group.name" />
+    <Head :title="`${group.name} · Poet-Web`">
+        <meta
+            name="description"
+            :content="group.about || `Poetry group ${group.name} on Poet-Web.`"
+        />
+        <meta property="og:title" :content="`${group.name} · Poet-Web`" />
+        <meta property="og:description" :content="group.about || 'Poet-Web poetry group'" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" :content="route('group.profile', group.slug)" />
+        <meta v-if="group.cover_url" property="og:image" :content="group.cover_url" />
+    </Head>
 
     <AuthenticatedLayout>
         <div
