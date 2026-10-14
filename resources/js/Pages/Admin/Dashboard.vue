@@ -11,6 +11,18 @@ const props = defineProps({
 
 const { locale } = useI18n();
 
+function goReportPage(page) {
+    router.get(
+        route('admin.index'),
+        { page },
+        {
+            preserveScroll: true,
+            preserveState: true,
+            replace: true,
+        }
+    );
+}
+
 function resolveReport(report, action) {
     const note = window.prompt(
         locale.value === 'lv'
@@ -117,6 +129,7 @@ function unsuspend(userId) {
                     v-if="reports.meta?.last_page > 1"
                     class="mt-4"
                     :meta="reports.meta"
+                    @page="goReportPage"
                 />
             </section>
         </div>
