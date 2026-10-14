@@ -17,6 +17,18 @@ const listForm = useForm({
     description: '',
 });
 
+function goBookmarksPage(page) {
+    router.get(
+        route('library.index'),
+        { bookmarks_page: page },
+        {
+            preserveScroll: true,
+            preserveState: true,
+            replace: true,
+        }
+    );
+}
+
 function createList() {
     listForm.post(route('reading-lists.store'), {
         preserveScroll: true,
@@ -153,6 +165,7 @@ async function removeFromList(list, post) {
                     v-if="bookmarks.meta?.last_page > 1"
                     class="mt-4"
                     :meta="bookmarks.meta"
+                    @page="goBookmarksPage"
                 />
             </section>
 
