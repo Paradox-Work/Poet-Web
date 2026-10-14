@@ -135,7 +135,8 @@ class CollaborationController extends Controller
         if (
             $post->user_id !==
                 $request->user()->id ||
-            $post->type !== 'poem'
+            $post->type !== 'poem' ||
+            $post->status !== 'published'
         ) {
             abort(403);
         }
@@ -266,7 +267,10 @@ class CollaborationController extends Controller
         User $user,
         Post $post
     ): void {
-        if ($post->type !== 'poem') {
+        if (
+            $post->type !== 'poem'
+            || $post->status !== 'published'
+        ) {
             abort(404);
         }
 
