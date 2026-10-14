@@ -388,6 +388,23 @@ class ProfileController extends Controller
                 ->where('user_id', $user->id)
                 ->delete();
 
+            DB::table('bookmarks')
+                ->where('user_id', $user->id)
+                ->delete();
+
+            DB::table('post_collaborators')
+                ->where('user_id', $user->id)
+                ->orWhere('added_by', $user->id)
+                ->delete();
+
+            DB::table('messages')
+                ->where('user_id', $user->id)
+                ->delete();
+
+            DB::table('conversation_user')
+                ->where('user_id', $user->id)
+                ->delete();
+
             DB::table('notifications')
                 ->where('notifiable_type', User::class)
                 ->where('notifiable_id', $user->id)
@@ -417,6 +434,7 @@ class ProfileController extends Controller
                 'cover_path' => null,
                 'avatar_path' => null,
                 'email_verified_at' => null,
+                'is_admin' => false,
             ])->save();
 
             $user->delete();
