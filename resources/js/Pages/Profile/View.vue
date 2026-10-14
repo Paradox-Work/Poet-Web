@@ -168,7 +168,7 @@
 
                         <div
                             v-if="!isMyProfile"
-                            class="sm:pb-1"
+                            class="flex flex-wrap items-center gap-2 sm:pb-1"
                         >
                             <Link
                                 v-if="!authUser"
@@ -191,6 +191,23 @@
                             >
                                 {{ locale === 'lv' ? 'Pārtraukt sekot' : 'Unfollow' }}
                             </DangerButton>
+
+                            <button
+                                v-if="authUser"
+                                type="button"
+                                class="rounded-md border border-[var(--poet-border)] px-3 py-2 text-xs font-semibold uppercase tracking-wider transition hover:bg-[var(--poet-surface-soft)]"
+                                @click="messageUser"
+                            >
+                                {{ locale === 'lv' ? 'Ziņa' : 'Message' }}
+                            </button>
+
+                            <Link
+                                v-if="authUser"
+                                :href="route('reports.create', { type: 'user', id: user.id })"
+                                class="rounded-md border border-red-400/50 px-3 py-2 text-xs font-semibold uppercase tracking-wider text-red-500 transition hover:bg-red-500/10"
+                            >
+                                {{ locale === 'lv' ? 'Ziņot' : 'Report' }}
+                            </Link>
                         </div>
                     </div>
                 </section>
@@ -920,6 +937,12 @@ function submitAvatarImage() {
                 );
             },
         }
+    );
+}
+
+function messageUser() {
+    router.post(
+        route('messages.start', props.user.id)
     );
 }
 
