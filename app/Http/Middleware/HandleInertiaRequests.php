@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Http\Requests\StorePostRequest;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -38,6 +39,52 @@ class HandleInertiaRequests extends Middleware
                     ? new UserResource($request->user())
                     : null,
             ],
+
+            'messages' => function () use ($request) {
+                $user = $request->user();
+
+                if (!$user) {
+                    return [
+                        'unread_count' => 0,
+                    ];
+                }
+
+                return [
+                    'unread_count' =>
+                        DB::table(
+                            'conversation_user as cu'
+                        )
+                            ->join(
+                                'messages as m',
+                                'm.conversation_id',
+                                '=',
+                                'cu.conversation_id'
+                            )
+                            ->where(
+                                'cu.user_id',
+                                $user->id
+                            )
+                            ->where(
+                                'm.user_id',
+                                '!=',
+                                $user->id
+                            )
+                            ->where(
+                                function ($query) {
+                                    $query
+                                        ->whereNull(
+                                            'cu.last_read_at'
+                                        )
+                                        ->orWhereColumn(
+                                            'm.created_at',
+                                            '>',
+                                            'cu.last_read_at'
+                                        );
+                                }
+                            )
+                            ->count(),
+                ];
+            },
 
             'notifications' => function () use ($request) {
                 $user = $request->user();
