@@ -2,6 +2,11 @@
 
 This directory documents the implemented behavior of Poet-Web. The application code remains the source of truth; documentation should be updated when routes, validation, authorization, storage, or UI flows change.
 
+## Qualification presentation
+
+- [Presentation demo guide](presentation-demo-guide.md)
+- [Presentation ER diagram](database-er-diagram.md)
+
 ## Current architecture and quality
 
 - [Implementation notes](implementation-notes.md)
