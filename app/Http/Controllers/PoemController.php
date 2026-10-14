@@ -11,10 +11,19 @@ class PoemController extends Controller
             Request $request
         ) {
             $drafts = Post::query()
-                ->where(
-                    'user_id',
-                    $request->user()->id
-                )
+                ->with('collaborators')
+                ->where(function ($query) use ($request) {
+                    $query
+                        ->where('user_id', $request->user()->id)
+                        ->orWhereHas(
+                            'collaborators',
+                            fn ($collaboratorQuery) =>
+                                $collaboratorQuery->where(
+                                    'users.id',
+                                    $request->user()->id
+                                )
+                        );
+                })
                 ->where(
                     'status',
                     'draft'
@@ -48,6 +57,15 @@ class PoemController extends Controller
                         'draft_saved_at' =>
                             $draft->draft_saved_at
                                 ?->toISOString(),
+                        'owner_id' => $draft->user_id,
+                        'collaborators' =>
+                            $draft->collaborators
+                                ->map(fn ($user) => [
+                                    'id' => $user->id,
+                                    'name' => $user->name,
+                                    'username' => $user->username,
+                                ])
+                                ->values(),
                     ]
                 );
     
