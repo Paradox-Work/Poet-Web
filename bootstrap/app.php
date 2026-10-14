@@ -18,6 +18,11 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
         ]);
 
+        $middleware->alias([
+            'not_suspended' =>
+                \App\Http\Middleware\EnsureUserNotSuspended::class,
+        ]);
+
         $middleware->redirectGuestsTo('/login');
         
         //
