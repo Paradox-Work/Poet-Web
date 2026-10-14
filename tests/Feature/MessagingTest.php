@@ -3,6 +3,7 @@
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\User;
+use Inertia\Testing\AssertableInertia as Assert;
 
 test('starting the same direct conversation is idempotent', function () {
     $first = User::factory()->create();
@@ -85,4 +86,25 @@ test('outsiders cannot access another conversation', function () {
             ['body' => 'Nope']
         )
         ->assertNotFound();
+});
+
+
+test('message page can search users to start a conversation', function () {
+    $actor = User::factory()->create();
+    $target = User::factory()->create([
+        'name' => 'Searchable Poet',
+    ]);
+
+    $this
+        ->actingAs($actor)
+        ->get(route('messages.index', ['q' => 'Searchable']))
+        ->assertOk()
+        ->assertInertia(
+            fn (Assert $page) =>
+                $page
+                    ->component('Messages/Index')
+                    ->where('search', 'Searchable')
+                    ->has('userMatches', 1)
+                    ->where('userMatches.0.id', $target->id)
+        );
 });
