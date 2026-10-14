@@ -133,7 +133,7 @@ function search() {
             >
                 <!-- Primary Navigation Menu -->
                 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div class="flex h-16 justify-between">
+                    <div class="flex h-16 min-w-0 justify-between">
                         <div class="flex">
                             <!-- Logo -->
                             <div class="flex shrink-0 items-center">
@@ -165,7 +165,7 @@ function search() {
 
                             <!-- Navigation Links -->
                             <div
-                                class="hidden space-x-7 min-[1380px]:-my-px min-[1380px]:ms-10 min-[1380px]:flex"
+                                class="hidden shrink-0 space-x-5 min-[1380px]:-my-px min-[1380px]:ms-6 min-[1380px]:flex"
                             >
                                 <NavLink
                                     :href="route('dashboard')"
@@ -189,46 +189,6 @@ function search() {
                                     :active="route().current('about')"
                                 >
                                     {{ t('nav.about') }}
-                                </NavLink>
-
-                                <NavLink
-                                    v-if="authUser"
-                                    :href="route('saved.index')"
-                                    :active="route().current('saved.index')"
-                                >
-                                    {{ locale === 'lv' ? 'Saglabātie' : 'Saved' }}
-                                </NavLink>
-
-                                <NavLink
-                                    v-if="authUser"
-                                    :href="route('messages.show')"
-                                    :active="route().current('messages.*')"
-                                >
-                                    <span class="inline-flex items-center gap-1.5">
-                                        {{ locale === 'lv' ? 'Ziņas' : 'Messages' }}
-                                        <span
-                                            v-if="$page.props.messages?.unread_count"
-                                            class="rounded-full bg-[var(--poet-accent)] px-1.5 py-0.5 text-[10px] font-bold leading-none text-white"
-                                        >
-                                            {{ $page.props.messages.unread_count }}
-                                        </span>
-                                    </span>
-                                </NavLink>
-
-                                <NavLink
-                                    v-if="authUser?.is_admin"
-                                    :href="route('admin.moderation')"
-                                    :active="route().current('admin.*')"
-                                >
-                                    {{ locale === 'lv' ? 'Moderācija' : 'Moderation' }}
-                                </NavLink>
-
-                                <NavLink
-                                    v-if="authUser"
-                                    :href="route('draft.index')"
-                                    :active="route().current('draft.index')"
-                                >
-                                    {{ t('nav.drafts') }}
                                 </NavLink>
 
                                 <div class="flex items-center">
@@ -300,7 +260,7 @@ function search() {
                         <div class="hidden min-[1380px]:ms-6 min-[1380px]:flex min-[1380px]:items-center">
 
                             <div
-                                class="mx-4 hidden max-w-md flex-1 min-[1380px]:flex"
+                                class="mx-2 hidden w-44 min-w-0 shrink min-[1380px]:flex xl:w-52"
                             >
                                 <TextInput
                                     v-model="keywords"
@@ -398,6 +358,11 @@ function search() {
                                             :href="route('profile', {username: authUser.username})"
                                         >
                                             {{ t('nav.profile') }}
+                                        </DropdownLink>
+                                        <DropdownLink
+                                            :href="route('draft.index')"
+                                        >
+                                            {{ t('nav.drafts') }}
                                         </DropdownLink>
                                         <DropdownLink
                                             :href="route('saved.index')"
@@ -595,30 +560,6 @@ function search() {
                             :active="route().current('about')"
                         >
                             {{ t('nav.about') }}
-                        </ResponsiveNavLink>
-
-                        <ResponsiveNavLink
-                            v-if="authUser"
-                            :href="route('saved.index')"
-                            :active="route().current('saved.index')"
-                        >
-                            {{ locale === 'lv' ? 'Saglabātie' : 'Saved' }}
-                        </ResponsiveNavLink>
-
-                        <ResponsiveNavLink
-                            v-if="authUser"
-                            :href="route('messages.show')"
-                            :active="route().current('messages.*')"
-                        >
-                            <span class="inline-flex items-center gap-2">
-                                {{ locale === 'lv' ? 'Ziņas' : 'Messages' }}
-                                <span
-                                    v-if="$page.props.messages?.unread_count"
-                                    class="rounded-full bg-[var(--poet-accent)] px-1.5 py-0.5 text-[10px] font-bold text-white"
-                                >
-                                    {{ $page.props.messages.unread_count }}
-                                </span>
-                            </span>
                         </ResponsiveNavLink>
 
                         <ResponsiveNavLink
