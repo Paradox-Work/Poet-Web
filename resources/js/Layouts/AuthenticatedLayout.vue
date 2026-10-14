@@ -204,7 +204,15 @@ function search() {
                                     :href="route('messages.show')"
                                     :active="route().current('messages.*')"
                                 >
-                                    {{ locale === 'lv' ? 'Ziņas' : 'Messages' }}
+                                    <span class="inline-flex items-center gap-1.5">
+                                        {{ locale === 'lv' ? 'Ziņas' : 'Messages' }}
+                                        <span
+                                            v-if="$page.props.messages?.unread_count"
+                                            class="rounded-full bg-[var(--poet-accent)] px-1.5 py-0.5 text-[10px] font-bold leading-none text-white"
+                                        >
+                                            {{ $page.props.messages.unread_count }}
+                                        </span>
+                                    </span>
                                 </NavLink>
 
                                 <NavLink
@@ -602,7 +610,15 @@ function search() {
                             :href="route('messages.show')"
                             :active="route().current('messages.*')"
                         >
-                            {{ locale === 'lv' ? 'Ziņas' : 'Messages' }}
+                            <span class="inline-flex items-center gap-2">
+                                {{ locale === 'lv' ? 'Ziņas' : 'Messages' }}
+                                <span
+                                    v-if="$page.props.messages?.unread_count"
+                                    class="rounded-full bg-[var(--poet-accent)] px-1.5 py-0.5 text-[10px] font-bold text-white"
+                                >
+                                    {{ $page.props.messages.unread_count }}
+                                </span>
+                            </span>
                         </ResponsiveNavLink>
 
                         <ResponsiveNavLink
