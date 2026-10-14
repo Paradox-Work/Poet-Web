@@ -166,6 +166,16 @@ class CollaborationController extends Controller
             ]);
         }
 
+        if (
+            $post->group_id &&
+            !$post->group?->hasApprovedUser($user->id)
+        ) {
+            return back()->withErrors([
+                'username' =>
+                    'Group poems can only be shared with approved group members.',
+            ]);
+        }
+
         PostCollaborator::query()
             ->updateOrCreate(
                 [
@@ -283,7 +293,12 @@ class CollaborationController extends Controller
                 )
                 ->exists()
         ) {
-            return;
+            if (
+                !$post->group_id
+                || $post->group?->hasApprovedUser($user->id)
+            ) {
+                return;
+            }
         }
 
         abort(403);
