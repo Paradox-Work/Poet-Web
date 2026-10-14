@@ -578,7 +578,7 @@ function removePost(postId) {
     >
         <div
             v-if="feedState.posts.length"
-            class="flex min-h-0 flex-1 items-stretch lg:items-center"
+            class="flex min-h-0 flex-1 items-stretch overflow-y-auto min-[1400px]:items-center min-[1400px]:overflow-visible"
             tabindex="0"
             @wheel="onDeckWheel"
             @pointerdown="onPointerDown"
@@ -587,10 +587,10 @@ function removePost(postId) {
             @pointercancel="onPointerUp"
         >
             <div
-                class="mx-auto grid h-full min-h-0 w-full max-w-[1480px] items-stretch gap-5 px-2 lg:h-auto lg:items-center lg:grid-cols-[minmax(190px,0.72fr)_minmax(480px,1.45fr)_minmax(190px,0.72fr)] xl:gap-8"
+                class="mx-auto grid h-full min-h-0 w-full max-w-[1480px] grid-cols-1 items-stretch gap-5 px-2 min-[1400px]:h-auto min-[1400px]:items-center min-[1400px]:grid-cols-[minmax(190px,0.72fr)_minmax(480px,1.45fr)_minmax(190px,0.72fr)] min-[1400px]:gap-8"
             >
                 <div
-                    class="hidden min-w-0 lg:block"
+                    class="hidden min-w-0 min-[1400px]:block"
                 >
                     <Transition
                         name="preview-fade"
@@ -617,7 +617,7 @@ function removePost(postId) {
                 </div>
 
                 <div
-                    class="h-full min-h-0 min-w-0 lg:h-auto"
+                    class="mx-auto h-full min-h-0 w-full max-w-3xl min-w-0 min-[1400px]:h-auto min-[1400px]:max-w-none"
                 >
                     <Transition
                         :name="deckTransitionName"
@@ -626,7 +626,7 @@ function removePost(postId) {
                         <div
                             v-if="activePost"
                             :key="activePost.id"
-                            class="mx-auto h-full min-h-0 w-full overflow-hidden rounded-2xl lg:h-auto lg:max-h-[calc(100vh-185px)] lg:overflow-y-auto lg:scrollbar-hidden"
+                            class="mx-auto h-full min-h-0 w-full overflow-hidden rounded-2xl min-[1400px]:h-auto min-[1400px]:max-h-[calc(100vh-185px)] min-[1400px]:overflow-y-auto min-[1400px]:scrollbar-hidden"
                         >
                             <PostItem
                                 :post="activePost"
@@ -667,7 +667,7 @@ function removePost(postId) {
                 </div>
 
                 <div
-                    class="min-w-0"
+                    class="mx-auto w-full max-w-3xl min-w-0 min-[1400px]:max-w-none"
                 >
                     <Transition
                         name="comments-panel"
@@ -686,7 +686,7 @@ function removePost(postId) {
                         <div
                             v-else
                             key="next-preview"
-                            class="hidden lg:block"
+                            class="hidden min-[1400px]:block"
                         >
                             <Transition
                                 name="preview-fade"
