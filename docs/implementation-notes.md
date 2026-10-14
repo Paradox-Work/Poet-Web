@@ -211,3 +211,59 @@ The automated suite is extended as presentation features are added; the exact cu
 ## Documentation principle
 
 Code is the source of truth. Documentation should describe the behavior that is actually enforced by current routes, controllers, requests, models, migrations, and tests.
+
+
+## Personal library
+
+Poet-Web includes bookmarks plus user-owned reading lists.
+
+The library uses the same publication visibility rules as public/feed access and does not create an alternate path to private content.
+
+## Messaging
+
+Direct messages use:
+
+```text
+conversations
+conversation_user
+messages
+```
+
+A deterministic direct-key prevents duplicate one-to-one threads.
+
+The frontend automatically checks for new messages every two seconds while a thread is open. This is a deliberately simple polling design for the current Sail deployment and qualification demonstration.
+
+## Poem collaboration
+
+`post_collaborators` stores owner invitations and accepted editor relationships.
+
+Accepted collaborators may update poems through the normal server-side validation path.
+
+They do not become publication owners and cannot use collaboration to bypass group membership.
+
+## Platform moderation
+
+A separate site-admin flag supports:
+
+- moderation report queue;
+- content removal;
+- account suspension/restoration;
+- aggregate operational statistics.
+
+This is independent from per-group administrator roles.
+
+## Public-web polish
+
+The application now includes:
+
+- deterministic discovery sorting;
+- public legal/community pages;
+- Open Graph metadata on public content/profile/group pages;
+- sitemap.xml;
+- robots.txt;
+- branded HTTP error pages;
+- skip navigation;
+- reduced-motion support;
+- global Inertia loading/flash feedback.
+
+See the dedicated documentation files linked from `docs/README.md`.
