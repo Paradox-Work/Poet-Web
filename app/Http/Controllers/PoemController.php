@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Post;
+use App\Models\PostCollaborator;
 use Illuminate\Http\Request;
 
 class PoemController extends Controller
@@ -56,18 +57,19 @@ class PoemController extends Controller
             if ($editId = $request->integer('edit')) {
                 $post = Post::query()
                     ->whereKey($editId)
-                    ->where(
-                        'user_id',
-                        $request->user()->id
-                    )
-                    ->where(
-                        'status',
-                        'published'
-                    )
-                    ->where(
-                        'type',
-                        'poem'
-                    )
+                    ->where('status', 'published')
+                    ->where('type', 'poem')
+                    ->where(function ($query) use ($request) {
+                        $query
+                            ->where('user_id', $request->user()->id)
+                            ->orWhereHas(
+                                'collaborators',
+                                fn ($collaboratorQuery) =>
+                                    $collaboratorQuery
+                                        ->where('user_id', $request->user()->id)
+                                        ->where('status', 'accepted')
+                            );
+                    })
                     ->firstOrFail();
     
                 $editPoem = [
@@ -89,6 +91,8 @@ class PoemController extends Controller
                     'body' => $post->body,
                     'group_id' =>
                         $post->group_id,
+                    'is_collaborator' =>
+                        $post->user_id !== $request->user()->id,
                 ];
             }
     
