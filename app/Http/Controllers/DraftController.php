@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Group;
 use App\Models\Post;
+use App\Models\PostCollaborator;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -196,9 +197,16 @@ class DraftController extends Controller
             Request $request,
             Post $post
         ) {
+            $canEdit =
+                $post->user_id === $request->user()->id
+                || PostCollaborator::query()
+                    ->where('post_id', $post->id)
+                    ->where('user_id', $request->user()->id)
+                    ->where('status', 'accepted')
+                    ->exists();
+
             if (
-                $post->user_id !==
-                    $request->user()->id ||
+                !$canEdit ||
                 $post->status !== 'draft'
             ) {
                 abort(
