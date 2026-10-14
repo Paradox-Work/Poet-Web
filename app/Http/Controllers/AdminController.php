@@ -114,6 +114,51 @@ class AdminController extends Controller
                             )
                             ->count(),
                 ],
+                'activity7d' =>
+                    collect(range(6, 0))
+                        ->map(function (int $daysAgo) {
+                            $date = now()
+                                ->subDays($daysAgo)
+                                ->toDateString();
+
+                            return [
+                                'date' => $date,
+                                'users' =>
+                                    User::query()
+                                        ->whereDate(
+                                            'created_at',
+                                            $date
+                                        )
+                                        ->count(),
+                                'publications' =>
+                                    Post::query()
+                                        ->where(
+                                            'status',
+                                            'published'
+                                        )
+                                        ->whereDate(
+                                            'created_at',
+                                            $date
+                                        )
+                                        ->count(),
+                                'messages' =>
+                                    Message::query()
+                                        ->whereDate(
+                                            'created_at',
+                                            $date
+                                        )
+                                        ->count(),
+                                'reports' =>
+                                    Report::query()
+                                        ->whereDate(
+                                            'created_at',
+                                            $date
+                                        )
+                                        ->count(),
+                            ];
+                        })
+                        ->values(),
+
                 'reports' => $reports,
                 'suspendedUsers' =>
                     User::query()
