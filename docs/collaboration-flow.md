@@ -2,7 +2,7 @@
 
 ## Overview
 
-Poet-Web supports shared editing of poems between registered users.
+Poet-Web supports shared editing of published poems between registered users.
 
 The owner remains the publication owner. Accepted collaborators receive edit permission.
 
@@ -50,6 +50,8 @@ Only:
 post.user_id = authenticated user
 AND
 post.type = poem
+AND
+post.status = published
 ```
 
 may send collaborator invitations.
