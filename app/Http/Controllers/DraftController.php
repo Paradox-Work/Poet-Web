@@ -228,6 +228,17 @@ class DraftController extends Controller
                 $this->validateDraft(
                     $request
                 );
+
+            if (
+                $post->user_id !==
+                    $request->user()->id
+            ) {
+                $data['group_id'] =
+                    $post->group_id;
+
+                $data['type'] =
+                    $post->type;
+            }
     
             $post->update([
                 ...$data,
