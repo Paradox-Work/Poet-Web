@@ -8,7 +8,15 @@ This document summarizes the authorization and data-protection rules that were h
 
 Published standalone content is public.
 
-Published group content is restricted to approved group members.
+Published group content follows the group's visibility setting:
+
+```text
+public group
+→ readable by guests and authenticated users
+
+private group
+→ approved members only
+```
 
 Drafts are never part of public timelines.
 
@@ -48,13 +56,27 @@ Guests may read public content:
 - group discovery/profile metadata;
 - search results;
 - public comments;
-- standalone-publication attachments.
+- standalone-publication attachments;
+- public-group publications and their authorized attachments.
 
 Guests may not perform write actions.
 
 ## Group security
 
-Group publications require approved membership.
+Group visibility and membership approval are separate controls.
+
+```text
+visibility = public
+→ publication reading does not require membership
+
+visibility = private
+→ publication reading requires approved membership
+
+auto_approval = true/false
+→ controls how a user becomes a member
+```
+
+Publishing into any group still requires approved membership.
 
 Tests cover:
 
@@ -144,4 +166,6 @@ PublicationTest
 QualificationHardeningTest
 SearchTest
 VisibilitySecurityTest
+GroupVisibilityTest
+PresentationDemoSeederTest
 ```
