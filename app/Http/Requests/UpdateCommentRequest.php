@@ -3,16 +3,18 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Auth;
 
 class UpdateCommentRequest extends FormRequest
 {
     public function authorize(): bool
     {
         $comment = $this->route('comment');
+        $userId = $this->user()?->id;
 
         return $comment
-            && $comment->user_id === Auth::id();
+            && $userId
+            && $comment->user_id === $userId
+            && $comment->post?->isVisibleTo($userId);
     }
 
     public function rules(): array
