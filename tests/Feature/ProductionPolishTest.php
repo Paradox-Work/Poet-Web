@@ -96,9 +96,27 @@ test('users can start direct conversations and exchange messages', function () {
 
     $this
         ->actingAs($second)
+        ->get(route('dashboard'))
+        ->assertOk()
+        ->assertInertia(
+            fn (Assert $page) =>
+                $page->where('messages.unread_count', 1)
+        );
+
+    $this
+        ->actingAs($second)
         ->getJson(route('messages.items', $conversation))
         ->assertOk()
         ->assertJsonCount(1, 'messages');
+
+    $this
+        ->actingAs($second)
+        ->get(route('dashboard'))
+        ->assertOk()
+        ->assertInertia(
+            fn (Assert $page) =>
+                $page->where('messages.unread_count', 0)
+        );
 });
 
 test('non participants cannot read direct conversations', function () {
