@@ -1,5 +1,7 @@
 <script setup>
 import {
+    computed,
+    onBeforeUnmount,
     onMounted,
     ref
 } from 'vue';
@@ -102,9 +104,21 @@ onMounted(() => {
 });
 
 const keywords =
-    ref(
-        usePage().props.search ?? ''
-    );
+    ref(usePage().props.search ?? '');
+
+const searchHints = computed(() => locale.value === 'lv'
+    ? ['Meklēt dzejoļus', 'Atrast autorus', 'Atklāt grupas', 'Meklēt tēmas']
+    : ['Find a poem', 'Discover authors', 'Explore groups', 'Search topics']
+);
+const activeSearchHint = ref(0);
+const currentSearchHint = computed(() => searchHints.value[activeSearchHint.value % searchHints.value.length]);
+let searchHintTimer;
+onMounted(() => {
+    searchHintTimer = window.setInterval(() => {
+        activeSearchHint.value = (activeSearchHint.value + 1) % searchHints.value.length;
+    }, 3400);
+});
+onBeforeUnmount(() => window.clearInterval(searchHintTimer));
 
 
 function search() {
@@ -262,12 +276,18 @@ function search() {
                             <div
                                 class="mx-2 hidden w-44 min-w-0 shrink min-[1380px]:flex xl:w-52"
                             >
-                                <TextInput
-                                    v-model="keywords"
-                                    :placeholder="t('nav.search')"
-                                    class="w-full !rounded-full"
-                                    @keyup.enter="search"
-                                />
+                                <div class="relative w-full min-w-0">
+                                    <TextInput
+                                        v-model="keywords"
+                                        :placeholder="keywords ? '' : ' '"
+                                        :aria-label="t('nav.search')"
+                                        class="w-full !rounded-full"
+                                        @keyup.enter="search"
+                                    />
+                                    <span v-if="!keywords" :key="currentSearchHint" class="poet-search-hint pointer-events-none absolute inset-y-0 left-3 right-3 flex items-center overflow-hidden whitespace-nowrap text-sm text-[var(--poet-muted)]">
+                                        <span class="poet-search-hint-text">{{ currentSearchHint }}</span>
+                                    </span>
+                                </div>
                             </div>
 
                             <NotificationDropdown
@@ -464,15 +484,21 @@ function search() {
                 >
                     <div class="space-y-1 pb-3 pt-2">
                         <div class="px-4 pb-2">
-                            <TextInput
-                                v-model="keywords"
-                                :placeholder="t('nav.search')"
-                                class="w-full !rounded-full"
-                                @keyup.enter="
-                                    search();
-                                    showingNavigationDropdown = false;
-                                "
-                            />
+                            <div class="relative w-full">
+                                <TextInput
+                                    v-model="keywords"
+                                    :placeholder="keywords ? '' : ' '"
+                                    :aria-label="t('nav.search')"
+                                    class="w-full !rounded-full"
+                                    @keyup.enter="
+                                        search();
+                                        showingNavigationDropdown = false;
+                                    "
+                                />
+                                <span v-if="!keywords" :key="currentSearchHint" class="poet-search-hint pointer-events-none absolute inset-y-0 left-3 right-3 flex items-center overflow-hidden whitespace-nowrap text-sm text-[var(--poet-muted)]">
+                                    <span class="poet-search-hint-text">{{ currentSearchHint }}</span>
+                                </span>
+                            </div>
                         </div>
 
                         <div class="flex items-center gap-2 px-4 py-2 text-sm text-[var(--poet-muted)]">
@@ -625,7 +651,8 @@ function search() {
             <main
                 id="main-content"
                 tabindex="-1"
-                class="flex-1 min-h-0"
+                :key="$page.component"
+                class="poet-page-enter flex-1 min-h-0"
             >
                 <slot />
             </main>
