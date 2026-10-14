@@ -19,8 +19,8 @@ Feature tests create test data, authenticate when needed, call real Laravel rout
 The current qualification build on `main` is verified by GitHub Actions with:
 
 ```text
-70 tests passed
-286 assertions
+86 tests passed
+357 assertions
 0 failures
 ```
 
@@ -108,6 +108,41 @@ The bilingual interface itself is additionally verified by the production fronte
 - public/private demo groups are created;
 - Latvian demo publication data is created.
 
+### Personal library
+
+- visible-publication bookmark toggling;
+- private-group bookmark denial for outsiders;
+- reading-list ownership enforcement.
+
+### Direct messaging
+
+- deterministic/idempotent direct conversation creation;
+- participant send/poll behavior;
+- outsider conversation denial.
+
+### Moderation
+
+- visible-content reports;
+- duplicate pending-report prevention;
+- private-group report visibility protection;
+- administrator content removal;
+- suspended-login denial;
+- ordinary-user admin-dashboard denial.
+
+### Collaboration
+
+- poem owner invitation;
+- invitee acceptance;
+- accepted-collaborator editing;
+- outsider edit denial;
+- private-group collaborator membership enforcement.
+
+### Discovery / public pages
+
+- popularity sorting;
+- public legal page;
+- sitemap response.
+
 ### Revoked private-group access
 
 Tests verify that a former private-group member cannot continue interacting with protected publications/comments after membership removal.
@@ -182,7 +217,16 @@ Before presentation/submission, manually verify:
 17. comments/replies/reactions;
 18. profile update/images;
 19. search pagination;
-20. responsive layout and dark/light theme.
+20. direct messaging between two accounts;
+21. bookmark and reading-list flow;
+22. collaborator invite/accept/edit flow;
+23. report submission;
+24. admin report resolution and suspension/restore with a demo admin;
+25. newest/trending/popular/discussed sorting;
+26. legal/community pages;
+27. branded 404/403 behavior;
+28. sitemap/metadata in a production-like environment;
+29. responsive layout and dark/light theme.
 
 ## What passing tests mean
 
