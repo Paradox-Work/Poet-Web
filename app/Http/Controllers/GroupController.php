@@ -238,13 +238,17 @@ class GroupController extends Controller
             }
     
             $isApprovedMember =
-        $group->hasApprovedUser(
-            $userId
-        );
-    
-    $posts = null;
-    
-    if ($isApprovedMember) {
+                $group->hasApprovedUser(
+                    $userId
+                );
+
+            $canViewContent =
+                $group->visibility === 'public'
+                || $isApprovedMember;
+
+            $posts = null;
+
+            if ($canViewContent) {
         $postsQuery =
             Post::postsForTimeline(
                 $userId
@@ -277,7 +281,7 @@ class GroupController extends Controller
             */
             if ($request->wantsJson()) {
     
-                if (!$isApprovedMember) {
+                if (!$canViewContent) {
                     abort(
                         403,
                         "You don't have permission to view posts in this group."
@@ -308,7 +312,7 @@ class GroupController extends Controller
     
             $photos = collect();
     
-            if ($isApprovedMember) {
+            if ($canViewContent) {
     
                 $groupPostIds =
                     Post::postsForTimeline(

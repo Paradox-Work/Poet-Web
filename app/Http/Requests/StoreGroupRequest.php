@@ -25,6 +25,12 @@ class StoreGroupRequest extends FormRequest
                 'boolean',
             ],
 
+            'visibility' => [
+                'required',
+                'string',
+                'in:public,private',
+            ],
+
             'about' => [
                 'nullable',
                 'string',
