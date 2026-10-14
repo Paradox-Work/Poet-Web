@@ -161,7 +161,16 @@ test('users can report visible content and site admins can resolve reports', fun
         )
         ->assertSessionHasNoErrors();
 
-    expect($post->fresh())->toBeNull();
+    expect(
+        Post::query()->find($post->id)
+    )->toBeNull();
+
+    expect(
+        Post::withTrashed()
+            ->findOrFail($post->id)
+            ->trashed()
+    )->toBeTrue();
+
     expect($report->fresh()->status)->toBe('actioned');
 });
 
@@ -244,6 +253,8 @@ test('non collaborators cannot edit another users draft', function () {
 });
 
 test('discovery can sort by reactions and comments without recommendations', function () {
+    $this->withoutExceptionHandling();
+
     $author = User::factory()->create();
     $other = User::factory()->create();
 
