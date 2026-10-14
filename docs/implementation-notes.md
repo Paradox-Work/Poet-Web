@@ -7,7 +7,7 @@ Poet-Web is implemented as a Laravel + Vue/Inertia social platform for poetry pu
 The current implementation distinguishes between:
 
 - public standalone publications;
-- member-only group publications;
+- public and private group publications;
 - authenticated write/interact actions;
 - guest read-only browsing.
 
@@ -36,7 +36,10 @@ Authentication is required for state-changing actions such as publishing, follow
 standalone published post
 → public
 
-group published post
+public group published post
+→ public
+
+private group published post
 → approved member only
 
 draft
@@ -139,12 +142,23 @@ Deletion performs cleanup/anonymization, hides the user's authored publications 
 
 See [Security and access control](security-and-access-control.md).
 
+## Localization
+
+The core presentation flow supports Latvian and English without a third-party frontend localization dependency.
+
+The shared `useI18n()` composable stores the selected locale in `localStorage`, applies the language to the document, and exposes reactive translations.
+
+Latvian is the default interface language for a new browser profile.
+
+The presentation-facing flow is localized across navigation, authentication, Home, search, publication editing, poem writing, profiles, comments, group discovery/settings, and the About/Rights page.
+
 ## Groups
 
 Groups support:
 
 - creation;
 - approved/pending membership;
+- public/private visibility;
 - automatic or manual approval;
 - invitations;
 - admin/member roles;
@@ -153,7 +167,7 @@ Groups support:
 - group moderation;
 - cover and thumbnail images.
 
-Group publication content remains member-only even when a guest can browse group discovery/profile metadata.
+Public group publications are readable by guests. Private group publications require approved membership. Visibility and membership approval are separate settings.
 
 Image replacement stores the new file and updates the database before deleting the previous image.
 
@@ -192,7 +206,7 @@ It:
 5. builds the Vite frontend;
 6. runs the Laravel test suite.
 
-The hardening release passed 63 tests with 244 assertions.
+The automated suite is extended as presentation features are added; the exact current result is reported by GitHub Actions and the testing guide.
 
 ## Documentation principle
 
