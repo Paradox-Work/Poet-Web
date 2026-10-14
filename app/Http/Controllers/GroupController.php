@@ -293,10 +293,12 @@ class GroupController extends Controller
                 );
             }
     
-            $users = $group
-                ->approvedUsers()
-                ->orderBy('users.name')
-                ->get();
+            $users = $canViewContent
+                ? $group
+                    ->approvedUsers()
+                    ->orderBy('users.name')
+                    ->get()
+                : collect();
     
             $requests = collect();
     
