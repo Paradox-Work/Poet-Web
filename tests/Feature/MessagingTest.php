@@ -108,3 +108,50 @@ test('message page can search users to start a conversation', function () {
                     ->where('userMatches.0.id', $target->id)
         );
 });
+
+
+test('shared navigation exposes unread direct message count', function () {
+    $first = User::factory()->create();
+    $second = User::factory()->create();
+
+    $conversation = Conversation::query()->create([
+        'created_by' => $first->id,
+        'direct_key' => Conversation::directKey($first->id, $second->id),
+    ]);
+
+    $conversation->users()->attach([$first->id, $second->id]);
+
+    Message::query()->create([
+        'conversation_id' => $conversation->id,
+        'user_id' => $second->id,
+        'body' => 'Unread message',
+    ]);
+
+    $this
+        ->actingAs($first)
+        ->get(route('dashboard'))
+        ->assertOk()
+        ->assertInertia(
+            fn (Assert $page) =>
+                $page->where(
+                    'messages.unread_count',
+                    1
+                )
+        );
+
+    $this
+        ->actingAs($first)
+        ->get(route('messages.show', $conversation))
+        ->assertOk();
+
+    $this
+        ->actingAs($first)
+        ->get(route('dashboard'))
+        ->assertInertia(
+            fn (Assert $page) =>
+                $page->where(
+                    'messages.unread_count',
+                    0
+                )
+        );
+});
