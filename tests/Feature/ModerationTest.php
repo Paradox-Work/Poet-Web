@@ -68,7 +68,17 @@ test('site admins can remove reported publications', function () {
         )
         ->assertSessionHasNoErrors();
 
-    expect($post->fresh())->toBeNull();
+    expect(
+        \App\Models\Post::query()
+            ->find($post->id)
+    )->toBeNull();
+
+    expect(
+        \App\Models\Post::withTrashed()
+            ->findOrFail($post->id)
+            ->trashed()
+    )->toBeTrue();
+
     expect($report->fresh()->status)->toBe('resolved');
 });
 
