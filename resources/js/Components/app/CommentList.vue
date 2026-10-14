@@ -24,6 +24,9 @@ import {
 } from '@inertiajs/vue3';
 
 import axios from 'axios';
+import { useI18n } from '@/i18n';
+
+const { locale } = useI18n();
 
 import EditDeleteDropdown
     from '@/Components/app/EditDeleteDropdown.vue';
@@ -256,7 +259,9 @@ async function deleteComment(comment) {
 
     if (
         !window.confirm(
-            'Are you sure you want to delete this comment?'
+            locale.value === 'lv'
+                ? 'Vai tiešām vēlies dzēst šo komentāru?'
+                : 'Are you sure you want to delete this comment?'
         )
     ) {
         return;
@@ -479,8 +484,8 @@ function onCommentDelete(
                 v-model="newCommentText"
                 :placeholder="
                     parentComment
-                        ? 'Write a reply...'
-                        : 'Write a comment...'
+                        ? (locale === 'lv' ? 'Raksti atbildi...' : 'Write a reply...')
+                        : (locale === 'lv' ? 'Raksti komentāru...' : 'Write a comment...')
                 "
                 :rows="
                     parentComment
@@ -511,8 +516,8 @@ function onCommentDelete(
                 ]"
                 :aria-label="
                     commentPending
-                        ? 'Posting comment'
-                        : 'Post comment'
+                        ? (locale === 'lv' ? 'Publicē komentāru' : 'Posting comment')
+                        : (locale === 'lv' ? 'Publicēt komentāru' : 'Post comment')
                 "
             >
                 <PaperAirplaneIcon
@@ -634,8 +639,8 @@ function onCommentDelete(
                             >
                                 {{
                                     commentUpdatePending
-                                        ? 'Updating...'
-                                        : 'Update'
+                                        ? (locale === 'lv' ? 'Atjaunina...' : 'Updating...')
+                                        : (locale === 'lv' ? 'Atjaunināt' : 'Update')
                                 }}
                             </button>
                         </div>
@@ -680,10 +685,10 @@ function onCommentDelete(
 
                             {{
                                 !authUser
-                                    ? 'Sign in to like'
+                                    ? (locale === 'lv' ? 'Piesakies, lai atzīmētu' : 'Sign in to like')
                                     : comment.current_user_has_reaction
-                                        ? 'Unlike'
-                                        : 'Like'
+                                        ? (locale === 'lv' ? 'Noņemt patīk' : 'Unlike')
+                                        : (locale === 'lv' ? 'Patīk' : 'Like')
                             }}
                         </button>
 
