@@ -33,6 +33,7 @@ class ModerationController extends Controller
                 'reviewer' => $report->reviewer?->username,
                 'created_at' => $report->created_at?->toISOString(),
                 'reviewed_at' => $report->reviewed_at?->toISOString(),
+                'target_url' => $this->targetUrl($report),
             ]);
 
         return Inertia::render('Admin/Moderation', [
@@ -65,7 +66,10 @@ class ModerationController extends Controller
         ]);
 
         if ($data['action'] === 'remove_content') {
-            $this->removeTarget($report);
+            $this->removeTarget(
+                $report,
+                $request->user()->id
+            );
         }
 
         $report->update([
@@ -85,12 +89,19 @@ class ModerationController extends Controller
         abort_unless($request->user()?->is_admin, 403);
     }
 
-    private function removeTarget(Report $report): void
-    {
+    private function removeTarget(
+        Report $report,
+        int $adminId
+    ): void {
         if ($report->reportable_type === 'post') {
-            Post::query()
-                ->find($report->reportable_id)
-                ?->delete();
+            $post = Post::query()
+                ->find($report->reportable_id);
+
+            if ($post) {
+                $post->deleted_by = $adminId;
+                $post->save();
+                $post->delete();
+            }
         }
 
         if ($report->reportable_type === 'comment') {
@@ -98,5 +109,38 @@ class ModerationController extends Controller
                 ->find($report->reportable_id)
                 ?->delete();
         }
+    }
+
+    private function targetUrl(Report $report): ?string
+    {
+        if ($report->reportable_type === 'post') {
+            $post = Post::query()
+                ->find($report->reportable_id);
+
+            return $post
+                ? route('post.view', $post)
+                : null;
+        }
+
+        if ($report->reportable_type === 'comment') {
+            $comment = Comment::query()
+                ->with('post')
+                ->find($report->reportable_id);
+
+            return $comment?->post
+                ? route('post.view', $comment->post)
+                : null;
+        }
+
+        if ($report->reportable_type === 'user') {
+            $user = User::query()
+                ->find($report->reportable_id);
+
+            return $user
+                ? route('profile', $user->username)
+                : null;
+        }
+
+        return null;
     }
 }
