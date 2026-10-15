@@ -491,6 +491,19 @@ async function sendReaction() {
                     Pinned
                 </div>
 
+                <button
+                    v-if="authUser"
+                    type="button"
+                    @click="toggleBookmark"
+                    :disabled="bookmarkPending"
+                    :aria-label="bookmarked ? (locale === 'lv' ? 'Noņemt no saglabātajiem' : 'Remove bookmark') : (locale === 'lv' ? 'Saglabāt darbu' : 'Save publication')"
+                    :title="bookmarked ? (locale === 'lv' ? 'Saglabāts' : 'Saved') : (locale === 'lv' ? 'Saglabāt' : 'Save')"
+                    :aria-pressed="bookmarked"
+                    class="poet-focus inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[var(--poet-muted)] transition hover:bg-[var(--poet-surface-soft)] hover:text-[var(--poet-accent)] disabled:opacity-50"
+                    :class="bookmarked ? 'text-[var(--poet-accent)]' : ''"
+                >
+                    <BookmarkIcon class="h-5 w-5" :class="bookmarked ? 'fill-current' : ''" />
+                </button>
                 <EditDeleteDropdown
                     :user="post.user"
                     :post="post"
@@ -814,38 +827,6 @@ async function sendReaction() {
                     View
                 </span>
             </Link>
-
-            <button
-                v-if="authUser"
-                type="button"
-                @click="toggleBookmark"
-                :disabled="bookmarkPending"
-                class="group flex flex-col items-center gap-1 text-xs text-[var(--poet-muted)] transition disabled:opacity-50"
-                :aria-label="
-                    bookmarked
-                        ? (locale === 'lv' ? 'Noņemt no saglabātajiem' : 'Remove bookmark')
-                        : (locale === 'lv' ? 'Saglabāt darbu' : 'Save publication')
-                "
-                :aria-pressed="bookmarked"
-            >
-                <span
-                    :class="[
-                        'flex h-11 w-11 items-center justify-center rounded-full border transition group-hover:-translate-y-0.5 group-hover:shadow-md',
-                        bookmarked
-                            ? 'border-[var(--poet-accent)] bg-[var(--poet-accent-soft)] text-[var(--poet-accent)]'
-                            : 'border-gray-200 bg-white text-gray-700 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100'
-                    ]"
-                >
-                    <BookmarkIcon
-                        class="h-5 w-5"
-                        :class="bookmarked ? 'fill-current' : ''"
-                    />
-                </span>
-
-                <span class="font-medium">
-                    {{ locale === 'lv' ? 'Saglabāt' : 'Save' }}
-                </span>
-            </button>
 
             <button
                 v-if="deckNavigation"
