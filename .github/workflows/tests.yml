@@ -35,7 +35,8 @@ jobs:
           DB_CONNECTION: sqlite
           DB_DATABASE: database/database.sqlite
 
-      - run: npm ci
+      # Temporary until package-lock.json includes the Playwright dependency.
+      - run: npm install --no-audit --no-fund
 
       - run: npm run build
 
