@@ -36,7 +36,9 @@ class ReportController extends Controller
             (int) $data['id']
         );
 
-        Report::query()->updateOrCreate(
+        // A report is one case per reporter and target. Submitting again
+        // must not reopen a case an administrator already resolved.
+        Report::query()->firstOrCreate(
             [
                 'reporter_id' => $request->user()->id,
                 'reportable_type' => $data['type'],
@@ -46,8 +48,6 @@ class ReportController extends Controller
                 'reason' => $data['reason'],
                 'details' => $data['details'] ?? null,
                 'status' => 'pending',
-                'reviewed_by' => null,
-                'reviewed_at' => null,
             ]
         );
 
