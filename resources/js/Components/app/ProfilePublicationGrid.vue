@@ -105,6 +105,10 @@ function publicationTitle(post) {
         return post.title.trim();
     }
 
+    if (post.caption?.trim()) {
+        return post.caption.trim();
+    }
+
     const body =
         plainText(post.body);
 
@@ -340,6 +344,7 @@ function publicationTitle(post) {
     display: -webkit-box;
     overflow: hidden;
     -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
+    -webkit-line-clamp: 2;
+    overflow-wrap: anywhere;
 }
 </style>
