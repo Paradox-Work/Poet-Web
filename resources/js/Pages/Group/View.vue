@@ -418,7 +418,7 @@ function joinToGroup() {
                     class="overflow-hidden rounded-2xl border border-[var(--poet-border)] bg-[var(--poet-surface)]"
                 >
                     <div
-                        class="group relative h-40 bg-gradient-to-br from-indigo-200 via-slate-200 to-purple-200 sm:h-48"
+                        class="group relative h-28 bg-gradient-to-br from-indigo-200 via-slate-200 to-purple-200 sm:h-36"
                     >
                         <img
                             v-if="
@@ -712,11 +712,11 @@ function joinToGroup() {
                 </div>
 
                 <section
-                    class="mt-4 overflow-hidden rounded-2xl border border-[var(--poet-border)] bg-[var(--poet-surface)]"
+                    class="mt-4 rounded-2xl border border-[var(--poet-border)] bg-[var(--poet-surface)]"
                 >
                     <TabGroup>
                         <TabList
-                            class="scrollbar-hidden flex overflow-x-auto border-b border-[var(--poet-border)] px-2"
+                            class="scrollbar-hidden sticky top-0 z-30 flex overflow-x-auto rounded-t-2xl border-b border-[var(--poet-border)] bg-[var(--poet-surface)] px-2 shadow-sm"
                         >
                             <Tab
                                 v-for="tab in [
@@ -828,6 +828,7 @@ function joinToGroup() {
 
                                     <PostList
                                         :posts="posts"
+                                        manual-load
                                     />
                                 </template>
 
