@@ -124,7 +124,7 @@ function publicationTitle(post) {
 
 <template>
     <div
-        class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4"
+        class="grid min-w-0 grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4"
     >
         <Link
             v-for="post in posts"
@@ -135,7 +135,7 @@ function publicationTitle(post) {
                     post.id
                 )
             "
-            class="group relative h-40 overflow-hidden rounded-2xl border border-[var(--poet-border)] bg-[var(--poet-surface)] shadow-sm transition duration-200 hover:-translate-y-1 hover:border-[var(--poet-accent)] hover:shadow-xl sm:h-48"
+            class="group relative block h-40 min-h-0 min-w-0 max-w-full overflow-hidden rounded-2xl border border-[var(--poet-border)] bg-[var(--poet-surface)] shadow-sm transition duration-200 hover:-translate-y-1 hover:border-[var(--poet-accent)] hover:shadow-xl sm:h-48"
         >
             <template
                 v-if="firstVisual(post)"
@@ -198,7 +198,7 @@ function publicationTitle(post) {
             />
 
             <div
-                class="absolute inset-0 flex flex-col p-2 sm:p-3"
+                class="absolute inset-0 flex min-h-0 min-w-0 flex-col overflow-hidden p-2 sm:p-3"
             >
                 <div
                     class="flex items-start justify-between gap-2"
@@ -346,5 +346,6 @@ function publicationTitle(post) {
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     overflow-wrap: anywhere;
+    max-width: 100%;
 }
 </style>
