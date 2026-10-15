@@ -334,27 +334,32 @@ body {
     margin: 0;
 }
 
-.comment-list::-webkit-scrollbar {
+/* Soft, minimal scrollbars for long-form pages and panels. */
+html, body, * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--poet-border-strong) transparent;
+}
+
+::-webkit-scrollbar {
     width: 7px;
+    height: 7px;
 }
 
-.comment-list::-webkit-scrollbar-thumb,
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
 ::-webkit-scrollbar-thumb {
-    border-radius:
-        9999px;
-
-    background:
-        color-mix(
-            in srgb,
-            var(--poet-border-strong) 82%,
-            transparent
-        );
+    border-radius: 9999px;
+    background: var(--poet-border-strong);
+    border: 2px solid transparent;
+    background-clip: padding-box;
 }
 
-.comment-list::-webkit-scrollbar-track,
-::-webkit-scrollbar-track {
-    background:
-        transparent;
+::-webkit-scrollbar-thumb:hover {
+    background: var(--poet-muted);
+    background-clip: padding-box;
 }
 
 .scrollbar-hidden {
@@ -454,3 +459,6 @@ body {
 @media (prefers-reduced-motion: reduce) {
     .poet-page-enter, .poet-search-hint-text { animation: none !important; }
 }
+
+/* Preserve fully hidden scrollbars for horizontal carousels and decks. */
+.scrollbar-hidden { scrollbar-width: none; }
