@@ -23,7 +23,6 @@ use Spatie\Sluggable\SlugOptions;
     'password',
     'cover_path',
     'avatar_path',
-    'is_admin',
 ])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements MustVerifyEmail
