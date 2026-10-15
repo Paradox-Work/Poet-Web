@@ -1,6 +1,7 @@
 <script setup>
 import {
-    computed
+    computed,
+    ref
 } from 'vue';
 
 import {
@@ -37,6 +38,9 @@ const props = defineProps({
 });
 
 const authUser = usePage().props.auth.user;
+const feedSlide = ref('feed-slide-next');
+const feedLoading = ref(false);
+const pendingSource = ref(null);
 const { locale, t } = useI18n();
 
 const allSourceOptions = [
@@ -164,9 +168,11 @@ function navigateFilters({
         route('dashboard'),
         query,
         {
-            preserveState: false,
-            preserveScroll: false,
-            replace: true
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+            onStart: () => { feedLoading.value = true; },
+            onFinish: () => { feedLoading.value = false; pendingSource.value = null; }
         }
     );
 }
@@ -206,9 +212,11 @@ function changeSource(source) {
         return;
     }
 
-    navigateFilters({
-        source
-    });
+    const oldIndex = sourceOptions.value.findIndex(item => item.value === props.feedFilters.source);
+    const nextIndex = sourceOptions.value.findIndex(item => item.value === source);
+    feedSlide.value = nextIndex >= oldIndex ? 'feed-slide-next' : 'feed-slide-prev';
+    pendingSource.value = source;
+    navigateFilters({ source });
 }
 </script>
 
@@ -353,7 +361,7 @@ function changeSource(source) {
                             "
                             :class="[
                                 'min-w-0 px-1 pb-2 text-xs font-medium transition-colors duration-200 sm:text-sm',
-                                feedFilters.source === source.value
+                                (pendingSource ?? feedFilters.source) === source.value
                                     ? 'text-[var(--poet-text)]'
                                     : 'text-[var(--poet-muted)] hover:text-[var(--poet-text)]'
                             ]"
@@ -369,7 +377,8 @@ function changeSource(source) {
                     </div>
                 </nav>
 
-                <div class="min-h-0 flex-1">
+                <div class="relative min-h-0 flex-1 overflow-hidden">
+                    <Transition :name="feedSlide" mode="out-in">
                     <PostList
                         :key="
                             `${feedFilters.source}-${feedFilters.feed}-${feedFilters.genre ?? 'all'}-${feedFilters.sort ?? 'latest'}`
@@ -377,8 +386,21 @@ function changeSource(source) {
                         :posts="posts"
                         mode="deck"
                     />
+                    </Transition>
+                    <div v-if="feedLoading" class="pointer-events-none absolute right-3 top-2 z-20 h-1 w-10 animate-pulse rounded-full bg-[var(--poet-accent)]" aria-hidden="true" />
                 </div>
             </section>
         </div>
     </AuthenticatedLayout>
 </template>
+
+<style scoped>
+.feed-slide-next-enter-active,.feed-slide-next-leave-active,.feed-slide-prev-enter-active,.feed-slide-prev-leave-active { transition: transform 190ms ease, opacity 190ms ease; }
+.feed-slide-next-enter-from { transform: translateX(6%); opacity: 0; }
+.feed-slide-next-leave-to { transform: translateX(-6%); opacity: 0; }
+.feed-slide-prev-enter-from { transform: translateX(-6%); opacity: 0; }
+.feed-slide-prev-leave-to { transform: translateX(6%); opacity: 0; }
+@media (prefers-reduced-motion: reduce) {
+.feed-slide-next-enter-active,.feed-slide-next-leave-active,.feed-slide-prev-enter-active,.feed-slide-prev-leave-active { transition: none; }
+}
+</style>
