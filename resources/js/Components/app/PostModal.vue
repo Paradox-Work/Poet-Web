@@ -1081,11 +1081,6 @@ function submit() {
             hashtagsInput.value
         );
 
-    if (form.type !== 'poem') {
-        form.title = '';
-        form.caption = '';
-    }
-
     if (!form.id) {
         form.group_id =
             props.group?.id ?? null;
