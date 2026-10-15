@@ -120,7 +120,7 @@ function publicationTitle(post) {
 
 <template>
     <div
-        class="grid grid-cols-2 gap-1 sm:grid-cols-3 sm:gap-2 lg:grid-cols-4"
+        class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4"
     >
         <Link
             v-for="post in posts"
@@ -131,7 +131,7 @@ function publicationTitle(post) {
                     post.id
                 )
             "
-            class="group relative h-28 overflow-hidden rounded-lg border border-[var(--poet-border)] bg-[var(--poet-surface)] transition duration-200 hover:-translate-y-0.5 hover:border-[var(--poet-border-strong)] hover:shadow-lg sm:h-40 sm:rounded-xl"
+            class="group relative h-40 overflow-hidden rounded-2xl border border-[var(--poet-border)] bg-[var(--poet-surface)] shadow-sm transition duration-200 hover:-translate-y-1 hover:border-[var(--poet-accent)] hover:shadow-xl sm:h-48"
         >
             <template
                 v-if="firstVisual(post)"
@@ -190,7 +190,7 @@ function publicationTitle(post) {
 
             <div
                 v-else
-                class="absolute inset-0 bg-[var(--poet-surface-soft)]"
+                class="absolute inset-0 bg-gradient-to-br from-[var(--poet-surface-soft)] via-[var(--poet-surface)] to-[var(--poet-accent-soft)]"
             />
 
             <div
