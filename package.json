@@ -14,7 +14,8 @@
         "laravel-vite-plugin": "^3.1",
         "tailwindcss": "^4.3.3",
         "vite": "^8.0.0",
-        "vue": "^3.4.0"
+        "vue": "^3.4.0",
+        "@tailwindcss/forms": "^0.5.3"
     },
     "optionalDependencies": {
         "@laravel/multiplex": "^0.4.1"
@@ -27,6 +28,7 @@
         "@tiptap/pm": "^3.31.3",
         "@tiptap/starter-kit": "^3.31.3",
         "@tiptap/vue-3": "^3.31.3",
-        "axios": "^1.20.0"
+        "axios": "^1.20.0",
+        "@headlessui/tailwindcss": "^0.2.2"
     }
 }
