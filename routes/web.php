@@ -81,6 +81,7 @@ Route::middleware('auth')->group(function () {
         ->name('messages.show');
 
     Route::post('/messages/start/{user}', [MessageController::class, 'start'])
+        ->middleware('throttle:10,1')
         ->name('messages.start');
 
     Route::post('/messages/{conversation}', [MessageController::class, 'store'])
@@ -101,6 +102,7 @@ Route::middleware('auth')->group(function () {
         ->name('admin.reports.resolve');
 
     Route::post('/drafts/{post}/collaborators', [DraftCollaboratorController::class, 'store'])
+        ->middleware('throttle:20,1')
         ->name('draft.collaborators.store');
 
     Route::delete('/drafts/{post}/collaborators/{user}', [DraftCollaboratorController::class, 'destroy'])
@@ -128,6 +130,7 @@ Route::middleware('auth')->group(function () {
         ->name('draft.update');
 
     Route::put('/posts/{post}', [PostController::class, 'update'])
+        ->middleware('throttle:30,1')
         ->name('post.update');
 
     Route::delete('/posts/{post}', [PostController::class, 'destroy'])
@@ -136,7 +139,8 @@ Route::middleware('auth')->group(function () {
     Route::post(
         '/profile/update-images',
         [ProfileController::class, 'updateImage']
-    )->name('profile.updateImages');
+    )->middleware('throttle:10,1')
+        ->name('profile.updateImages');
 
     Route::post(
         '/posts/{post}/reaction',
@@ -163,12 +167,14 @@ Route::middleware('auth')->group(function () {
         ->name('post.comment.reaction');
 
     Route::post('/groups', [GroupController::class, 'store'])
+        ->middleware('throttle:5,1')
         ->name('group.create');
 
     Route::put('/groups/{group:slug}', [GroupController::class, 'update'])
         ->name('group.update');
 
     Route::post('/groups/{group:slug}/images', [GroupImageController::class, 'updateImage'])
+        ->middleware('throttle:10,1')
         ->name('group.updateImages');
 
     Route::post('/groups/{group:slug}/invitations', [GroupInvitationController::class, 'inviteUsers'])
