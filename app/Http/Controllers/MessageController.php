@@ -35,25 +35,34 @@ class MessageController extends Controller
 
         abort_if($actor->id === $user->id, 422, 'You cannot message yourself.');
 
-        $conversation = Conversation::query()
-            ->whereHas('users', fn ($q) => $q->where('users.id', $actor->id))
-            ->whereHas('users', fn ($q) => $q->where('users.id', $user->id))
-            ->withCount('users')
-            ->get()
-            ->first(fn ($item) => $item->users_count === 2);
+        // Serialize attempts for the same pair of users before checking.
+        // The sorted lock order also avoids lock-order deadlocks on MySQL.
+        $conversation = DB::transaction(function () use ($actor, $user) {
+            User::query()
+                ->whereIn('id', [$actor->id, $user->id])
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get();
 
-        if (!$conversation) {
-            $conversation = DB::transaction(function () use ($actor, $user) {
-                $conversation = Conversation::query()->create();
+            $existing = Conversation::query()
+                ->whereHas('users', fn ($q) => $q->where('users.id', $actor->id))
+                ->whereHas('users', fn ($q) => $q->where('users.id', $user->id))
+                ->withCount('users')
+                ->get()
+                ->first(fn ($item) => $item->users_count === 2);
 
-                $conversation->users()->attach([
-                    $actor->id => ['last_read_at' => now()],
-                    $user->id => ['last_read_at' => null],
-                ]);
+            if ($existing) {
+                return $existing;
+            }
 
-                return $conversation;
-            });
-        }
+            $created = Conversation::query()->create();
+            $created->users()->attach([
+                $actor->id => ['last_read_at' => now()],
+                $user->id => ['last_read_at' => null],
+            ]);
+
+            return $created;
+        });
 
         return to_route('messages.show', $conversation);
     }
