@@ -139,20 +139,20 @@ watch(
                         leave-to="opacity-0 scale-95"
                     >
                         <DialogPanel
-                            class="w-full max-w-md overflow-hidden rounded-xl bg-white shadow-xl"
+                            class="w-full max-w-md overflow-hidden rounded-2xl border border-[var(--poet-border)] bg-[var(--poet-surface)] text-[var(--poet-text)] shadow-2xl"
                         >
                             <DialogTitle
                                 class="flex items-center justify-between border-b px-5 py-4"
                             >
                                 <div>
                                     <h2
-                                        class="font-semibold text-gray-900"
+                                        class="font-semibold text-[var(--poet-text)]"
                                     >
                                         Invite user
                                     </h2>
 
                                     <p
-                                        class="mt-1 text-sm text-gray-500"
+                                        class="mt-1 text-sm text-[var(--poet-muted)]"
                                     >
                                         Invite someone to {{ group.name }}
                                     </p>
@@ -162,7 +162,7 @@ watch(
                                 <button
                                     type="button"
                                     @click="closeModal"
-                                    class="rounded-full p-2 text-gray-500 hover:bg-gray-100"
+                                    class="rounded-full p-2 text-[var(--poet-muted)] hover:bg-[var(--poet-surface-soft)]"
                                 >
                                     <XMarkIcon
                                         class="w-5 h-5"
@@ -179,7 +179,7 @@ watch(
                                 >
                                     <label
                                         for="group-invite-identifier"
-                                        class="block text-sm font-medium text-gray-700"
+                                        class="block text-sm font-medium text-[var(--poet-text)]"
                                     >
                                         Username or email
                                     </label>
@@ -204,7 +204,7 @@ watch(
 
 
                                     <p
-                                        class="mt-2 text-xs text-gray-500"
+                                        class="mt-2 text-xs text-[var(--poet-muted)]"
                                     >
                                         The user will receive an email containing an invitation link.
                                     </p>
@@ -212,12 +212,12 @@ watch(
 
 
                                 <div
-                                    class="flex justify-end gap-2 border-t bg-gray-50 px-5 py-4"
+                                    class="flex justify-end gap-2 border-t border-[var(--poet-border)] bg-[var(--poet-surface-soft)] px-5 py-4"
                                 >
                                     <button
                                         type="button"
                                         @click="closeModal"
-                                        class="rounded-md px-4 py-2 text-sm text-gray-700 hover:bg-gray-200"
+                                        class="rounded-md px-4 py-2 text-sm text-[var(--poet-text)] hover:bg-[var(--poet-surface-soft)]"
                                     >
                                         Cancel
                                     </button>
@@ -229,7 +229,7 @@ watch(
                                             form.processing ||
                                             !form.identifier.trim()
                                         "
-                                        class="flex items-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
+                                        class="flex items-center gap-2 rounded-full bg-[var(--poet-accent)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--poet-accent-strong)] disabled:cursor-not-allowed disabled:opacity-50"
                                     >
                                         <EnvelopeIcon
                                             class="w-4 h-4"
