@@ -238,19 +238,18 @@
                                     </div>
 
                                     <div
-                                        v-if="form.type === 'poem'"
                                         class="mb-4 space-y-3"
                                     >
                                         <div>
                                             <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
-                                                {{ locale === 'lv' ? 'Dzejoļa nosaukums' : 'Poem title' }}
+                                                {{ form.type === 'poem' ? (locale === 'lv' ? 'Dzejoļa nosaukums' : 'Poem title') : (locale === 'lv' ? 'Publikācijas nosaukums (neobligāti)' : 'Post title (optional)') }}
                                             </label>
 
                                             <input
                                                 v-model="form.title"
                                                 type="text"
                                                 maxlength="160"
-                                                :placeholder="locale === 'lv' ? 'Piešķir dzejolim nosaukumu...' : 'Give your poem a title...'"
+                                                :placeholder="locale === 'lv' ? 'Piešķir darbam nosaukumu...' : 'Give your publication a title...'"
                                                 class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
                                             />
 
@@ -279,7 +278,7 @@
                                             />
 
                                             <div class="mt-1 flex justify-between text-xs text-gray-400">
-                                                <span>{{ locale === 'lv' ? 'Tiek rādīts atsevišķi no dzejoļa.' : 'Shown separately from the poem.' }}</span>
+                                                <span>{{ locale === 'lv' ? 'Tiek rādīts atsevišķi no satura.' : 'Shown separately from the content.' }}</span>
                                                 <span>{{ (form.caption ?? '').length }}/500</span>
                                             </div>
                                         </div>
@@ -840,14 +839,8 @@ function draftPayload() {
         type: form.type,
         content_rating:
             form.content_rating,
-        title:
-            form.type === 'poem'
-                ? form.title
-                : null,
-        caption:
-            form.type === 'poem'
-                ? form.caption
-                : null,
+        title: form.title,
+        caption: form.caption,
         hashtags:
             normalizeHashtags(
                 hashtagsInput.value
