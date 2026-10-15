@@ -592,7 +592,7 @@ function joinToGroup() {
                                 </span>
 
                                 <span
-                                    class="rounded-full border border-[var(--poet-border)] px-2 py-0.5"
+                                    class="inline-flex items-center rounded-full border border-[var(--poet-border)] bg-[var(--poet-surface-soft)] px-2.5 py-1 text-[11px] font-semibold text-[var(--poet-muted)]"
                                 >
                                     {{
                                         group.visibility === 'public'
