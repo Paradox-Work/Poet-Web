@@ -18,6 +18,9 @@
         >
         <meta name="twitter:card" content="summary">
         <style>
+            /* Prevent the keyboard skip link flashing before Vite CSS loads. */
+            .poet-skip-link:not(:focus) { visibility: hidden; }
+            .poet-skip-link:focus { visibility: visible; }
             html, body { background-color: #f4ede4; color: #0f1b2d; }
             html.dark, html.dark body { background-color: #0f1b2d; color: #f4ede4; color-scheme: dark; }
         </style>
