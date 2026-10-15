@@ -34,6 +34,11 @@ const props = defineProps({
     mode: {
         type: String,
         default: 'list'
+    },
+
+    manualLoad: {
+        type: Boolean,
+        default: false
     }
 });
 
@@ -463,7 +468,7 @@ onMounted(() => {
     );
 
     if (
-        props.mode === 'list'
+        props.mode === 'list' && !props.manualLoad
     ) {
         observer =
             new IntersectionObserver(
@@ -798,10 +803,24 @@ function removePost(postId) {
         />
 
         <div
+            v-if="!manualLoad"
             ref="loadMoreIntersect"
             class="h-px"
             aria-hidden="true"
         />
+
+        <div v-if="manualLoad && feedState.nextPageUrl" class="flex justify-center py-6">
+            <button
+                type="button"
+                :disabled="loadingMore"
+                @click="loadMore"
+                class="poet-focus rounded-full border border-[var(--poet-border)] bg-[var(--poet-surface-soft)] px-6 py-2.5 text-sm font-semibold text-[var(--poet-text)] transition hover:border-[var(--poet-accent)] hover:bg-[var(--poet-accent-soft)] disabled:cursor-wait disabled:opacity-60"
+            >
+                {{ loadingMore
+                    ? (locale === 'lv' ? 'Ielādē…' : 'Loading…')
+                    : (locale === 'lv' ? 'Ielādēt vēl 10 publikācijas' : 'Load 10 more posts') }}
+            </button>
+        </div>
 
         <div
             v-if="loadingMore"
