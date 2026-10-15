@@ -611,6 +611,13 @@ async function sendReaction() {
                 </div>
             </div>
 
+            <h2
+                v-if="post.type !== 'poem' && post.title"
+                class="mb-2 line-clamp-2 break-words font-serif text-xl font-semibold leading-snug text-[var(--poet-text)]"
+            >
+                {{ post.title }}
+            </h2>
+
             <Disclosure
                 v-if="plainBody.length > 200"
                 v-slot="{ open }"
