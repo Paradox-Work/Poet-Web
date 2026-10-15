@@ -55,18 +55,19 @@ const showingNavigationDropdown = ref(false);
 
 const isDark = ref(false);
 
-const authUser = usePage().props.auth.user;
+const page = usePage();
+const authUser = computed(() => page.props.auth?.user ?? null);
 
 const showCreatePostModal = ref(false);
 
-const newPost = {
+const newPost = computed(() => ({
     id: null,
     type: 'post',
     body: '',
-    user: authUser,
+    user: authUser.value,
     group: null,
     updated_at: null
-};
+}));
 
 function openCreatePost() {
     showCreatePostModal.value = true;
