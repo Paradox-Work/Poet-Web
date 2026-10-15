@@ -21,6 +21,22 @@ class GroupInvitationController extends Controller
         ) {
             $user = $request->invitedUser();
     
+            // Avoid rotating an unexpired token or spamming the invitee
+            // whenever an administrator clicks Send repeatedly.
+            $existing = GroupUser::query()
+                ->where('user_id', $user->id)
+                ->where('group_id', $group->id)
+                ->first();
+
+            if ($existing
+                && $existing->status === GroupUserStatus::PENDING->value
+                && $existing->token
+                && !$existing->token_used
+                && $existing->token_expire_date?->isFuture()
+            ) {
+                return back()->with('success', 'An active invitation has already been sent.');
+            }
+
             $hours = 24;
     
             $token = Str::random(64);
