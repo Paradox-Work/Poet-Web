@@ -178,14 +178,8 @@ class PostController extends Controller
                         $data['type'] === 'poem'
                             ? ($data['poem_genres'] ?? [])
                             : [],
-                    'title' =>
-                        $data['type'] === 'poem'
-                            ? ($data['title'] ?? null)
-                            : null,
-                    'caption' =>
-                        $data['type'] === 'poem'
-                            ? ($data['caption'] ?? null)
-                            : null,
+                    'title' => $data['title'] ?? null,
+                    'caption' => $data['caption'] ?? null,
                     'hashtags' =>
                         $data['hashtags'] ?? [],
                     'body' => $data['body'] ?? null,
