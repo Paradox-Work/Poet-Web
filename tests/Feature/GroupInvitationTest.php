@@ -354,3 +354,27 @@ test('expired invitations cannot be accepted', function () {
         )
         ->assertStatus(410);
 });
+
+test('resending an active invitation does not rotate its token or notify again', function () {
+    Notification::fake();
+    $owner = User::factory()->create();
+    $invitee = User::factory()->create();
+    $group = poetTestGroup($owner);
+
+    $this->actingAs($owner)->post(route('group.inviteUsers', $group), [
+        'identifier' => $invitee->username,
+    ])->assertSessionHasNoErrors();
+
+    $firstToken = GroupUser::query()
+        ->where('group_id', $group->id)
+        ->where('user_id', $invitee->id)
+        ->firstOrFail()->token;
+
+    $this->actingAs($owner)->post(route('group.inviteUsers', $group), [
+        'identifier' => $invitee->username,
+    ])->assertSessionHasNoErrors();
+
+    expect(GroupUser::query()->where('group_id', $group->id)
+        ->where('user_id', $invitee->id)->firstOrFail()->token)->toBe($firstToken);
+    Notification::assertSentToTimes($invitee, InvitationInGroup::class, 1);
+});
