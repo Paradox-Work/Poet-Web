@@ -9,6 +9,7 @@ use App\Models\Group;
 use App\Models\Message;
 use App\Models\Post;
 use App\Models\User;
+use App\Support\PresentationDemoTextRepair;
 use Illuminate\Database\Seeder;
 use RuntimeException;
 
@@ -118,15 +119,15 @@ class PresentationContentSeeder extends Seeder
             ],
             [
                 'author' => 'rihards@poetweb.lv',
-                'title' => 'Uz vecā tilta',
-                'caption' => 'Par pazīstamu vietu un mainīgu skatījumu.',
+                'title' => 'Across the Old Bridge',
+                'caption' => 'A quiet poem about places that stay with us.',
                 'genres' => ['nature', 'memory'],
-                'tags' => ['tilts', 'upe', 'atminas'],
+                'tags' => ['bridge', 'river', 'memories'],
                 'lines' => [
-                    'Uz vecā tilta stāv vējš,',
-                    'un upe zem viņa nesteidzas.',
-                    'Mēs katru reizi ejam pāri citādi,',
-                    'bet krasti paliek turpat.',
+                    'The old bridge holds the evening wind,',
+                    'while water carries yesterday away.',
+                    'We cross the same familiar river,',
+                    'but never quite the same way.',
                 ],
             ],
             [
@@ -251,6 +252,26 @@ class PresentationContentSeeder extends Seeder
             ],
         ];
 
+        // The English-titled version replaces the old Latvian seed publication
+        // without deleting any real content or changing the author relationship.
+        $oliver = $users['rihards@poetweb.lv'];
+        $formerTitle = 'Uz vecā tilta';
+        $newTitle = 'Across the Old Bridge';
+        if (
+            !Post::query()->where('user_id', $oliver->id)->where('title', $newTitle)->exists()
+        ) {
+            $existing = Post::query()
+                ->where('user_id', $oliver->id)
+                ->where('title', $formerTitle)
+                ->first();
+            if ($existing) {
+                $existing->title = $newTitle;
+                $existing->caption = 'A quiet poem about places that stay with us.';
+                $existing->body = '<p>The old bridge holds the evening wind,<br>while water carries yesterday away.<br>We cross the same familiar river,<br>but never quite the same way.</p>';
+                $existing->save();
+            }
+        }
+
         $created = [];
 
         foreach ($poems as $item) {
@@ -272,6 +293,11 @@ class PresentationContentSeeder extends Seeder
                     'status' => 'published',
                     'published_at' => now(),
                 ]
+            );
+
+            PresentationDemoTextRepair::restoreIfCorrupted(
+                $post,
+                '<p>' . implode('<br>', $item['lines']) . '</p>'
             );
 
             $created[$item['title']] = $post;
@@ -296,7 +322,7 @@ class PresentationContentSeeder extends Seeder
         $commentExamples = [
             ['Kad pilsēta aizver logus', 'elza@poetweb.lv', 'Ļoti dzīva pilsētas noskaņa — īpaši patīk pēdējā rinda.'],
             ['Pirmā sniega vēstule', 'marta@poetweb.lv', 'Tik vienkārši un tēlaini! Šo gribētos dzirdēt arī lasījumā.'],
-            ['Uz vecā tilta', 'janis@poetweb.lv', 'Skaists novērojums par vietām un atmiņām.'],
+            ['Across the Old Bridge', 'janis@poetweb.lv', 'Beautiful imagery — the last two lines stayed with me.'],
             ['Vasaras bibliotēka', 'nora@poetweb.lv', 'Lasot gandrīz var sajust liepu smaržu.'],
             ['Mazā rudens karte', 'rihards@poetweb.lv', 'Cēsis šajā gadalaikā tiešām izskatās tieši tā.'],
             ['Lasījums sestdienā', 'marta@poetweb.lv', 'Laba ideja — nākamreiz varam sarīkot tematisku lasījumu.'],
