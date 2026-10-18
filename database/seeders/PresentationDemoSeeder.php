@@ -33,7 +33,7 @@ class PresentationDemoSeeder extends Seeder
                 ['name' => 'Nora Dauga', 'email' => 'nora@poetweb.lv'],
                 ['name' => 'Emīls Straume', 'email' => 'emils@poetweb.lv'],
             ])->mapWithKeys(function (array $data) {
-                $user = User::query()->updateOrCreate(
+                $user = User::query()->firstOrCreate(
                     ['email' => $data['email']],
                     [
                         'name' => $data['name'],
@@ -208,7 +208,9 @@ class PresentationDemoSeeder extends Seeder
             $publicGroup->save();
         });
 
-        $this->call(PresentationContentSeeder::class);\n\n        $this->command?->newLine();
+        $this->call(PresentationContentSeeder::class);
+
+        $this->command?->newLine();
         $this->command?->info('Poet-Web presentation demo data is ready.');
         $this->command?->table(
             ['Demo account', 'Password'],
@@ -267,7 +269,11 @@ class PresentationDemoSeeder extends Seeder
         User $author,
         array $attributes
     ): Post {
-        return Post::query()->firstOrCreate([\n            'user_id' => $author->id,\n            'title' => $attributes['title'] ?? null,\n            'body' => $attributes['body'] ?? '<p>Demo publication</p>',\n        ], array_merge([
+        return Post::query()->firstOrCreate([
+            'user_id' => $author->id,
+            'title' => $attributes['title'] ?? null,
+            'body' => $attributes['body'] ?? '<p>Demo publication</p>',
+        ], array_merge([
             'user_id' => $author->id,
             'group_id' => null,
             'type' => 'post',
