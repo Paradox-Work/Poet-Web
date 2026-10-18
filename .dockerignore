@@ -1,0 +1,38 @@
+# Keep credentials and local state out of production Docker build contexts.
+.git
+.github
+.env
+.env.*
+!.env.example
+*.log
+*.sqlite
+*.sqlite3
+.DS_Store
+.idea
+.vscode
+.cursor
+.codex
+
+# Rebuild dependencies and frontend assets in the container.
+vendor
+node_modules
+public/build
+public/hot
+public/storage
+public/fonts-manifest.dev.json
+
+# Local uploads, cached views/sessions and logs must never be baked into an image.
+storage/app
+storage/framework/cache
+storage/framework/sessions
+storage/framework/views
+storage/logs
+storage/*.key
+
+# Local test/browser artifacts.
+tests
+test-results
+playwright-report
+coverage
+.phpunit.cache
+.phpunit.result.cache
