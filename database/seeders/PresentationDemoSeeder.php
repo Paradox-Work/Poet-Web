@@ -154,20 +154,20 @@ class PresentationDemoSeeder extends Seeder
                 'comment' => 'Ļoti patīk noskaņa un vienkāršais ritms.',
             ]);
 
-            Comment::query()->create([
+            Comment::query()->firstOrCreate([
                 'post_id' => $firstPoem->id,
                 'user_id' => $elza->id,
                 'parent_id' => $comment->id,
                 'comment' => 'Paldies! Tieši mierīgu ritmu arī gribēju saglabāt.',
             ]);
 
-            Comment::query()->create([
+            Comment::query()->firstOrCreate([
                 'post_id' => $publicGroupPost->id,
                 'user_id' => $elza->id,
                 'comment' => 'Labs piemērs grupas publiskajai plūsmai.',
             ]);
 
-            Comment::query()->create([
+            Comment::query()->firstOrCreate([
                 'post_id' => $privateGroupPost->id,
                 'user_id' => $janis->id,
                 'comment' => 'Privātajā grupā šo varam attīstīt tālāk.',
