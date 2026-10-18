@@ -9,6 +9,7 @@ use App\Models\Group;
 use App\Models\GroupUser;
 use App\Models\Post;
 use App\Models\User;
+use App\Support\PresentationDemoTextRepair;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -29,7 +30,7 @@ class PresentationDemoSeeder extends Seeder
                 ['name' => 'Elza Ozola', 'email' => 'elza@poetweb.lv', 'is_admin' => true],
                 ['name' => 'Jānis Vējš', 'email' => 'janis@poetweb.lv'],
                 ['name' => 'Marta Liepa', 'email' => 'marta@poetweb.lv'],
-                ['name' => 'Rihards Kalns', 'email' => 'rihards@poetweb.lv'],
+                ['name' => 'Oliver Reed', 'email' => 'rihards@poetweb.lv'],
                 ['name' => 'Nora Dauga', 'email' => 'nora@poetweb.lv'],
                 ['name' => 'Emīls Straume', 'email' => 'emils@poetweb.lv'],
             ])->mapWithKeys(function (array $data) {
@@ -45,6 +46,9 @@ class PresentationDemoSeeder extends Seeder
 
                 return [$data['email'] => $user];
             });
+
+            // Keep the same demo user ID, email and relationships on reseeding.
+            $users['rihards@poetweb.lv']->update(['name' => 'Oliver Reed']);
 
             $elza = $users['elza@poetweb.lv'];
             $janis = $users['janis@poetweb.lv'];
@@ -206,6 +210,11 @@ class PresentationDemoSeeder extends Seeder
 
             $publicGroup->pinned_post_id = $publicGroupPost->id;
             $publicGroup->save();
+
+            PresentationDemoTextRepair::restoreIfCorrupted(
+                $firstPoem,
+                '<p>Rīts saloka miglu pār upi,<br>un pilsēta mostas bez steigas.<br>Uz tilta paliek tikai soļi,<br>kas zina ceļu uz gaismu.</p>'
+            );
         });
 
         $this->call(PresentationContentSeeder::class);
