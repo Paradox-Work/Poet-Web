@@ -12,7 +12,7 @@ Use the dedicated local-only seeder:
 ./vendor/bin/sail artisan db:seed --class=PresentationDemoSeeder
 ```
 
-The seeder creates Latvian demo users, publications, comments, reactions, follows, public/private groups, approved memberships, and a pending join request.
+The seeder creates six Latvian demo users and three groups, and calls `PresentationContentSeeder` to add 15 more original Latvian poems, a private group poem, a saved draft, realistic comments/reactions, bookmarks, and two sample conversations. It also creates follows and a pending join request.\n\n**Repeatable:** Run the same command again without duplicate posts, messages, or comments. Existing demo-account passwords are not reset. This is intended for local/testing, not production.\n\n**Old `af` / `afaf` test posts remain:** Seeders add meaningful sample data but do not delete existing posts. Manually remove your throwaway posts through the UI, or use a *disposable* demo database. Do NOT run `migrate:fresh` against a database containing anything you want to keep.
 
 Local demo accounts:
 

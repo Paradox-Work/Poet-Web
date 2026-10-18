@@ -84,10 +84,15 @@ class RichTextSanitizer
                 'UTF-8'
             );
 
+        // DOMDocument::loadHTML() defaults to ISO-8859-1 unless the
+        // document declares its encoding. The XML declaration forces
+        // UTF-8 before parsing, preserving Latvian diacritics in rich text.
+        // It is outside poet-root and is not included in the saved HTML.
         $dom->loadHTML(
-            '<div id="poet-root">' .
+            '<?xml encoding="UTF-8"?>' .
+                '<div id="poet-root">' .
                 $html .
-            '</div>',
+                '</div>',
             LIBXML_HTML_NOIMPLIED |
                 LIBXML_HTML_NODEFDTD
         );

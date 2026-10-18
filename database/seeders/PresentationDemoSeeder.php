@@ -9,6 +9,7 @@ use App\Models\Group;
 use App\Models\GroupUser;
 use App\Models\Post;
 use App\Models\User;
+use App\Support\PresentationDemoTextRepair;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -29,11 +30,11 @@ class PresentationDemoSeeder extends Seeder
                 ['name' => 'Elza Ozola', 'email' => 'elza@poetweb.lv', 'is_admin' => true],
                 ['name' => 'Jānis Vējš', 'email' => 'janis@poetweb.lv'],
                 ['name' => 'Marta Liepa', 'email' => 'marta@poetweb.lv'],
-                ['name' => 'Rihards Kalns', 'email' => 'rihards@poetweb.lv'],
+                ['name' => 'Oliver Reed', 'email' => 'rihards@poetweb.lv'],
                 ['name' => 'Nora Dauga', 'email' => 'nora@poetweb.lv'],
                 ['name' => 'Emīls Straume', 'email' => 'emils@poetweb.lv'],
             ])->mapWithKeys(function (array $data) {
-                $user = User::query()->updateOrCreate(
+                $user = User::query()->firstOrCreate(
                     ['email' => $data['email']],
                     [
                         'name' => $data['name'],
@@ -45,6 +46,9 @@ class PresentationDemoSeeder extends Seeder
 
                 return [$data['email'] => $user];
             });
+
+            // Keep the same demo user ID, email and relationships on reseeding.
+            $users['rihards@poetweb.lv']->update(['name' => 'Oliver Reed']);
 
             $elza = $users['elza@poetweb.lv'];
             $janis = $users['janis@poetweb.lv'];
@@ -148,42 +152,42 @@ class PresentationDemoSeeder extends Seeder
                 'hashtags' => ['jaunieautori'],
             ]);
 
-            $comment = Comment::query()->create([
+            $comment = Comment::query()->firstOrCreate([
                 'post_id' => $firstPoem->id,
                 'user_id' => $marta->id,
                 'comment' => 'Ļoti patīk noskaņa un vienkāršais ritms.',
             ]);
 
-            Comment::query()->create([
+            Comment::query()->firstOrCreate([
                 'post_id' => $firstPoem->id,
                 'user_id' => $elza->id,
                 'parent_id' => $comment->id,
                 'comment' => 'Paldies! Tieši mierīgu ritmu arī gribēju saglabāt.',
             ]);
 
-            Comment::query()->create([
+            Comment::query()->firstOrCreate([
                 'post_id' => $publicGroupPost->id,
                 'user_id' => $elza->id,
                 'comment' => 'Labs piemērs grupas publiskajai plūsmai.',
             ]);
 
-            Comment::query()->create([
+            Comment::query()->firstOrCreate([
                 'post_id' => $privateGroupPost->id,
                 'user_id' => $janis->id,
                 'comment' => 'Privātajā grupā šo varam attīstīt tālāk.',
             ]);
 
-            $firstPoem->reactions()->create([
+            $firstPoem->reactions()->firstOrCreate([
                 'user_id' => $janis->id,
                 'type' => 'like',
             ]);
 
-            $firstPoem->reactions()->create([
+            $firstPoem->reactions()->firstOrCreate([
                 'user_id' => $rihards->id,
                 'type' => 'like',
             ]);
 
-            $publicGroupPost->reactions()->create([
+            $publicGroupPost->reactions()->firstOrCreate([
                 'user_id' => $marta->id,
                 'type' => 'like',
             ]);
@@ -206,7 +210,14 @@ class PresentationDemoSeeder extends Seeder
 
             $publicGroup->pinned_post_id = $publicGroupPost->id;
             $publicGroup->save();
+
+            PresentationDemoTextRepair::restoreIfCorrupted(
+                $firstPoem,
+                '<p>Rīts saloka miglu pār upi,<br>un pilsēta mostas bez steigas.<br>Uz tilta paliek tikai soļi,<br>kas zina ceļu uz gaismu.</p>'
+            );
         });
+
+        $this->call(PresentationContentSeeder::class);
 
         $this->command?->newLine();
         $this->command?->info('Poet-Web presentation demo data is ready.');
@@ -267,7 +278,12 @@ class PresentationDemoSeeder extends Seeder
         User $author,
         array $attributes
     ): Post {
-        return Post::query()->create(array_merge([
+        return Post::query()->firstOrCreate([
+            'user_id' => $author->id,
+            'title' => $attributes['title'] ?? null,
+            'group_id' => $attributes['group_id'] ?? null,
+            'type' => $attributes['type'] ?? 'post',
+        ], array_merge([
             'user_id' => $author->id,
             'group_id' => null,
             'type' => 'post',
