@@ -321,7 +321,8 @@ class PresentationContentSeeder extends Seeder
             'emils@poetweb.lv',
         ];
 
-        foreach ($created as $index => $poem) {
+        $index = 0;
+        foreach ($created as $poem) {
             // Each visible publication has believable, non-zero interaction.
             foreach (array_slice($readerEmails, 0, 2 + ($index % 4)) as $email) {
                 $reader = $users[$email];
@@ -332,6 +333,7 @@ class PresentationContentSeeder extends Seeder
                     );
                 }
             }
+            $index++;
         }
 
         foreach ([
