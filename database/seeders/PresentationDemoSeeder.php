@@ -272,7 +272,8 @@ class PresentationDemoSeeder extends Seeder
         return Post::query()->firstOrCreate([
             'user_id' => $author->id,
             'title' => $attributes['title'] ?? null,
-            'body' => $attributes['body'] ?? '<p>Demo publication</p>',
+            'group_id' => $attributes['group_id'] ?? null,
+            'type' => $attributes['type'] ?? 'post',
         ], array_merge([
             'user_id' => $author->id,
             'group_id' => null,
