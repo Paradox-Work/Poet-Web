@@ -481,6 +481,7 @@
 
 import {
     computed,
+    inject,
     onBeforeUnmount,
     ref,
     watch
@@ -611,6 +612,16 @@ const show = computed({
 
 });
 
+// Notify the parent layout while a new-post composer is visible. Editing an
+// existing published post does not change the navigation's visibility.
+const setPostComposerVisibility = inject('setPostComposerVisibility', null);
+const composerInstanceKey = Symbol('post-composer');
+
+watch(
+    () => show.value && (!props.post?.id || props.post?.status === 'draft'),
+    (isOpen) => setPostComposerVisibility?.(composerInstanceKey, isOpen),
+    { immediate: true }
+);
 
 watch(
     [
@@ -1041,6 +1052,8 @@ watch(
 );
 
 onBeforeUnmount(() => {
+    setPostComposerVisibility?.(composerInstanceKey, false);
+
     if (draftSaveTimer) {
         clearTimeout(
             draftSaveTimer
