@@ -174,3 +174,65 @@ test('group drafts require approved membership', function () {
             ->exists()
     )->toBeTrue();
 });
+
+test('reopened poem draft can be saved again without publishing', function () {
+    $owner = User::factory()->create();
+
+    $draft = poetTestPost($owner, [
+        'type' => 'poem',
+        'status' => 'draft',
+        'published_at' => null,
+        'draft_saved_at' => now(),
+    ]);
+
+    $this->actingAs($owner)
+        ->putJson(
+            route('draft.update', $draft),
+            poetTestPostPayload([
+                'type' => 'poem',
+                'title' => 'Rīts pār Gauju',
+                'body' => '<p>Vēl viena nepabeigta rinda.</p>',
+            ])
+        )
+        ->assertOk()
+        ->assertJsonPath('draft.id', $draft->id);
+
+    $draft->refresh();
+
+    expect($draft->status)->toBe('draft')
+        ->and($draft->published_at)->toBeNull()
+        ->and($draft->title)->toBe('Rīts pār Gauju')
+        ->and($draft->body)->toContain('nepabeigta rinda');
+
+    $this->actingAs($owner)
+        ->get(route('poem.write', ['draft' => $draft->id]))
+        ->assertOk();
+});
+
+test('reopened draft may save an empty body without becoming published', function () {
+    $owner = User::factory()->create();
+
+    $draft = poetTestPost($owner, [
+        'type' => 'poem',
+        'status' => 'draft',
+        'published_at' => null,
+        'draft_saved_at' => now(),
+    ]);
+
+    $this->actingAs($owner)
+        ->putJson(
+            route('draft.update', $draft),
+            poetTestPostPayload([
+                'type' => 'poem',
+                'title' => 'Still working',
+                'body' => '',
+            ])
+        )
+        ->assertOk();
+
+    $draft->refresh();
+
+    expect($draft->status)->toBe('draft')
+        ->and($draft->published_at)->toBeNull()
+        ->and($draft->body)->toBe('');
+});
