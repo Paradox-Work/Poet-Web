@@ -79,6 +79,9 @@ const isDraftOwner = computed(
 );
 
 let saveTimer = null;
+let draftSavePromise = null;
+let lastSavedPayload = null;
+const leavingAfterSave = ref(false);
 
 const form = useForm({
     type: 'poem',
@@ -191,57 +194,146 @@ function draftPayload() {
     };
 }
 
-async function saveDraft() {
-    if (
-        editingPostId.value ||
-        !hasContent()
-    ) {
-        return;
+async function saveDraft({ leaveAfterSave = false } = {}) {
+    if (editingPostId.value) {
+        return false;
+    }
+
+    if (saveTimer) {
+        clearTimeout(saveTimer);
+        saveTimer = null;
+    }
+
+    // A draft can be emptied again, but do not create blank new drafts.
+    if (!draftId.value && !hasContent() && !draftSavePromise) {
+        if (leaveAfterSave) {
+            router.visit(route('draft.index'));
+        }
+        return false;
+    }
+
+    // Serialize autosaves and manual saves to avoid creating duplicate drafts
+    // or allowing an older request to overwrite a newer edit.
+    if (draftSavePromise) {
+        try {
+            await draftSavePromise;
+        } catch (error) {
+            // Retry with the latest contents using the same draft if possible.
+        }
+    }
+
+    const payload = draftPayload();
+    const payloadKey = JSON.stringify(payload);
+
+    if (draftId.value && lastSavedPayload === payloadKey) {
+        saveState.value = 'saved';
+        if (leaveAfterSave) {
+            router.visit(route('draft.index'));
+        }
+        return true;
     }
 
     saveState.value = 'saving';
 
-    try {
-        const response = draftId.value
-            ? await axios.put(
-                route('draft.update', draftId.value),
-                draftPayload()
-            )
-            : await axios.post(
-                route('draft.store'),
-                draftPayload()
-            );
+    const request = draftId.value
+        ? axios.put(route('draft.update', draftId.value), payload)
+        : axios.post(route('draft.store'), payload);
 
-        draftId.value =
-            response.data.draft.id;
+    draftSavePromise = request;
+
+    try {
+        const response = await request;
+        draftId.value = response.data.draft.id;
 
         if (draftOwnerId.value === null) {
             draftOwnerId.value = authUser?.id ?? null;
         }
 
-        savedAt.value =
-            response.data.draft.draft_saved_at;
-
-        saveState.value = 'saved';
+        savedAt.value = response.data.draft.draft_saved_at;
+        lastSavedPayload = payloadKey;
     } catch (error) {
         saveState.value = 'error';
-        console.error(
-            'Draft autosave failed:',
-            error
-        );
+        console.error('Draft save failed:', error);
+        return false;
+    } finally {
+        if (draftSavePromise === request) {
+            draftSavePromise = null;
+        }
     }
+
+    // Edits made while the request was in flight still need to be persisted.
+    if (JSON.stringify(draftPayload()) !== payloadKey) {
+        saveState.value = 'idle';
+
+        if (leaveAfterSave) {
+            return saveDraft({ leaveAfterSave: true });
+        }
+
+        scheduleSave();
+    } else {
+        saveState.value = 'saved';
+
+        if (leaveAfterSave) {
+            router.visit(route('draft.index'));
+        }
+    }
+
+    return true;
 }
 
 function scheduleSave() {
-    if (saveTimer) clearTimeout(saveTimer);
+    if (saveTimer) {
+        clearTimeout(saveTimer);
+    }
 
-    saveTimer = setTimeout(
-        saveDraft,
-        1200
-    );
+    if (editingPostId.value) {
+        return;
+    }
+
+    saveState.value = 'idle';
+    saveTimer = setTimeout(() => {
+        void saveDraft();
+    }, 1200);
 }
 
-function openDraft(draft) {
+// Save and leave is distinct from Publish, so drafts remain unpublished.
+async function saveAndLeave() {
+    if (leavingAfterSave.value) {
+        return;
+    }
+
+    leavingAfterSave.value = true;
+
+    try {
+        await saveDraft({ leaveAfterSave: true });
+    } finally {
+        leavingAfterSave.value = false;
+    }
+}
+
+function leaveEditor() {
+    if (editingPostId.value) {
+        router.visit(route('dashboard'));
+        return;
+    }
+
+    void saveAndLeave();
+}
+
+async function openDraft(draft) {
+    if (!editingPostId.value && (draftId.value || hasContent())) {
+        const saved = await saveDraft();
+        if (!saved) {
+            return;
+        }
+    }
+
+    if (saveTimer) {
+        clearTimeout(saveTimer);
+        saveTimer = null;
+    }
+
+    editingPostId.value = null;
     draftId.value = draft.id;
 
     form.content_rating =
@@ -269,15 +361,29 @@ function openDraft(draft) {
         draft.owner_id ?? authUser?.id ?? null;
     collaborators.value =
         draft.collaborators ?? [];
+    lastSavedPayload = JSON.stringify(draftPayload());
     saveState.value = 'saved';
     draftMenuOpen.value = false;
 }
 
-function newPoem() {
+async function newPoem() {
+    if (!editingPostId.value && (draftId.value || hasContent())) {
+        const saved = await saveDraft();
+        if (!saved) {
+            return;
+        }
+    }
+
+    if (saveTimer) {
+        clearTimeout(saveTimer);
+        saveTimer = null;
+    }
+
     editingPostId.value = null;
     draftId.value = null;
     saveState.value = 'idle';
     savedAt.value = null;
+    lastSavedPayload = null;
     hashtagsInput.value = '';
     customGenreInput.value = '';
     collaborators.value = [];
@@ -404,7 +510,22 @@ async function removeCollaborator(user) {
         );
 }
 
-function publish() {
+async function publish() {
+    if (saveTimer) {
+        clearTimeout(saveTimer);
+        saveTimer = null;
+    }
+
+    // Do not publish before an in-flight create-draft request has returned its ID.
+    if (draftSavePromise) {
+        try {
+            await draftSavePromise;
+        } catch (error) {
+            saveState.value = 'error';
+            return;
+        }
+    }
+
     form.hashtags =
         normalizeHashtags(
             hashtagsInput.value
@@ -517,12 +638,15 @@ if (props.editPoem) {
             <header class="sticky top-0 z-40 bg-white/95 backdrop-blur dark:bg-gray-800/95">
                 <div class="flex items-center justify-between gap-4 px-5 pt-3">
                     <div class="flex items-center gap-3">
-                        <Link
-                            :href="route('dashboard')"
-                            class="rounded-lg p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                        <button
+                            type="button"
+                            @click="leaveEditor"
+                            :disabled="leavingAfterSave"
+                            class="rounded-lg p-2 text-gray-500 hover:bg-gray-100 disabled:opacity-50 dark:text-gray-300 dark:hover:bg-gray-700"
+                            :aria-label="locale === 'lv' ? 'Saglabāt un iziet' : 'Save and exit'"
                         >
                             <ArrowLeftIcon class="h-5 w-5" />
-                        </Link>
+                        </button>
 
                         <div>
                             <h1 class="font-serif text-xl font-semibold text-gray-900 dark:text-gray-100">
@@ -547,7 +671,7 @@ if (props.editPoem) {
                         </div>
                     </div>
 
-                    <div class="flex items-center gap-2">
+                    <div class="flex flex-wrap items-center justify-end gap-2">
                         <button
                             type="button"
                             @click="newPoem"
@@ -606,10 +730,31 @@ if (props.editPoem) {
                         </div>
 
                         <button
+                            v-if="!editingPostId"
+                            type="button"
+                            @click="saveDraft()"
+                            :disabled="leavingAfterSave || (!draftId && !hasContent())"
+                            class="rounded-lg border border-indigo-200 bg-white px-3 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-50 disabled:opacity-50 dark:border-indigo-700 dark:bg-gray-800 dark:text-indigo-200 dark:hover:bg-gray-700"
+                        >
+                            {{ locale === 'lv' ? 'Saglabāt melnrakstu' : 'Save draft' }}
+                        </button>
+
+                        <button
+                            v-if="!editingPostId"
+                            type="button"
+                            @click="saveAndLeave"
+                            :disabled="leavingAfterSave"
+                            class="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
+                        >
+                            {{ locale === 'lv' ? 'Saglabāt un iziet' : 'Save & exit' }}
+                        </button>
+
+                        <button
                             type="button"
                             @click="publish"
 :disabled="
                                 form.processing ||
+                                leavingAfterSave ||
                                 (
                                     draftId &&
                                     !isDraftOwner
