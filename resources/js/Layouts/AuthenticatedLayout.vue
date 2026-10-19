@@ -3,6 +3,7 @@ import {
     computed,
     onBeforeUnmount,
     onMounted,
+    provide,
     ref
 } from 'vue';
 
@@ -59,6 +60,22 @@ const page = usePage();
 const authUser = computed(() => page.props.auth?.user ?? null);
 
 const showCreatePostModal = ref(false);
+
+// Keep the shared navbar out of the way whenever a create-post composer is open,
+// including composers opened from group pages rather than the navbar.
+const isPostComposerOpen = ref(false);
+const activePostComposers = new Set();
+
+provide('setPostComposerVisibility', (composerId, isOpen) => {
+    if (isOpen) {
+        activePostComposers.add(composerId);
+        showingNavigationDropdown.value = false;
+    } else {
+        activePostComposers.delete(composerId);
+    }
+
+    isPostComposerOpen.value = activePostComposers.size > 0;
+});
 
 const newPost = computed(() => ({
     id: null,
@@ -144,7 +161,12 @@ function search() {
     <div>
         <div class="h-screen flex flex-col bg-[var(--poet-bg)] text-[var(--poet-text)]">
             <nav
-                class="relative z-[100] overflow-visible border-b border-[var(--poet-border)] bg-[var(--poet-nav)]/95 backdrop-blur-md"
+                class="relative z-40 overflow-visible border-b border-[var(--poet-border)] bg-[var(--poet-nav)]/95 backdrop-blur-md transition-[margin-top,transform,opacity] duration-200 ease-in-out motion-reduce:transition-none"
+                :class="isPostComposerOpen
+                    ? '-mt-[65px] -translate-y-full opacity-0 pointer-events-none'
+                    : 'mt-0 translate-y-0 opacity-100'"
+                :aria-hidden="isPostComposerOpen ? 'true' : undefined"
+                :inert="isPostComposerOpen"
             >
                 <!-- Primary Navigation Menu -->
                 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
