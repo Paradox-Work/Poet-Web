@@ -322,3 +322,67 @@ test('group admins can moderate a members group publication', function () {
             ->trashed()
     )->toBeTrue();
 });
+
+test('approved group member can leave without admin permissions', function () {
+    $owner = User::factory()->create();
+    $member = User::factory()->create();
+    $group = poetTestGroup($owner, ['visibility' => 'private']);
+    poetTestAddGroupUser($group, $member);
+
+    $this->actingAs($member)
+        ->delete(route('group.leave', $group))
+        ->assertRedirect(route('group.index'));
+
+    $this->assertDatabaseMissing('group_users', [
+        'group_id' => $group->id,
+        'user_id' => $member->id,
+    ]);
+
+    expect($group->hasApprovedUser($member->id))->toBeFalse();
+});
+
+test('non-owner group admin can leave their group', function () {
+    $owner = User::factory()->create();
+    $admin = User::factory()->create();
+    $group = poetTestGroup($owner);
+    poetTestAddGroupUser(
+        $group,
+        $admin,
+        GroupUserStatus::APPROVED->value,
+        \App\Enums\GroupUserRole::ADMIN->value
+    );
+
+    $this->actingAs($admin)
+        ->delete(route('group.leave', $group))
+        ->assertRedirect(route('group.index'));
+
+    expect($group->hasApprovedUser($admin->id))->toBeFalse();
+});
+
+test('group owners cannot leave without transferring ownership', function () {
+    $owner = User::factory()->create();
+    $group = poetTestGroup($owner);
+
+    $this->actingAs($owner)
+        ->delete(route('group.leave', $group))
+        ->assertRedirect()
+        ->assertSessionHasErrors('membership');
+
+    expect($group->hasApprovedUser($owner->id))->toBeTrue();
+});
+
+test('users cannot remove another member via the leave route', function () {
+    $owner = User::factory()->create();
+    $member = User::factory()->create();
+    $other = User::factory()->create();
+    $group = poetTestGroup($owner);
+    poetTestAddGroupUser($group, $member);
+    poetTestAddGroupUser($group, $other);
+
+    $this->actingAs($member)
+        ->delete(route('group.leave', $group), ['user_id' => $other->id])
+        ->assertRedirect(route('group.index'));
+
+    expect($group->hasApprovedUser($other->id))->toBeTrue()
+        ->and($group->hasApprovedUser($member->id))->toBeFalse();
+});
