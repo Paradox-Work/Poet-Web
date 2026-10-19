@@ -985,6 +985,7 @@ function joinToGroup() {
                                             user.id ===
                                             group.user_id
                                         "
+                                        :is-self="user.id === authUser?.id"
                                         :role-processing="
                                             roleForm.processing ||
                                             removeMemberForm.processing
