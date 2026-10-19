@@ -200,6 +200,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/groups/{group:slug}/members/role', [GroupMembershipController::class, 'changeRole'])
         ->name('group.changeRole');
 
+    Route::delete('/groups/{group:slug}/leave', [GroupMembershipController::class, 'leave'])
+        ->middleware('throttle:10,1')
+        ->name('group.leave');
+
     Route::delete('/groups/{group:slug}/members', [GroupMembershipController::class, 'removeUser'])
         ->name('group.removeUser');
 
