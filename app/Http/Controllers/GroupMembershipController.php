@@ -176,6 +176,34 @@ class GroupMembershipController extends Controller
             );
         }
 
+    /**
+     * Allow members to leave voluntarily without requiring admin permissions.
+     * Group ownership must be transferred before the owner may leave.
+     */
+    public function leave(Request $request, Group $group)
+    {
+        $userId = $request->user()->id;
+
+        if ($group->isOwner($userId)) {
+            return back()->withErrors([
+                'membership' => 'Group owners cannot leave their group until ownership is transferred.',
+            ]);
+        }
+
+        $membership = GroupUser::query()
+            ->where('group_id', $group->id)
+            ->where('user_id', $userId)
+            ->where('status', GroupUserStatus::APPROVED->value)
+            ->firstOrFail();
+
+        $membership->delete();
+
+        // Returning to the former group's private page can cause a 403.
+        return redirect()
+            ->route('group.index')
+            ->with('success', 'You left "' . $group->name . '".');
+    }
+
     public function removeUser(
             Request $request,
             Group $group
