@@ -10,6 +10,8 @@ test('groups tab contains only approved memberships while public groups remain d
 
     poetTestPost($owner, [
         'group_id' => $group->id,
+        'type' => 'poem',
+        'poem_form' => 'free_verse',
         'title' => 'Public group poem',
     ]);
 
