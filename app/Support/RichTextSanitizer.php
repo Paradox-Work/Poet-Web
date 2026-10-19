@@ -84,7 +84,10 @@ class RichTextSanitizer
                 'UTF-8'
             );
 
+        // DOMDocument::loadHTML() otherwise treats text without a charset hint
+        // as ISO-8859-1, corrupting Latvian UTF-8 characters.
         $dom->loadHTML(
+            '<?xml encoding="UTF-8"?>' .
             '<div id="poet-root">' .
                 $html .
             '</div>',
