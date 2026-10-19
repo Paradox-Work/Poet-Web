@@ -63,6 +63,8 @@ const formGuideOpen = ref(false);
 const genrePickerOpen = ref(false);
 const hashtagsInput = ref('');
 const customGenreInput = ref('');
+// Temporarily hide draft collaboration controls without removing saved collaborators.
+const draftCollaboratorsEnabled = false;
 const collaborators = ref([]);
 const draftOwnerId = ref(null);
 const collaboratorUsername = ref('');
@@ -759,7 +761,7 @@ if (props.editPoem) {
                         </div>
 
                         <section
-                            v-if="draftId"
+                            v-if="draftCollaboratorsEnabled && draftId"
                             class="rounded-xl border border-stone-200 bg-white/70 p-3 dark:border-gray-700 dark:bg-gray-900/40"
                         >
                             <div class="text-xs font-semibold uppercase tracking-[0.16em] text-gray-400">
