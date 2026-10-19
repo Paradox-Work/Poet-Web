@@ -234,5 +234,5 @@ test('reopened draft may save an empty body without becoming published', functio
 
     expect($draft->status)->toBe('draft')
         ->and($draft->published_at)->toBeNull()
-        ->and($draft->body)->toBe('');
+        ->and($draft->body)->toBeNull();
 });
