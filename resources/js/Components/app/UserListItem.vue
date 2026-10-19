@@ -24,6 +24,11 @@ defineProps({
         default: false
     },
 
+    isSelf: {
+        type: Boolean,
+        default: false
+    },
+
     isOwner: {
         type: Boolean,
         default: false
@@ -148,6 +153,7 @@ defineEmits([
             </select>
 
             <button
+                v-if="!isOwner && !isSelf"
                 type="button"
                 :disabled="roleProcessing"
                 @click="$emit('remove', user)"
