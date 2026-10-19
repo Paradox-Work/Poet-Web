@@ -171,6 +171,8 @@ const requestForm = useForm({
 });
 
 const joinForm = useForm({});
+const leaveForm = useForm({});
+const isGroupOwner = computed(() => authUser.value?.id === props.group.user_id);
 
 const groupSettingsForm = useForm({
     name: props.group.name,
@@ -382,6 +384,24 @@ function submitThumbnail() {
             }
         }
     );
+}
+
+function leaveGroup() {
+    if (leaveForm.processing || !isApprovedMember.value || isGroupOwner.value) {
+        return;
+    }
+
+    if (!window.confirm(
+        locale.value === 'lv'
+            ? 'Vai tiešām vēlies pamest šo grupu?'
+            : 'Are you sure you want to leave this group?'
+    )) {
+        return;
+    }
+
+    leaveForm.delete(route('group.leave', props.group.slug), {
+        preserveScroll: false
+    });
 }
 
 function joinToGroup() {
@@ -643,8 +663,26 @@ function joinToGroup() {
                                 {{ locale === 'lv' ? 'Uzaicināt' : 'Invite' }}
                             </button>
 
+                            <button
+                                v-if="isApprovedMember && !isGroupOwner"
+                                type="button"
+                                @click="leaveGroup"
+                                :disabled="leaveForm.processing"
+                                class="rounded-full border border-red-400/60 px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-500/10 disabled:opacity-50 dark:text-red-300"
+                            >
+                                {{ locale === 'lv' ? 'Pamest grupu' : 'Leave group' }}
+                            </button>
+
+                            <span
+                                v-if="isApprovedMember && isGroupOwner"
+                                class="self-center text-xs text-[var(--poet-muted)]"
+                                :title="locale === 'lv' ? 'Īpašniekam pirms aiziešanas jānodod grupas īpašumtiesības.' : 'Owners must transfer ownership before leaving.'"
+                            >
+                                {{ locale === 'lv' ? 'Grupas īpašnieks' : 'Group owner' }}
+                            </span>
+
                             <Link
-                                v-else-if="!authUser"
+                                v-if="!authUser"
                                 :href="route('login')"
                                 class="rounded-full bg-[var(--poet-accent)] px-4 py-2 text-sm font-medium text-white"
                             >
