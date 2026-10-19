@@ -1,6 +1,7 @@
 <script setup>
 import {
     computed,
+    onBeforeUnmount,
     ref
 } from 'vue';
 
@@ -21,7 +22,7 @@ import axios from 'axios';
 
 import { useI18n } from '@/i18n';
 
-const { t } = useI18n();
+const { locale, t } = useI18n();
 
 const props = defineProps({
     modelValue: Boolean
@@ -38,8 +39,49 @@ const autoApproval = ref(true);
 const visibility = ref('private');
 
 const submitting = ref(false);
+const retryAfterSeconds = ref(0);
+const submitError = ref('');
+let rateLimitTimer = null;
 
 const errors = ref({});
+
+// Respect the server's Retry-After response instead of letting users submit
+// repeatedly while Laravel is still refusing group creation requests.
+function startRateLimitCountdown(value) {
+    if (rateLimitTimer !== null) {
+        clearInterval(rateLimitTimer);
+        rateLimitTimer = null;
+    }
+
+    const numericSeconds = Number(value);
+    const dateSeconds = Date.parse(value);
+    const seconds = Number.isFinite(numericSeconds) && numericSeconds > 0
+        ? numericSeconds
+        : Number.isFinite(dateSeconds)
+            ? (dateSeconds - Date.now()) / 1000
+            : 60;
+
+    const until = Date.now() + Math.max(1, Math.ceil(seconds)) * 1000;
+    retryAfterSeconds.value = Math.max(1, Math.ceil((until - Date.now()) / 1000));
+
+    rateLimitTimer = setInterval(() => {
+        retryAfterSeconds.value = Math.max(
+            0,
+            Math.ceil((until - Date.now()) / 1000)
+        );
+
+        if (retryAfterSeconds.value === 0) {
+            clearInterval(rateLimitTimer);
+            rateLimitTimer = null;
+        }
+    }, 1000);
+}
+
+onBeforeUnmount(() => {
+    if (rateLimitTimer !== null) {
+        clearInterval(rateLimitTimer);
+    }
+});
 
 const show = computed({
     get: () => props.modelValue,
@@ -57,6 +99,7 @@ function resetModal() {
     autoApproval.value = true;
     visibility.value = 'private';
     errors.value = {};
+    submitError.value = '';
 }
 
 function closeModal() {
@@ -67,13 +110,14 @@ function closeModal() {
 
 async function submit() {
 
-    if (submitting.value) {
+    if (submitting.value || retryAfterSeconds.value > 0) {
         return;
     }
 
     submitting.value = true;
 
     errors.value = {};
+    submitError.value = '';
 
     try {
 
@@ -99,16 +143,20 @@ async function submit() {
 
     } catch (error) {
 
-        if (
-            error.response?.status === 422
-        ) {
-            errors.value =
-                error.response.data.errors;
+        if (error.response?.status === 422) {
+            errors.value = error.response.data.errors ?? {};
+        } else if (error.response?.status === 429) {
+            const headers = error.response.headers;
+            const retryAfter = headers?.get?.('Retry-After')
+                ?? headers?.['retry-after'];
+
+            startRateLimitCountdown(retryAfter);
         } else {
-            console.error(
-                'Failed to create group:',
-                error
-            );
+            submitError.value = locale.value === 'lv'
+                ? 'Grupu neizdevās izveidot. Lūdzu, mēģini vēlreiz.'
+                : 'Could not create the group. Please try again.';
+
+            console.error('Failed to create group:', error);
         }
 
     } finally {
@@ -278,6 +326,25 @@ async function submit() {
 
 
                             <div
+                                v-if="retryAfterSeconds > 0"
+                                role="alert"
+                                aria-live="polite"
+                                class="mx-4 mb-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200"
+                            >
+                                {{ locale === 'lv'
+                                    ? `Pārāk daudz mēģinājumu izveidot grupu. Lūdzu, uzgaidi ${retryAfterSeconds} s un mēģini vēlreiz.`
+                                    : `Too many group creation attempts. Please wait ${retryAfterSeconds} s before trying again.` }}
+                            </div>
+
+                            <div
+                                v-else-if="submitError"
+                                role="alert"
+                                class="mx-4 mb-2 rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-800 dark:bg-red-950/40 dark:text-red-200"
+                            >
+                                {{ submitError }}
+                            </div>
+
+                            <div
                                 class="flex justify-end gap-2 px-4 py-3"
                             >
 
@@ -294,6 +361,7 @@ async function submit() {
                                     @click="submit"
                                     :disabled="
                                         submitting ||
+                                        retryAfterSeconds > 0 ||
                                         !name.trim()
                                     "
                                     class="flex items-center rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-500 disabled:opacity-50"
@@ -305,7 +373,9 @@ async function submit() {
                                     {{
                                         submitting
                                             ? t('group.creating')
-                                            : t('group.create')
+                                            : retryAfterSeconds > 0
+                                                ? (locale === 'lv' ? `Uzgaidi ${retryAfterSeconds} s` : `Wait ${retryAfterSeconds} s`)
+                                                : t('group.create')
                                     }}
                                 </button>
 
