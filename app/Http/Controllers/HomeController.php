@@ -47,7 +47,14 @@ class HomeController extends Controller
                     ->where('follower_id', $userId);
             });
         } elseif ($source === 'groups' && $userId) {
-            $sourceFeedQuery->whereNotNull('posts.group_id');
+            // Groups feed is limited to groups with approved membership.
+            // Public group posts remain discoverable in For You.
+            $sourceFeedQuery
+                ->whereNotNull('posts.group_id')
+                ->whereHas('group.groupUsers', function ($query) use ($userId) {
+                    $query->where('user_id', $userId)
+                        ->where('status', 'approved');
+                });
         } elseif ($source === 'mine' && $userId) {
             $sourceFeedQuery->where('posts.user_id', $userId);
         }
