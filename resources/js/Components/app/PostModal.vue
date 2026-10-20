@@ -452,6 +452,7 @@
                                         type="button"
                                         class="flex items-center justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 flex-1"
                                         @click="submit"
+                                        :disabled="form.processing"
                                     >
 
                                         {{ form.id ? (locale === 'lv' ? 'Saglabāt izmaiņas' : 'Save Changes') : (locale === 'lv' ? 'Publicēt' : 'Publish Post') }}
@@ -1086,6 +1087,7 @@ function normalizeHashtags(value) {
 }
 
 function submit() {
+    if (form.processing) return;
 
     attachmentErrors.value = [];
 
