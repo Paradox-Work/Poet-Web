@@ -105,16 +105,16 @@ onBeforeUnmount(stopPolling);
     <Head :title="locale === 'lv' ? 'Ziņas' : 'Messages'" />
 
     <AuthenticatedLayout>
-        <div class="h-full bg-[var(--poet-bg)] p-3 sm:p-6">
-            <div class="mx-auto grid h-full max-w-6xl overflow-hidden rounded-2xl border border-[var(--poet-border)] bg-[var(--poet-surface)] md:grid-cols-[18rem_1fr]">
-                <aside class="min-h-0 border-b border-[var(--poet-border)] md:border-b-0 md:border-r">
+        <div class="h-full min-h-0 bg-[var(--poet-bg)] p-2 sm:p-6">
+            <div class="mx-auto grid h-full min-h-0 max-w-6xl grid-cols-1 grid-rows-[minmax(0,1fr)] overflow-hidden rounded-2xl border border-[var(--poet-border)] bg-[var(--poet-surface)] md:grid-cols-[18rem_1fr]">
+                <aside :class="activeConversation ? 'hidden md:block' : 'block'" class="min-h-0 overflow-y-auto border-b border-[var(--poet-border)] md:border-b-0 md:border-r md:overflow-hidden">
                     <div class="border-b border-[var(--poet-border)] px-4 py-4">
                         <h1 class="font-serif text-xl font-semibold text-[var(--poet-text)]">
                             {{ locale === 'lv' ? 'Tiešās ziņas' : 'Direct messages' }}
                         </h1>
                     </div>
 
-                    <div class="max-h-52 overflow-y-auto md:max-h-none md:h-[calc(100%-4rem)]">
+                    <div class="overflow-y-auto md:max-h-none md:h-[calc(100%-4rem)]">
                         <Link
                             v-for="conversation in conversations"
                             :key="conversation.id"
@@ -158,8 +158,9 @@ onBeforeUnmount(stopPolling);
                     </div>
                 </aside>
 
-                <section v-if="activeConversation" class="flex min-h-0 flex-col">
+                <section v-if="activeConversation" class="flex h-full min-h-0 flex-col">
                     <header class="flex items-center gap-3 border-b border-[var(--poet-border)] px-4 py-3">
+                        <Link :href="route('messages.show')" class="shrink-0 rounded-lg px-2 py-2 text-sm font-semibold text-[var(--poet-accent-strong)] md:hidden" :aria-label="locale === 'lv' ? 'Atpakaļ uz sarunām' : 'Back to conversations'">←</Link>
                         <img
                             :src="activeConversation.other_user?.avatar_url"
                             :alt="activeConversation.other_user?.name ?? ''"
@@ -221,7 +222,7 @@ onBeforeUnmount(stopPolling);
                     </form>
                 </section>
 
-                <section v-else class="flex items-center justify-center p-8 text-center text-[var(--poet-muted)]">
+                <section v-else class="hidden items-center justify-center p-8 text-center text-[var(--poet-muted)] md:flex">
                     {{
                         locale === 'lv'
                             ? 'Izvēlies sarunu vai atver autora profilu un sāc jaunu ziņu.'
