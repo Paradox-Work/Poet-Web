@@ -109,7 +109,7 @@ Route::middleware('auth')->group(function () {
         ->name('draft.collaborators.destroy');
 
     Route::post('/posts', [PostController::class, 'store'])
-        ->middleware('throttle:20,1')
+        ->middleware('throttle:6,1')
         ->name('post.create');
 
     Route::get('/write/poem', [PoemController::class, 'writePoem'])
