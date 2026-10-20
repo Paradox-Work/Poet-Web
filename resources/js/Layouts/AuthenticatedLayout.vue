@@ -503,7 +503,7 @@ function search() {
                         block: showingNavigationDropdown,
                         hidden: !showingNavigationDropdown,
                     }"
-                    class="min-[1380px]:hidden"
+                    class="absolute inset-x-0 top-full max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain border-b border-[var(--poet-border)] bg-[var(--poet-nav)] shadow-xl min-[1380px]:hidden"
                 >
                     <div class="space-y-1 pb-3 pt-2">
                         <div class="px-4 pb-2">
@@ -617,6 +617,14 @@ function search() {
                             :active="route().current('admin.*')"
                         >
                             {{ locale === 'lv' ? 'Moderācija' : 'Moderation' }}
+                        </ResponsiveNavLink>
+
+                        <ResponsiveNavLink
+                            v-if="authUser"
+                            :href="route('messages.show')"
+                            :active="route().current('messages.show')"
+                        >
+                            {{ locale === 'lv' ? 'Tiešās ziņas' : 'Direct messages' }}
                         </ResponsiveNavLink>
 
                         <ResponsiveNavLink
