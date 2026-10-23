@@ -45,6 +45,11 @@ class Group extends Model
             ->doNotGenerateSlugsOnUpdate();
     }
 
+    public function owner(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
     public function groupUsers(): HasMany
     {
         return $this->hasMany(GroupUser::class);
