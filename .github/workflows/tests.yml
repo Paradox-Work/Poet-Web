@@ -50,7 +50,7 @@ jobs:
 
       - name: Start isolated Laravel server
         run: |
-          DB_CONNECTION=sqlite DB_DATABASE="${{ github.workspace }}/database/database.sqlite" APP_ENV=testing APP_DEBUG=false php artisan serve --host=127.0.0.1 --port=8000 > /tmp/poet-web-server.log 2>&1 &
+          DB_CONNECTION=sqlite DB_DATABASE="${{ github.workspace }}/database/database.sqlite" APP_ENV=testing APP_DEBUG=false MAIL_MAILER=array QUEUE_CONNECTION=sync php artisan serve --host=127.0.0.1 --port=8000 > /tmp/poet-web-server.log 2>&1 &
           echo $! > /tmp/poet-web-server.pid
           for attempt in $(seq 1 30); do
             if curl --silent --fail http://127.0.0.1:8000/ > /dev/null; then exit 0; fi

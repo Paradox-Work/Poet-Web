@@ -457,6 +457,9 @@ function search() {
                                 v-if="authUser"
                             />
                             <button
+                                type="button"
+                                aria-label="Toggle navigation menu"
+                                :aria-expanded="showingNavigationDropdown"
                                 @click="
                                     showingNavigationDropdown =
                                         !showingNavigationDropdown
@@ -625,6 +628,16 @@ function search() {
                             :active="route().current('draft.index')"
                         >
                             {{ t('nav.drafts') }}
+                        </ResponsiveNavLink>
+                    </div>
+
+                    <!-- Mobile guest authentication shortcuts -->
+                    <div v-if="!authUser" class="border-t border-[var(--poet-border)] py-2">
+                        <ResponsiveNavLink :href="route('login')">
+                            {{ t('nav.login') }}
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('register')">
+                            {{ t('nav.register') }}
                         </ResponsiveNavLink>
                     </div>
 

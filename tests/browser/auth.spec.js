@@ -18,12 +18,16 @@ test('a new account can log out without stale authenticated navigation', async (
     await page.locator('#password_confirmation').fill('SecurePassword123!');
     await page.locator('form button[type="submit"]').click();
     await expect(page).not.toHaveURL(/\/register/);
-    const logout = page.locator('button').filter({ hasText: /Log Out|Log out|Iziet/i });
-    // Account dropdown is opened through the signed-in user's name.
-    await page.getByText('Browser Test Author', { exact: true }).first().click();
-    await expect(logout.first()).toBeVisible();
-    await logout.first().click();
-    await page.waitForURL(url => !url.pathname.includes('/logout'));
+    // The responsive menu is the visible navigation at both tested widths
+    // (the full desktop navbar starts at 1380px).
+    await page.getByRole('button', { name: 'Toggle navigation menu' }).click();
+    const logout = page.getByRole('button', { name: /Log Out|Izrakstīties/i });
+    await expect(logout).toBeVisible();
+    await logout.click();
+    await expect(page).toHaveURL('/');
     await page.reload();
-    await expect(page.getByRole('link', { name: /log in|pieslēgties/i }).first()).toBeVisible();
+
+    // Unauthenticated visitors should still be able to open the login screen.
+    await page.getByRole('button', { name: 'Toggle navigation menu' }).click();
+    await expect(page.locator('nav a[href="/login"]:visible')).toBeVisible();
 });
