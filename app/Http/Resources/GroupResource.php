@@ -65,6 +65,13 @@ class GroupResource extends JsonResource
             'user_id' =>
                 $this->user_id,
 
+            'member_count' => (int) ($this->approved_users_count ?? 0),
+
+            'owner' => $this->whenLoaded('owner', fn () => $this->owner ? [
+                'name' => $this->owner->name,
+                'username' => $this->owner->username,
+            ] : null),
+
             'created_at' =>
                 $this->created_at,
 
