@@ -109,7 +109,7 @@ const isApprovedMember = computed(
 );
 
 const memberCount = computed(
-    () => props.users.length
+    () => props.group.member_count ?? props.users.length
 );
 
 const memberSearch = ref('');
@@ -629,6 +629,16 @@ function joinToGroup() {
                                     {{ t('group.members', { count: memberCount }) }}
                                 </span>
 
+                                <span v-if="group.owner">
+                                    {{ locale === 'lv' ? 'Izveidoja:' : 'Owner:' }}
+                                    <Link
+                                        v-if="group.owner.username"
+                                        :href="route('profile', group.owner.username)"
+                                        class="font-medium text-[var(--poet-text)] hover:underline"
+                                    >{{ group.owner.name }}</Link>
+                                    <span v-else>{{ group.owner.name }}</span>
+                                </span>
+
                                 <span>
                                     {{
                                         group.auto_approval
@@ -954,6 +964,7 @@ function joinToGroup() {
                                     </div>
 
                                     <div
+                                        v-if="group.visibility === 'public' || isApprovedMember"
                                         class="relative w-full sm:w-72"
                                     >
                                         <MagnifyingGlassIcon
@@ -970,7 +981,14 @@ function joinToGroup() {
                                 </div>
 
                                 <div
-                                    v-if="filteredUsers.length"
+                                    v-if="group.visibility === 'private' && !isApprovedMember"
+                                    class="rounded-xl border border-dashed border-[var(--poet-border)] py-10 text-center text-sm text-[var(--poet-muted)]"
+                                >
+                                    {{ locale === 'lv' ? 'Dalībnieku profili ir redzami tikai apstiprinātiem grupas dalībniekiem.' : 'Member profiles are visible only to approved group members.' }}
+                                </div>
+
+                                <div
+                                    v-else-if="filteredUsers.length"
                                     class="grid gap-2 sm:grid-cols-2"
                                 >
                                     <UserListItem
