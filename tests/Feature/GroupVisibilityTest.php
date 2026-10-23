@@ -127,3 +127,30 @@ test('group visibility accepts only public or private', function () {
         )
         ->assertSessionHasErrors('visibility');
 });
+
+test('private groups disclose approved member count and owner without exposing member profiles', function () {
+    $owner = User::factory()->create();
+    $member = User::factory()->create();
+    $outsider = User::factory()->create();
+    $group = poetTestGroup($owner, ['visibility' => 'private']);
+    poetTestAddGroupUser($group, $member);
+
+    $this->actingAs($outsider)
+        ->get(route('group.profile', $group))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Group/View')
+            ->where('group.member_count', 2)
+            ->where('group.owner.name', $owner->name)
+            ->where('group.owner.username', $owner->username)
+            ->has('users', 0)
+            ->where('posts', null));
+
+    $this->actingAs($member)
+        ->get(route('group.profile', $group))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Group/View')
+            ->where('group.member_count', 2)
+            ->has('users', 2));
+});
