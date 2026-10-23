@@ -237,6 +237,8 @@ class GroupController extends Controller
                     $membership?->role;
             }
     
+            $group->load('owner')->loadCount('approvedUsers');
+
             $isApprovedMember =
                 $group->hasApprovedUser(
                     $userId
