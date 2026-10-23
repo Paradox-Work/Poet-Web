@@ -30,11 +30,15 @@ const widthClass = computed(() => {
         48: 'w-48',
 
         notifications:
-            'w-[calc(100vw-2rem)] max-w-96',
+            'fixed inset-x-4 top-16 w-auto min-[1380px]:absolute min-[1380px]:inset-x-auto min-[1380px]:top-auto min-[1380px]:w-[calc(100vw-2rem)] min-[1380px]:max-w-96',
     }[props.width.toString()];
 });
 
 const alignmentClasses = computed(() => {
+    if (props.width === 'notifications') {
+        return 'min-[1380px]:end-0 min-[1380px]:origin-top-right';
+    }
+
     if (props.align === 'left') {
         return 'ltr:origin-top-left rtl:origin-top-right start-0';
     } else if (props.align === 'right') {

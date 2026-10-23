@@ -62,7 +62,6 @@ const draftMenuOpen = ref(false);
 const formGuideOpen = ref(false);
 const genrePickerOpen = ref(false);
 const hashtagsInput = ref('');
-const customGenreInput = ref('');
 // Temporarily hide draft collaboration controls without removing saved collaborators.
 const draftCollaboratorsEnabled = false;
 const collaborators = ref([]);
@@ -385,7 +384,6 @@ async function newPoem() {
     savedAt.value = null;
     lastSavedPayload = null;
     hashtagsInput.value = '';
-    customGenreInput.value = '';
     collaborators.value = [];
     draftOwnerId.value = null;
     collaboratorUsername.value = '';
@@ -418,30 +416,6 @@ function toggleGenre(genre) {
         ...form.poem_genres,
         genre
     ];
-}
-
-function addCustomGenre() {
-    const genre = customGenreInput.value.trim();
-
-    if (!genre || form.poem_genres.length >= 8) {
-        return;
-    }
-
-    const duplicate =
-        form.poem_genres.some(
-            item =>
-                item.toLocaleLowerCase() ===
-                genre.toLocaleLowerCase()
-        );
-
-    if (!duplicate) {
-        form.poem_genres = [
-            ...form.poem_genres,
-            genre.slice(0, 50)
-        ];
-    }
-
-    customGenreInput.value = '';
 }
 
 async function addCollaborator() {
@@ -511,6 +485,8 @@ async function removeCollaborator(user) {
 }
 
 async function publish() {
+    if (form.processing) return;
+
     if (saveTimer) {
         clearTimeout(saveTimer);
         saveTimer = null;
@@ -636,7 +612,7 @@ if (props.editPoem) {
     <AuthenticatedLayout>
         <div class="h-full overflow-y-auto bg-stone-50 dark:bg-gray-900">
             <header class="sticky top-0 z-40 bg-white/95 backdrop-blur dark:bg-gray-800/95">
-                <div class="flex items-center justify-between gap-4 px-5 pt-3">
+                <div class="flex flex-col gap-3 px-3 pt-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
                     <div class="flex items-center gap-3">
                         <button
                             type="button"
@@ -671,7 +647,7 @@ if (props.editPoem) {
                         </div>
                     </div>
 
-                    <div class="flex flex-wrap items-center justify-end gap-2">
+                    <div class="flex w-full min-w-0 items-center gap-2 overflow-x-auto pb-2 sm:w-auto sm:justify-end sm:overflow-visible sm:pb-0">
                         <button
                             type="button"
                             @click="newPoem"
@@ -779,8 +755,8 @@ if (props.editPoem) {
                     </div>
                 </div>
 
-                <div class="mt-2 border-b border-stone-200 px-5 pb-2.5 dark:border-gray-700">
-                    <div class="ml-10 flex flex-wrap items-center gap-2">
+                <div class="mt-2 overflow-x-auto border-b border-stone-200 px-3 pb-2.5 dark:border-gray-700 sm:px-5">
+                    <div class="flex w-max items-center gap-2 sm:ml-10 sm:flex-wrap">
                         <div class="flex items-center gap-2">
                             <span class="text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">
                                 {{ locale === 'lv' ? 'Forma' : 'Form' }}
@@ -894,7 +870,7 @@ if (props.editPoem) {
             </header>
 
             <div class="grid min-h-full lg:grid-cols-[280px_minmax(0,1fr)]">
-                <aside class="border-r border-stone-200 bg-stone-100/70 p-4 dark:border-gray-700 dark:bg-gray-800/60">
+                <aside class="order-2 border-t border-stone-200 bg-stone-100/70 p-4 dark:border-gray-700 dark:bg-gray-800/60 lg:order-1 lg:border-r lg:border-t-0">
                     <div class="space-y-5">
                         <div>
                             <div class="text-xs font-semibold uppercase tracking-[0.16em] text-gray-400">
@@ -1054,24 +1030,6 @@ if (props.editPoem) {
                                 </div>
                             </div>
 
-                            <div class="mt-2 flex gap-2">
-                                <input
-                                    v-model="customGenreInput"
-                                    type="text"
-                                    maxlength="50"
-                                    :placeholder="locale === 'lv' ? 'Savs žanrs' : 'Custom genre'"
-                                    class="min-w-0 flex-1 rounded-lg border-gray-300 bg-white text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-                                    @keyup.enter.prevent="addCustomGenre"
-                                />
-                                <button
-                                    type="button"
-                                    @click="addCustomGenre"
-                                    class="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
-                                >
-                                    {{ locale === 'lv' ? 'Pievienot' : 'Add' }}
-                                </button>
-                            </div>
-
                             <div
                                 v-if="form.poem_genres.length"
                                 class="mt-2 flex flex-wrap gap-1.5"
@@ -1121,7 +1079,7 @@ if (props.editPoem) {
                     </div>
                 </aside>
 
-                <main class="p-5 lg:p-8">
+                <main class="order-1 p-3 sm:p-5 lg:order-2 lg:p-8">
                     <div class="mx-auto max-w-4xl">
                         <div class="rounded-2xl border border-stone-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
                             <input
@@ -1129,10 +1087,10 @@ if (props.editPoem) {
                                 type="text"
                                 maxlength="160"
                                 :placeholder="locale === 'lv' ? 'Dzejolis bez nosaukuma' : 'Untitled poem'"
-                                class="w-full border-0 border-b border-stone-100 bg-transparent px-8 py-6 font-serif text-3xl font-semibold text-gray-900 placeholder:text-gray-300 focus:ring-0 dark:border-gray-700 dark:text-gray-100 dark:placeholder:text-gray-600"
+                                class="w-full border-0 border-b border-stone-100 bg-transparent px-4 py-4 font-serif text-xl font-semibold text-gray-900 placeholder:text-gray-300 focus:ring-0 dark:border-gray-700 dark:text-gray-100 dark:placeholder:text-gray-600 sm:px-8 sm:py-6 sm:text-3xl"
                             />
 
-                            <div class="p-6 lg:p-8">
+                            <div class="p-3 sm:p-6 lg:p-8">
                                 <TiptapEditor
                                     v-model="form.body"
                                     poem-mode
